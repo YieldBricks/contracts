@@ -29,9 +29,10 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     bytes32 private constant IDENTITY_TYPEHASH =
         keccak256("Identity(address wallet,address signer,bytes32 emailHash,uint256 expiration,uint16 country)");
 
-    function initialize(address identitySigner_) public initializer {
-        __EIP712_init_unchained("Compliance", "1");
-        __Ownable2Step_init_unchained();
+    function initialize(address identitySigner_, address owner_) public initializer {
+        __EIP712_init("Compliance", "1");
+        __Ownable2Step_init();
+        __Ownable_init(owner_);
         _identitySigner = identitySigner_;
     }
 

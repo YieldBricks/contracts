@@ -28,8 +28,9 @@ contract SaleManager is Ownable2StepUpgradeable {
     address[] public tokenAddresses;
     UpgradeableBeacon public tokenBeacon;
 
-    function initialize(address tokenBeacon_) public initializer {
-        __Ownable2Step_init_unchained();
+    function initialize(address tokenBeacon_, address owner_) public initializer {
+        __Ownable2Step_init();
+        __Ownable_init(owner_);
         tokenBeacon = UpgradeableBeacon(tokenBeacon_);
     }
 
