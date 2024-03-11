@@ -74,7 +74,7 @@ contract SaleManager is Ownable2StepUpgradeable {
 
         // Check there is enough supply left
         require(
-            _amount + unclaimedTokensByToken[tokenAddress] + _token.totalSupply() <= _token.cap(),
+            _amount + unclaimedTokensByToken[tokenAddress] + _token.balanceOf(address(this)) <= _token.cap(),
             "Not enough tokens left"
         );
         require(msg.value == _amount * sales[tokenAddress].price, "Not enough funds");
