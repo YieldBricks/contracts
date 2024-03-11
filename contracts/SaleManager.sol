@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import "./Token.sol";
 
+import "hardhat/console.sol";
+
 contract SaleManager is Ownable2StepUpgradeable {
     event TokenDeployed(address indexed token, string name, string symbol, uint256 cap, address compliance);
     event SaleCreated(address indexed token, uint256 start, uint256 end, uint256 price);
@@ -40,19 +42,14 @@ contract SaleManager is Ownable2StepUpgradeable {
         uint256 cap_,
         address compliance_
     ) external onlyOwner {
-        address tokenAddress = address(
-            new BeaconProxy(
-                address(tokenBeacon),
-                abi.encodeWithSignature(
-                    "initialize(address,string memory,string memory,uint256)",
-                    compliance_,
-                    name_,
-                    symbol_,
-                    cap_
-                )
-            )
+        console.log("createToken", address(this));
+        BeaconProxy tokenProxy = new BeaconProxy(
+            address(tokenBeacon),
+            abi.encodeWithSelector(Token.initialize.selector, compliance_, name_, symbol_, cap_)
         );
-        emit TokenDeployed(tokenAddress, name_, symbol_, cap_, compliance_);
+        tokenAddresses.push(address(tokenProxy));
+
+        emit TokenDeployed(address(tokenProxy), name_, symbol_, cap_, compliance_);
     }
 
     function createSale(address _token, uint256 _start, uint256 _end, uint256 _price) external onlyOwner {
@@ -103,11 +100,13 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     // Will result in a 20% penalty
-    function cancelPurchase(address _token) external {
-        uint256 amount = unclaimedTokensByUserByToken[msg.sender][_token];
+    function cancelPurchase(Token _token) external {
+        address tokenAddress = address(_token);
+
+        uint256 amount = unclaimedTokensByUserByToken[msg.sender][tokenAddress];
         require(amount > 0, "No unclaimed tokens");
-        unclaimedTokensByUserByToken[msg.sender][_token] = 0;
-        unclaimedTokensByToken[_token] -= amount;
-        payable(msg.sender).transfer((amount * sales[_token].price * 80) / 100);
+        unclaimedTokensByUserByToken[msg.sender][tokenAddress] = 0;
+        unclaimedTokensByToken[tokenAddress] -= amount;
+        payable(msg.sender).transfer((amount * sales[tokenAddress].price * 80) / 100);
     }
 }

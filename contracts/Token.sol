@@ -8,6 +8,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUp
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import "./Compliance.sol";
 
+import "hardhat/console.sol";
+
 contract Token is
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,
@@ -30,6 +32,7 @@ contract Token is
         __ERC20Capped_init(cap_);
         __ERC20Permit_init(name_);
         _compliance = Compliance(compliance_);
+        console.log("Token Initialized", _msgSender());
         _mint(_msgSender(), cap_);
     }
 
@@ -49,7 +52,7 @@ contract Token is
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable) {
         require(!_frozen[to] && !_frozen[from], "Wallet frozen");
-        require(_compliance.canTransfer(from, to, value), "Compliance failure");
+        _compliance.canTransfer(from, to, value);
 
         super._update(from, to, value);
     }

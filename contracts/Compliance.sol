@@ -6,6 +6,8 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "./Token.sol";
 
+import "hardhat/console.sol";
+
 contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
 
@@ -34,36 +36,49 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         __Ownable2Step_init();
         __Ownable_init(owner_);
         _identitySigner = identitySigner_;
+        _identitySignerExpiration = block.timestamp + 7 days;
     }
 
     // compliance check and state update
-    function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool) {
+    function canTransfer(address _from, address _to, uint256 _amount) external view {
         // get Identity for _from and _to
         Identity memory identityFrom = identities[_from];
-        Identity memory identitiyTo = identities[_to];
+        Identity memory identityTo = identities[_to];
+
+        console.log("canTransferDebug", msg.sender, identityTo.wallet, _to);
+
+        if (_from != address(0)) {
+            require(identityFrom.wallet != address(0), "Sender identity not found");
+            require(!_signerBlacklist[identityFrom.signer], "Sender signer is blacklisted");
+            require(block.timestamp < identityFrom.expiration, "Sender KYC expired");
+            require(!_countryBlacklist[identityFrom.country], "Sender country is blacklisted");
+            require(!_walletBlacklist[_from], "Sender wallet is blacklisted");
+        }
+
+        // Check if identity exists
+
+        require(identityTo.wallet != address(0), "Receiver identity not found");
 
         // Check if signer is blacklisted
-        require(!_signerBlacklist[identityFrom.signer], "Signer is blacklisted");
-        require(!_signerBlacklist[identitiyTo.signer], "Signer is blacklisted");
+
+        require(!_signerBlacklist[identityTo.signer], "Receiver signer is blacklisted");
 
         // Check if KYC expired
-        require(block.timestamp < identityFrom.expiration, "KYC expired");
-        require(block.timestamp < identitiyTo.expiration, "KYC expired");
+
+        require(block.timestamp < identityTo.expiration, "Receiver KYC expired");
 
         // Check if country is blacklisted
-        require(!_countryBlacklist[identityFrom.country], "Sender country is blacklisted");
-        require(!_countryBlacklist[identitiyTo.country], "Receiver country is blacklisted");
+
+        require(!_countryBlacklist[identityTo.country], "Receiver country is blacklisted");
 
         // Check if wallet is blacklisted
-        require(!_walletBlacklist[_from], "Sender wallet is blacklisted");
+
         require(!_walletBlacklist[_to], "Receiver wallet is blacklisted");
 
         // Check if the amount transfered is a significant part of the users supply
-        Token token = Token(msg.sender);
-        uint256 balance = token.balanceOf(_from);
-        require(_amount < balance / 10, "Transfer amount is too high");
-
-        return true;
+        // Token token = Token(msg.sender);
+        // uint256 balance = token.balanceOf(_from);
+        // require(_amount < balance / 10, "Transfer amount is too high");
     }
 
     function addIdentity(Identity memory _identity, bytes memory signature) external {
@@ -82,6 +97,7 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         address signer = ECDSA.recover(digest, signature);
         require(signer == _identitySigner, "Invalid signature");
         require(block.timestamp < _identitySignerExpiration, "Expired signer key");
+
         identities[_identity.wallet] = _identity;
     }
 
