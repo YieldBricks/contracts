@@ -91,7 +91,6 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
         }
     }
 
-    // IN case the user wasn't KYCed, they will need to claim tokens later or cancel the purchase (which incurs a 20% penalty)
     function claimTokens(TokenV2 _token) external {
         address tokenAddress = address(_token);
 

@@ -25,7 +25,7 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         address signer; // Identity signer that was used, in case it gets blacklisted later
         bytes32 emailHash; // Hash of email used for KYC purposes
         uint256 expiration; // Expiration date of the KYC validation
-        uint16 country; // According to https://en.wikipedia.org/wiki/ISO_3166-1_numeric#Officially_assigned_code_elements
+        uint16 country; // According to https://en.wikipedia.org/wiki/ISO_3166-1_numeric
     }
 
     bytes32 private constant IDENTITY_TYPEHASH =

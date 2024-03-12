@@ -72,9 +72,17 @@ contract SaleManager is Ownable2StepUpgradeable {
         require(block.timestamp >= sales[tokenAddress].start, "Sale not started");
         require(block.timestamp <= sales[tokenAddress].end, "Sale ended");
 
+        console.log("buyTokens", _amount, _token.balanceOf(address(this)), unclaimedTokensByToken[tokenAddress]);
+        console.log(
+            "buyTokens",
+            _amount + unclaimedTokensByToken[tokenAddress] + _token.balanceOf(address(this)),
+            _token.cap()
+        );
+        console.log("funds", msg.value, _amount, sales[tokenAddress].price);
+
         // Check there is enough supply left
         require(
-            _amount + unclaimedTokensByToken[tokenAddress] + _token.balanceOf(address(this)) <= _token.cap(),
+            _amount + unclaimedTokensByToken[tokenAddress] <= _token.balanceOf(address(this)),
             "Not enough tokens left"
         );
         require(msg.value == _amount * sales[tokenAddress].price, "Not enough funds");
@@ -88,7 +96,6 @@ contract SaleManager is Ownable2StepUpgradeable {
         }
     }
 
-    // IN case the user wasn't KYCed, they will need to claim tokens later or cancel the purchase (which incurs a 20% penalty)
     function claimTokens(Token _token) external {
         address tokenAddress = address(_token);
 

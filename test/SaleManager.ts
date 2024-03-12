@@ -6,6 +6,8 @@ import { deploySystemFixture } from "./System.fixture";
 
 type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deploySystemFixture>>>>;
 
+const DAY = 60 * 60 * 24;
+
 describe("SaleManager", function () {
   before(async function () {
     this.loadFixture = loadFixture;
@@ -58,8 +60,8 @@ describe("SaleManager", function () {
 
       const tokenAddress = await saleManager.tokenAddresses(0);
 
-      const startTime = await time.latest();
-      const endTime = (await time.latest()) + 3600 * 24 * 7;
+      const startTime = (await time.latest()) + DAY;
+      const endTime = (await time.latest()) + 7 * DAY;
       const price = 100;
 
       await expect(saleManager.connect(multisig).createSale(tokenAddress, startTime, endTime, price)).to.emit(
@@ -73,45 +75,36 @@ describe("SaleManager", function () {
       expect(sale.price).to.equal(price);
     });
 
-    // function buyTokens(uint256 _amount, Token _token) external payable {
-    //     address tokenAddress = address(_token);
-
-    //     // check that sale is open
-    //     require(block.timestamp >= sales[tokenAddress].start, "Sale not started");
-    //     require(block.timestamp <= sales[tokenAddress].end, "Sale ended");
-
-    //     // Check there is enough supply left
-    //     require(
-    //         _amount + unclaimedTokensByToken[tokenAddress] + _token.totalSupply() <= _token.cap(),
-    //         "Not enough tokens left"
-    //     );
-    //     require(msg.value == _amount * sales[tokenAddress].price, "Not enough funds");
-
-    //     // Try to mint tokens to user, if it fails, add the amount to unclaimed tokens
-    //     try _token.transfer(msg.sender, _amount) {
-    //         // success
-    //     } catch {
-    //         unclaimedTokensByUserByToken[msg.sender][tokenAddress] += _amount;
-    //         unclaimedTokensByToken[tokenAddress] += _amount;
-    //     }
-    // }
-
-    it("User can buy token", async function () {
+    it("User can't buy token before sale starts", async function () {
       const { saleManager, alice } = this.fixture as FixtureReturnType;
 
       const tokenAddress = await saleManager.tokenAddresses(0);
 
-      await saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 10000 });
+      await expect(saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 })).to.be.revertedWith(
+        "Sale not started",
+      );
     });
 
-    // Testing flow for saleManager contract
+    it("User can buy token during sale duration", async function () {
+      const { saleManager, alice } = this.fixture as FixtureReturnType;
 
-    // Verify sale manager has correct owner, and correct tokenbeacon
-    // createToken to deploy a token with beaconproxy
-    // verify that the entire supply of the token is now on the SaleManager
-    // try to edit sale
+      await time.increase(DAY);
 
-    // User flow
-    // try to buy token with normal receive, everything should go fine
+      const tokenAddress = await saleManager.tokenAddresses(0);
+
+      await saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 });
+    });
+
+    it("User can't buy token after sale ends", async function () {
+      const { saleManager, alice } = this.fixture as FixtureReturnType;
+
+      await time.increase(7 * DAY);
+
+      const tokenAddress = await saleManager.tokenAddresses(0);
+
+      await expect(saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 })).to.be.revertedWith(
+        "Sale ended",
+      );
+    });
   });
 });
