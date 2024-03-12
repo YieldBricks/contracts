@@ -19,3 +19,5 @@ export function identityTypedMessage(eip712Domain: any, identity: any) {
     identity,
   };
 }
+
+export const DAY = 60 * 60 * 24;

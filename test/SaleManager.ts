@@ -3,10 +3,9 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import { deploySystemFixture } from "./System.fixture";
+import { DAY } from "./utils";
 
 type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deploySystemFixture>>>>;
-
-const DAY = 60 * 60 * 24;
 
 describe("SaleManager", function () {
   before(async function () {
@@ -92,7 +91,7 @@ describe("SaleManager", function () {
 
       const tokenAddress = await saleManager.tokenAddresses(0);
 
-      await saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 });
+      expect(saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 }));
     });
 
     it("User can't buy token after sale ends", async function () {

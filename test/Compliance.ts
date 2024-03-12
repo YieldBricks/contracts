@@ -3,7 +3,7 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 
 import { deploySystemFixture } from "./System.fixture";
-import { identityTypedMessage } from "./utils";
+import { DAY, identityTypedMessage } from "./utils";
 
 describe("Compliance", function () {
   before(async function () {
@@ -29,7 +29,7 @@ describe("Compliance", function () {
         wallet: alice.address,
         signer: kycSigner.address,
         emailHash: ethers.keccak256(ethers.toUtf8Bytes("alice@example.com")),
-        expiration: (await time.latest()) + 60 * 60 * 24 * 7, // 7 days
+        expiration: (await time.latest()) + 7 * DAY, // 7 days
         country: 840,
       };
 
@@ -37,7 +37,7 @@ describe("Compliance", function () {
         wallet: bob.address,
         signer: kycSigner.address,
         emailHash: ethers.keccak256(ethers.toUtf8Bytes("bob@example.com")),
-        expiration: (await time.latest()) + 60 * 60 * 24 * 7, // 7 days,
+        expiration: (await time.latest()) + 14 * DAY, // 7 days,
         country: 550,
       };
 
@@ -99,6 +99,15 @@ describe("Compliance", function () {
       await compliance.connect(multisig).blacklistSigner(kycSigner.address, false);
 
       expect(compliance.canTransfer(alice, alice, 1));
+    });
+
+    it("Sender and Receiver KYC expiration", async function () {
+      const { compliance, alice, bob } = this.fixture;
+
+      await time.increase(7 * DAY); // Increase by 7 days
+
+      await expect(compliance.canTransfer(alice, bob, 1)).to.be.revertedWith("Sender KYC expired");
+      await expect(compliance.canTransfer(bob, alice, 1)).to.be.revertedWith("Receiver KYC expired");
     });
 
     it("Signer expiration", async function () {
