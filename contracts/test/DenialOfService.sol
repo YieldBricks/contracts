@@ -5,8 +5,17 @@ import "./../SaleManager.sol";
 import "./../Token.sol";
 
 contract DenialOfService {
+    bool called;
+
     receive() external payable {
-        revert("DoS");
+        if (!called) {
+            called = true;
+            revert("DoS");
+        }
+    }
+
+    function buyTokens(address saleManager, address token, uint256 amount) external payable {
+        SaleManager(saleManager).buyTokens{ value: msg.value }(amount, Token(token));
     }
 
     function claimTokens(address saleManager, address token) external {

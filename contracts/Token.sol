@@ -17,11 +17,12 @@ contract Token is
     ERC20PermitUpgradeable,
     ERC20CappedUpgradeable
 {
-    mapping(address => bool) private _frozen;
+    mapping(address => bool) public frozen;
     Compliance private _compliance;
 
     function initialize(
         address compliance_,
+        address saleManager_,
         string memory name_,
         string memory symbol_,
         uint256 cap_
@@ -33,7 +34,7 @@ contract Token is
         __ERC20Permit_init(name_);
         _compliance = Compliance(compliance_);
         console.log("Token Initialized", _msgSender());
-        _mint(_msgSender(), cap_);
+        _mint(saleManager_, cap_);
     }
 
     function pause() public onlyOwner {
@@ -51,7 +52,7 @@ contract Token is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable) {
-        require(!_frozen[to] && !_frozen[from], "Wallet frozen");
+        require(!frozen[to] && !frozen[from], "Wallet frozen");
         _compliance.canTransfer(from, to, value);
 
         super._update(from, to, value);
@@ -59,6 +60,10 @@ contract Token is
 
     function forceTransfer(address from, address to, uint256 value) public onlyOwner {
         _update(from, to, value);
+    }
+
+    function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
+        frozen[wallet] = isFrozen;
     }
 
     error OwnableUnauthorizedAccount(address sender);

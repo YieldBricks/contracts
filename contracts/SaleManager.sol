@@ -45,7 +45,7 @@ contract SaleManager is Ownable2StepUpgradeable {
         console.log("createToken", address(this));
         BeaconProxy tokenProxy = new BeaconProxy(
             address(tokenBeacon),
-            abi.encodeWithSelector(Token.initialize.selector, compliance_, name_, symbol_, cap_)
+            abi.encodeWithSelector(Token.initialize.selector, compliance_, address(this), name_, symbol_, cap_)
         );
         tokenAddresses.push(address(tokenProxy));
 

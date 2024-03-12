@@ -15,7 +15,7 @@ contract TokenV2 is
     ERC20PermitUpgradeable,
     ERC20CappedUpgradeable
 {
-    mapping(address => bool) private _frozen;
+    mapping(address => bool) private frozen;
     ComplianceV2 private _compliance;
 
     function initialize(
@@ -48,7 +48,7 @@ contract TokenV2 is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable) {
-        require(!_frozen[to] && !_frozen[from], "Wallet frozen");
+        require(!frozen[to] && !frozen[from], "Wallet frozen");
         require(_compliance.canTransfer(from, to, value), "Compliance failure");
 
         super._update(from, to, value);

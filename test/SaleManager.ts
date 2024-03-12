@@ -2,6 +2,7 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
+import { DenialOfService, DenialOfService__factory } from "../types";
 import { deploySystemFixture } from "./System.fixture";
 import { DAY } from "./utils";
 
@@ -12,7 +13,7 @@ describe("SaleManager", function () {
     this.loadFixture = loadFixture;
   });
 
-  describe("Flow", function () {
+  describe("Happy flow", function () {
     before(async function () {
       this.fixture = (await this.loadFixture(deploySystemFixture)) as FixtureReturnType;
     });
@@ -92,6 +93,25 @@ describe("SaleManager", function () {
       const tokenAddress = await saleManager.tokenAddresses(0);
 
       expect(saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 }));
+    });
+
+    it("Denial of Service attempt", async function () {
+      const { saleManager, alice } = this.fixture as FixtureReturnType;
+
+      const DenialOfService = (await ethers.getContractFactory("DenialOfService")) as DenialOfService__factory;
+      const denialOfService = (await DenialOfService.deploy()) as DenialOfService;
+
+      const tokenAddress = await saleManager.tokenAddresses(0);
+      const token = await ethers.getContractAt("Token", tokenAddress);
+
+      expect(denialOfService.buyTokens(saleManager, token, 1, { value: 100 }));
+
+      await expect(await saleManager.unclaimedTokensByToken(tokenAddress)).to.equal(1);
+      await expect(
+        await saleManager.unclaimedTokensByUserByToken(await denialOfService.getAddress(), tokenAddress),
+      ).to.equal(1);
+
+      // Try to claimTokens directly
     });
 
     it("User can't buy token after sale ends", async function () {

@@ -3,7 +3,6 @@ import { expect } from "chai";
 import { Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
 
-import { Compliance, Compliance__factory, SaleManager, SaleManager__factory, Token__factory } from "../types";
 import { deploySystemFixture } from "./System.fixture";
 
 describe("System", function () {
