@@ -16,6 +16,8 @@ contract TokenV2 is
     ERC20CappedUpgradeable
 {
     mapping(address => bool) private frozen;
+    mapping(address => uint) public lastUpdate;
+    mapping(address => uint) public stakeValue;
     ComplianceV2 private _compliance;
 
     function initialize(

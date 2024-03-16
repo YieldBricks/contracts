@@ -11,6 +11,9 @@ import "hardhat/console.sol";
 contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
 
+    // Define const default signer duration to be 7 days
+    uint256 public constant DEFAULT_SIGNER_DURATION = 7 days;
+
     // Signers are on a hot wallet, so they are rotated on a weekly basis to optimize the RTO
     address private _identitySigner;
     uint256 private _identitySignerExpiration;
@@ -36,7 +39,7 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         __Ownable2Step_init();
         __Ownable_init(owner_);
         _identitySigner = identitySigner_;
-        _identitySignerExpiration = block.timestamp + 7 days;
+        _identitySignerExpiration = block.timestamp + DEFAULT_SIGNER_DURATION;
     }
 
     // compliance check and state update
@@ -55,24 +58,10 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
             require(!_walletBlacklist[_from], "Sender wallet is blacklisted");
         }
 
-        // Check if identity exists
-
         require(identityTo.wallet != address(0), "Receiver identity not found");
-
-        // Check if signer is blacklisted
-
         require(!_signerBlacklist[identityTo.signer], "Receiver signer is blacklisted");
-
-        // Check if KYC expired
-
         require(block.timestamp < identityTo.expiration, "Receiver KYC expired");
-
-        // Check if country is blacklisted
-
         require(!_countryBlacklist[identityTo.country], "Receiver country is blacklisted");
-
-        // Check if wallet is blacklisted
-
         require(!_walletBlacklist[_to], "Receiver wallet is blacklisted");
 
         // Check if the amount transfered is a significant part of the users supply
@@ -96,14 +85,15 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         );
         address signer = ECDSA.recover(digest, signature);
         require(signer == _identitySigner, "Invalid signature");
+        require(_identity.signer == signer, "Signature mismatch");
         require(block.timestamp < _identitySignerExpiration, "Expired signer key");
 
         identities[_identity.wallet] = _identity;
     }
 
-    function setIdentitySigner(address _signer, uint256 duration) external onlyOwner {
+    function setIdentitySigner(address _signer) external onlyOwner {
         _identitySigner = _signer;
-        _identitySignerExpiration = block.timestamp + duration;
+        _identitySignerExpiration = block.timestamp + DEFAULT_SIGNER_DURATION;
     }
 
     function blacklistSigner(address _signer, bool isBlacklisted) external onlyOwner {

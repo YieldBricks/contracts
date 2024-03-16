@@ -6,7 +6,7 @@ import { identityTypedMessage } from "./utils";
 
 export async function deploySystemFixture() {
   // Contracts are deployed using the first signer/account by default
-  const [deployer, multisig, kycSigner, kycSigner2, alice, bob, eve] = await ethers.getSigners();
+  const [deployer, multisig, kycSigner, kycSigner2, alice, bob, charlie, eve] = await ethers.getSigners();
 
   // Deploy Compliance contract
   const Compliance = (await ethers.getContractFactory("Compliance")) as Compliance__factory;
@@ -63,6 +63,7 @@ export async function deploySystemFixture() {
     multisig,
     alice,
     bob,
+    charlie,
     eve,
     kycSigner,
     kycSigner2,

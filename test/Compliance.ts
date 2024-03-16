@@ -10,7 +10,7 @@ describe("Compliance", function () {
     this.loadFixture = loadFixture;
   });
 
-  describe("Flow", function () {
+  describe("Happy Flow", function () {
     before(async function () {
       this.fixture = await loadFixture(deploySystemFixture);
     });
@@ -90,7 +90,7 @@ describe("Compliance", function () {
       expect(compliance.canTransfer(alice, alice, 1));
     });
 
-    it("Blacklist Signer", async function () {
+    it("Blacklist Sender Signer", async function () {
       const { compliance, multisig, kycSigner, alice } = this.fixture;
 
       await compliance.connect(multisig).blacklistSigner(kycSigner, true);
@@ -130,6 +130,54 @@ describe("Compliance", function () {
       const eveSignature = await kycSigner.signTypedData(eveData.domain, eveData.types, eveData.identity);
 
       await expect(compliance.addIdentity(eveIdentity, eveSignature)).to.be.revertedWith("Expired signer key");
+    });
+  });
+
+  describe("Change Identity", function () {
+    before(async function () {
+      this.fixture = await loadFixture(deploySystemFixture);
+    });
+
+    it("Compliance should have correct owner", async function () {
+      const { compliance, multisig } = this.fixture;
+      expect(await compliance.owner()).to.equal(multisig.address);
+    });
+
+    // Add Alice and Bob, but change the signer so alice is added with kycSigner and bob with kycSigner2
+
+    it("Identity signer can add new Identities", async function () {
+      const { compliance, kycSigner, kycSigner2, alice, bob } = this.fixture;
+
+      const eip712Domain = await compliance.eip712Domain();
+
+      const aliceIdentity = {
+        wallet: alice.address,
+        signer: kycSigner.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("alice@example.com")),
+        expiration: (await time.latest()) + 7 * DAY, // 7 days
+        country: 840,
+      };
+
+      const bobIdentity = {
+        wallet: bob.address,
+        signer: kycSigner2.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("bob@example.com")),
+        expiration: (await time.latest()) + 14 * DAY, // 7 days,
+        country: 550,
+      };
+
+      const aliceData = identityTypedMessage(eip712Domain, aliceIdentity);
+      const bobData = identityTypedMessage(eip712Domain, bobIdentity);
+
+      const aliceSignature = await kycSigner.signTypedData(aliceData.domain, aliceData.types, aliceData.identity);
+
+      const bobSignature = await kycSigner2.signTypedData(bobData.domain, bobData.types, bobData.identity);
+
+      // await compliance.addIdentity(aliceIdentity, aliceSignature);
+      // await compliance.addIdentity(bobIdentity, bobSignature);
+
+      await expect(compliance.addIdentity(aliceIdentity, aliceSignature)).to.be.fulfilled;
+      await expect(compliance.addIdentity(bobIdentity, bobSignature)).to.be.fulfilled;
     });
   });
 });
