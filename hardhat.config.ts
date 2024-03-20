@@ -3,6 +3,7 @@ import "@openzeppelin/hardhat-upgrades";
 import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
 import type { NetworkUserConfig } from "hardhat/types";
+import "solidity-docgen";
 
 import "./tasks/accounts";
 
@@ -70,6 +71,7 @@ const config: HardhatUserConfig = {
     excludeContracts: [],
     src: "./contracts",
   },
+  docgen: {},
   networks: {
     hardhat: {
       accounts: {
