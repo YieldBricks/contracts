@@ -31,13 +31,13 @@ contract YBR is
         __ERC20_init("YieldBricks", "YBR");
         __ERC20Burnable_init();
         __ERC20Pausable_init();
-        __ERC20Capped_init(10000000);
+        __ERC20Capped_init(1_000_000_000);
         __ERC20Permit_init("YieldBricks");
         __ERC20Votes_init();
         __Ownable2Step_init();
         __Ownable_init(owner_);
 
-        _mint(owner_, 10000000);
+        _mint(owner_, 1_000_000_000);
     }
 
     function pause() public onlyOwner {
