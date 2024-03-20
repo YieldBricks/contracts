@@ -127,17 +127,28 @@ describe("YBR", function () {
       expect(await ybr.getVotes(alice.address)).to.equal(0);
     });
 
-    if (process.env.REPORT_GAS) {
-      it("Measure transfer gas", async function () {
-        const { ybr, multisig, alice, bob } = this.fixture as FixtureReturnType;
-        await ybr.connect(multisig).delegate(multisig.address);
-        for (let i = 0; i < 100; i++) {
-          // Transfer cycle delegated -> non-delegated -> non-delegated -> delegated
-          await ybr.connect(multisig).transfer(alice.address, 100_000_000);
-          await ybr.connect(alice).transfer(bob.address, 100_000_000);
-          await ybr.connect(bob).transfer(multisig.address, 100_000_000);
-        }
-      });
-    }
+    it("User delegates votes to multisig after transfer", async function () {
+      const { ybr, multisig, bob } = this.fixture as FixtureReturnType;
+      await ybr.connect(multisig).transfer(bob.address, 100_000_000);
+      expect(await ybr.getVotes(multisig.address)).to.equal(900_000_000);
+      expect(await ybr.getVotes(bob.address)).to.equal(0);
+      await ybr.connect(bob).delegate(multisig.address);
+      expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
+      expect(await ybr.getVotes(bob.address)).to.equal(0);
+      expect(await ybr.balanceOf(bob.address)).to.equal(100_000_000);
+
+      await ybr.connect(bob).transfer(multisig.address, 100_000_000);
+    });
+
+    it("User delegates votes to multisig before transfer", async function () {
+      const { ybr, multisig, bob } = this.fixture as FixtureReturnType;
+      await ybr.connect(bob).delegate(multisig.address);
+      await ybr.connect(multisig).transfer(bob.address, 100_000_000);
+      expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
+      expect(await ybr.getVotes(bob.address)).to.equal(0);
+      expect(await ybr.balanceOf(bob.address)).to.equal(100_000_000);
+
+      await ybr.connect(bob).transfer(multisig.address, 100_000_000);
+    });
   });
 });
