@@ -261,6 +261,53 @@ describe("Compliance", function () {
       await expect(compliance.addIdentity(aliceIdentity, badSignature)).to.be.revertedWith("Signature mismatch");
     });
 
+    it("Make sure _identitySigner == signer", async function () {
+      const { compliance, alice, bob, kycSigner, kycSigner2 } = this.fixture;
+
+      const eip712Domain = await compliance.eip712Domain();
+
+      const aliceIdentity = {
+        wallet: alice.address,
+        signer: kycSigner.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("alice@example.com")),
+        expiration: (await time.latest()) + 7 * DAY, // 7 days
+        country: 840,
+      };
+
+      const bobIdentity = {
+        wallet: bob.address,
+        signer: kycSigner2.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("bob@example.com")),
+        expiration: (await time.latest()) + 14 * DAY, // 7 days,
+        country: 550,
+      };
+
+      const bobData = identityTypedMessage(eip712Domain, bobIdentity);
+
+      const bobSignature = await kycSigner2.signTypedData(bobData.domain, bobData.types, bobData.identity);
+
+      await expect(compliance.addIdentity(aliceIdentity, bobSignature)).to.be.revertedWith("Invalid signature");
+    });
+
+    it("Make sure _identitySigner == signer == _identitySigner", async function () {
+      const { compliance, alice, kycSigner, kycSigner2 } = this.fixture;
+
+      const eip712Domain = await compliance.eip712Domain();
+
+      const aliceIdentity = {
+        wallet: alice.address,
+        signer: kycSigner.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("alice@example.com")),
+        expiration: (await time.latest()) + 7 * DAY, // 7 days
+        country: 840,
+      };
+
+      const aliceData = identityTypedMessage(eip712Domain, aliceIdentity);
+
+      const badSignature = await kycSigner2.signTypedData(aliceData.domain, aliceData.types, aliceData.identity);
+      await expect(compliance.addIdentity(aliceIdentity, badSignature)).to.be.revertedWith("Signature mismatch");
+    });
+
     it("Blacklist Alice's signer but not Bob's, then check canTransfer from Bob to Alice", async function () {
       const { compliance, multisig, kycSigner, alice, bob } = this.fixture;
 

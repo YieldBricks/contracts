@@ -6,5 +6,6 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "[solidity]": {
     "editor.defaultFormatter": "NomicFoundation.hardhat-solidity"
-  }
+  },
+  "liveServer.settings.port": 5501
 }

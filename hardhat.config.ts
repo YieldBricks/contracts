@@ -2,7 +2,6 @@ import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";
 import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
-import type { NetworkUserConfig } from "hardhat/types";
 import "solidity-docgen";
 
 import "./tasks/accounts";
@@ -72,9 +71,9 @@ const config: HardhatUserConfig = {
     src: "./contracts",
   },
   docgen: {
-    outputDir: "./docs/output",
+    outputDir: "./docs",
     pages: "files",
-    templates: "docs/template",
+    exclude: ["test"],
   },
   networks: {
     hardhat: {
