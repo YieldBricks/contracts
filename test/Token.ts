@@ -5,7 +5,7 @@ import { deployTokenFixture } from "./Token.fixture";
 
 type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deployTokenFixture>>>>;
 
-describe("SaleManager", function () {
+describe("Token", function () {
   before(async function () {
     this.loadFixture = loadFixture;
   });
@@ -13,6 +13,16 @@ describe("SaleManager", function () {
   describe("Happy flow", function () {
     before(async function () {
       this.fixture = (await this.loadFixture(deployTokenFixture)) as FixtureReturnType;
+    });
+
+    it("The initialize function should only be called once", async function () {
+      const { token, compliance, multisig } = this.fixture;
+
+      // Call the initialize function the second time and expect it to revert with a custom error
+      await expect(token.initialize(compliance, multisig, "My Token", "MTK", 1000000)).to.be.revertedWithCustomError(
+        token,
+        "InvalidInitialization",
+      );
     });
 
     it("Compliance should have correct owner", async function () {

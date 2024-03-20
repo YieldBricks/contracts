@@ -14,22 +14,22 @@ export async function deploySystemFixture() {
   const compliance = Compliance.attach(await complianceProxy.getAddress()) as Compliance;
   const complianceAddress = await complianceProxy.getAddress();
 
-  console.log("Compliance deployed to:", await compliance.getAddress());
+  console.log("Compliance deployed to:", complianceAddress);
 
   // Deploy BeaconProxy contract
   const Token = (await ethers.getContractFactory("Token")) as Token__factory;
   const tokenBeacon = await upgrades.deployBeacon(Token, { initialOwner: multisig.address });
   const tokenBeaconAddress = await tokenBeacon.getAddress();
 
-  console.log("TokenBeacon deployed to:", await tokenBeacon.getAddress());
+  console.log("TokenBeacon deployed to:", tokenBeaconAddress);
 
   // Deploy SaleManager contract
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
-  const saleManagerProxy = await upgrades.deployProxy(SaleManager, [await tokenBeacon.getAddress(), multisig.address]);
+  const saleManagerProxy = await upgrades.deployProxy(SaleManager, [tokenBeaconAddress, multisig.address]);
   const saleManager = SaleManager.attach(await saleManagerProxy.getAddress()) as SaleManager;
   const saleManagerAddress = await saleManagerProxy.getAddress();
 
-  console.log("SaleManager deployed to:", await saleManager.getAddress());
+  console.log("SaleManager deployed to:", saleManagerAddress);
 
   // Add SaleManager to Compliance
   const eip712Domain = await compliance.eip712Domain();

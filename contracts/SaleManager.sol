@@ -87,7 +87,7 @@ contract SaleManager is Ownable2StepUpgradeable {
         );
         require(msg.value == _amount * sales[tokenAddress].price, "Not enough funds");
 
-        // Try to mint tokens to user, if it fails, add the amount to unclaimed tokens
+        // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
         try _token.transfer(msg.sender, _amount) {
             // success
         } catch {

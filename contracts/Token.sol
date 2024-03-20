@@ -63,18 +63,11 @@ contract Token is
         super._update(from, to, value);
     }
 
+    function updateStakeValue(address user) external {
+        _updateStakeValue(user);
+    }
+
     function _updateStakeValue(address user) internal {
-        // Instead of locking tokens, we are simply tracking any transfers and treating it like the tokens were staked during that time period.
-        // User has 100 tokens, 1 month passes
-        // User sends 50 tokens to someone else
-        // We treat it as if the user staked 100 tokens for 1 month
-        // And stakeValue[address] += 100 * 1 month or whatever (time since last update)
-        // Now user has 50 tokens
-        // Another 3 months pass
-        // He sends the 50 tokens to someone else
-        // We treat that as if he staked 50 tokens for 3 months
-        // And stakeValue[address] += 50 * 3 months
-        // We are going to keep account of how long people are holding tokens, and for how long. However, we want it to value the tokens more the longer they are held, up to a certain point
         uint256 timeSinceLastUpdate = block.timestamp - lastUpdate[user];
         stakeValue[user] += timeSinceLastUpdate * balanceOf(user);
         lastUpdate[user] = block.timestamp;
