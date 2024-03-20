@@ -71,7 +71,11 @@ const config: HardhatUserConfig = {
     excludeContracts: [],
     src: "./contracts",
   },
-  docgen: {},
+  docgen: {
+    outputDir: "./docs/output",
+    pages: "files",
+    templates: "docs/template",
+  },
   networks: {
     hardhat: {
       accounts: {
