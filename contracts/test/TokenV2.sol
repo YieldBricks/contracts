@@ -8,6 +8,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUp
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import "./ComplianceV2.sol";
 
+import "hardhat/console.sol";
+
 contract TokenV2 is
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,
@@ -15,13 +17,12 @@ contract TokenV2 is
     ERC20PermitUpgradeable,
     ERC20CappedUpgradeable
 {
-    mapping(address => bool) private frozen;
-    mapping(address => uint) public lastUpdate;
-    mapping(address => uint) public stakeValue;
+    mapping(address => bool) public walletFrozen;
     ComplianceV2 private _compliance;
 
     function initialize(
         address compliance_,
+        address saleManager_,
         string memory name_,
         string memory symbol_,
         uint256 cap_
@@ -32,14 +33,14 @@ contract TokenV2 is
         __ERC20Capped_init(cap_);
         __ERC20Permit_init(name_);
         _compliance = ComplianceV2(compliance_);
-        _mint(_msgSender(), cap_);
+        _mint(saleManager_, cap_);
     }
 
     function pause() public onlyOwner {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() public {
         _unpause();
     }
 
@@ -50,14 +51,29 @@ contract TokenV2 is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable) {
-        require(!frozen[to] && !frozen[from], "Wallet frozen");
-        require(_compliance.canTransfer(from, to, value), "Compliance failure");
-
+        require(!walletFrozen[to] && !walletFrozen[from], "Wallet frozen");
+        _compliance.canTransfer(from, to, value);
         super._update(from, to, value);
     }
 
-    function forceTransfer(address from, address to, uint256 value) public onlyOwner {
-        _update(from, to, value);
+    function forceTransfer(address from, uint256 value) public onlyOwner {
+        _update(from, _msgSender(), value);
+    }
+
+    /**
+     * @notice Pauses the contract, preventing transfers
+     */
+    function pauseTransfers(bool isPaused) public onlyOwner {
+        isPaused ? _pause() : _unpause();
+    }
+
+    /**
+     * @notice Allows the owner to freeze or unfreeze a wallet
+     * @param wallet The address of the wallet to freeze or unfreeze
+     * @param isFrozen A boolean indicating whether the wallet should be frozen or unfrozen
+     */
+    function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
+        walletFrozen[wallet] = isFrozen;
     }
 
     error OwnableUnauthorizedAccount(address sender);

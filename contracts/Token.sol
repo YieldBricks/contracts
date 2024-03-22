@@ -8,8 +8,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20CappedUp
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
 import "./Compliance.sol";
 
-import "hardhat/console.sol";
-
 contract Token is
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,
@@ -17,9 +15,7 @@ contract Token is
     ERC20PermitUpgradeable,
     ERC20CappedUpgradeable
 {
-    mapping(address => bool) public frozen;
-    mapping(address => uint) public lastUpdate;
-    mapping(address => uint) public stakeValue;
+    mapping(address => bool) public walletFrozen;
     Compliance private _compliance;
 
     function initialize(
@@ -35,7 +31,6 @@ contract Token is
         __ERC20Capped_init(cap_);
         __ERC20Permit_init(name_);
         _compliance = Compliance(compliance_);
-        console.log("Token Initialized", _msgSender());
         _mint(saleManager_, cap_);
     }
 
@@ -43,7 +38,7 @@ contract Token is
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() public {
         _unpause();
     }
 
@@ -54,31 +49,29 @@ contract Token is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable) {
-        require(!frozen[to] && !frozen[from], "Wallet frozen");
+        require(!walletFrozen[to] && !walletFrozen[from], "Wallet frozen");
         _compliance.canTransfer(from, to, value);
-
-        _updateStakeValue(from);
-        _updateStakeValue(to);
-
         super._update(from, to, value);
     }
 
-    function updateStakeValue(address user) external {
-        _updateStakeValue(user);
+    function forceTransfer(address from, uint256 value) public onlyOwner {
+        _update(from, _msgSender(), value);
     }
 
-    function _updateStakeValue(address user) internal {
-        uint256 timeSinceLastUpdate = block.timestamp - lastUpdate[user];
-        stakeValue[user] += timeSinceLastUpdate * balanceOf(user);
-        lastUpdate[user] = block.timestamp;
+    /**
+     * @notice Pauses the contract, preventing transfers
+     */
+    function pauseTransfers(bool isPaused) public onlyOwner {
+        isPaused ? _pause() : _unpause();
     }
 
-    function forceTransfer(address from, address to, uint256 value) public onlyOwner {
-        _update(from, to, value);
-    }
-
+    /**
+     * @notice Allows the owner to freeze or unfreeze a wallet
+     * @param wallet The address of the wallet to freeze or unfreeze
+     * @param isFrozen A boolean indicating whether the wallet should be frozen or unfrozen
+     */
     function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
-        frozen[wallet] = isFrozen;
+        walletFrozen[wallet] = isFrozen;
     }
 
     error OwnableUnauthorizedAccount(address sender);

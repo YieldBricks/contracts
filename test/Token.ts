@@ -59,6 +59,9 @@ describe("Token", function () {
       await token.connect(multisig).unpause();
       expect(await token.paused()).to.be.false;
 
+      // Non multisig should not be able to unpause
+      await expect(token.connect(alice).unpause()).to.be.revertedWithCustomError(token, "OwnableUnauthorizedAccount");
+
       // Everyone should be able to transfer now
       await expect(token.connect(bob).transfer(alice.address, 1)).to.be.fulfilled;
       await expect(token.connect(alice).transfer(bob.address, 1)).to.be.fulfilled;
@@ -70,6 +73,9 @@ describe("Token", function () {
       expect(await token.frozen(alice.address)).to.be.true;
 
       await expect(token.connect(alice).transfer(bob.address, 1)).to.be.revertedWith("Wallet frozen");
+
+      // Non multisig should not be able to freeze wallet
+      await expect(token.connect(alice).freezeWallet(bob.address, true)).to.be.reverted;
     });
 
     it("Unfreezing of addresses should work", async function () {
@@ -77,5 +83,23 @@ describe("Token", function () {
       await token.connect(multisig).freezeWallet(alice.address, false);
       expect(await token.frozen(alice.address)).to.be.false;
     });
+
+    // it("The updateStakeValue function should update the stake value correctly", async function () {
+    //   const { token, alice } = this.fixture as FixtureReturnType;
+
+    //   // Mint some token to the user
+    //   //const initialBalance = ethers.utils.parseEther("1.0");
+    //   await token.mint(alice.address, 1);
+
+    //   // Wait for some time
+    //   await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    //   // Action
+    //   await token.updateStakeValue(alice.address);
+
+    //   // Assertion
+    //   const updatedStakeValue = await token.stakeValue(alice.address);
+    //   expect(updatedStakeValue).to.be.above(0);
+    // });
   });
 });
