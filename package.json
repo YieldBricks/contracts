@@ -45,7 +45,8 @@
     "ts-generator": "^0.1.1",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "@morenabarboni/sumo": "^2.5.4"
   },
   "files": [
     "contracts"
@@ -79,6 +80,7 @@
     "flatten": "hardhat flatten",
     "docgen": "hardhat docgen",
     "gas": "REPORT_GAS=true hardhat test",
-    "gas:ybr": "REPORT_GAS=true yarn test test/YBR.gas.ts && REPORT_GAS=true DELEGATED=true yarn test test/YBR.gas.ts"
+    "gas:ybr": "REPORT_GAS=true yarn test test/YBR.gas.ts && REPORT_GAS=true DELEGATED=true yarn test test/YBR.gas.ts",
+    "mutate": "sumo test"
   }
 }
