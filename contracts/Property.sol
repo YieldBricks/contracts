@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: See LICENSE in root directory
 pragma solidity ^0.8.20;
 
 /**
@@ -114,7 +114,7 @@ contract Property is
     }
 
     /**
-     * @notice Pauses the contract, preventing transfers
+     * @notice Controls contract pausing, preventing transfers
      */
     function pauseTransfers(bool isPaused) public onlyOwner {
         isPaused ? _pause() : _unpause();
