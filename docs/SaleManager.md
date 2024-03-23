@@ -5,19 +5,19 @@
 ### TokenDeployed
 
 ```solidity
-event TokenDeployed(address token, string name, string symbol, uint256 cap, address compliance)
+event TokenDeployed(address property, string name, string symbol, uint256 cap, address compliance)
 ```
 
 ### SaleCreated
 
 ```solidity
-event SaleCreated(address token, uint256 start, uint256 end, uint256 price)
+event SaleCreated(address property, uint256 start, uint256 end, uint256 price)
 ```
 
 ### SaleModified
 
 ```solidity
-event SaleModified(address token, uint256 start, uint256 end, uint256 price)
+event SaleModified(address property, uint256 start, uint256 end, uint256 price)
 ```
 
 ### ClaimAdded
@@ -93,18 +93,18 @@ function editSale(address _token, uint256 _start, uint256 _end, uint256 _price) 
 ### buyTokens
 
 ```solidity
-function buyTokens(uint256 _amount, contract Token _token) external payable
+function buyTokens(uint256 _amount, address _property) external payable
 ```
 
 ### claimTokens
 
 ```solidity
-function claimTokens(contract Token _token) external
+function claimTokens(address _property) external
 ```
 
 ### cancelPurchase
 
 ```solidity
-function cancelPurchase(contract Token _token) external
+function cancelPurchase(address _property) external
 ```
 
