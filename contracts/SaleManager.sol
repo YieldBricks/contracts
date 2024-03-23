@@ -4,14 +4,12 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import "./Token.sol";
-
-import "hardhat/console.sol";
+import "./Property.sol";
 
 contract SaleManager is Ownable2StepUpgradeable {
-    event TokenDeployed(address indexed token, string name, string symbol, uint256 cap, address compliance);
-    event SaleCreated(address indexed token, uint256 start, uint256 end, uint256 price);
-    event SaleModified(address indexed token, uint256 start, uint256 end, uint256 price);
+    event TokenDeployed(address indexed property, string name, string symbol, uint256 cap, address compliance);
+    event SaleCreated(address indexed property, uint256 start, uint256 end, uint256 price);
+    event SaleModified(address indexed property, uint256 start, uint256 end, uint256 price);
     event ClaimAdded(uint indexed transactionId, address sender, uint amount);
 
     struct Sale {
@@ -20,7 +18,7 @@ contract SaleManager is Ownable2StepUpgradeable {
         uint256 price;
     }
 
-    // Is the sale open for token with given address
+    // Is the sale open for property with given address
     mapping(address => Sale) public sales;
 
     // unclaimed tokens
@@ -42,10 +40,9 @@ contract SaleManager is Ownable2StepUpgradeable {
         uint256 cap_,
         address compliance_
     ) external onlyOwner {
-        console.log("createToken", address(this));
         BeaconProxy tokenProxy = new BeaconProxy(
             address(tokenBeacon),
-            abi.encodeWithSelector(Token.initialize.selector, compliance_, address(this), name_, symbol_, cap_)
+            abi.encodeWithSelector(Property.initialize.selector, compliance_, address(this), name_, symbol_, cap_)
         );
         tokenAddresses.push(address(tokenProxy));
 
@@ -65,55 +62,42 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     // Sale functions
-    function buyTokens(uint256 _amount, Token _token) external payable {
-        address tokenAddress = address(_token);
-
+    function buyTokens(uint256 _amount, address _property) external payable {
         // check that sale is open
-        require(block.timestamp >= sales[tokenAddress].start, "Sale not started");
-        require(block.timestamp <= sales[tokenAddress].end, "Sale ended");
+        require(block.timestamp >= sales[_property].start, "Sale not started");
+        require(block.timestamp <= sales[_property].end, "Sale ended");
 
-        console.log("buyTokens", _amount, _token.balanceOf(address(this)), unclaimedTokensByToken[tokenAddress]);
-        console.log(
-            "buyTokens",
-            _amount + unclaimedTokensByToken[tokenAddress] + _token.balanceOf(address(this)),
-            _token.cap()
-        );
-        console.log("funds", msg.value, _amount, sales[tokenAddress].price);
-
+        Property property = Property(_property);
         // Check there is enough supply left
         require(
-            _amount + unclaimedTokensByToken[tokenAddress] <= _token.balanceOf(address(this)),
+            _amount + unclaimedTokensByToken[_property] <= property.balanceOf(address(this)),
             "Not enough tokens left"
         );
-        require(msg.value == _amount * sales[tokenAddress].price, "Not enough funds");
+        require(msg.value == _amount * sales[_property].price, "Not enough funds");
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
-        try _token.transfer(msg.sender, _amount) {
+        try property.transfer(msg.sender, _amount) {
             // success
         } catch {
-            unclaimedTokensByUserByToken[msg.sender][tokenAddress] += _amount;
-            unclaimedTokensByToken[tokenAddress] += _amount;
+            unclaimedTokensByUserByToken[msg.sender][_property] += _amount;
+            unclaimedTokensByToken[_property] += _amount;
         }
     }
 
-    function claimTokens(Token _token) external {
-        address tokenAddress = address(_token);
-
-        uint256 amount = unclaimedTokensByUserByToken[msg.sender][tokenAddress];
+    function claimTokens(address _property) external {
+        uint256 amount = unclaimedTokensByUserByToken[msg.sender][_property];
         require(amount > 0, "No unclaimed tokens");
-        unclaimedTokensByUserByToken[msg.sender][tokenAddress] = 0;
-        unclaimedTokensByToken[tokenAddress] -= amount;
-        _token.transfer(msg.sender, amount);
+        unclaimedTokensByUserByToken[msg.sender][_property] = 0;
+        unclaimedTokensByToken[_property] -= amount;
+        Property(_property).transfer(msg.sender, amount);
     }
 
     // Will result in a 20% penalty
-    function cancelPurchase(Token _token) external {
-        address tokenAddress = address(_token);
-
-        uint256 amount = unclaimedTokensByUserByToken[msg.sender][tokenAddress];
+    function cancelPurchase(address _property) external {
+        uint256 amount = unclaimedTokensByUserByToken[msg.sender][_property];
         require(amount > 0, "No unclaimed tokens");
-        unclaimedTokensByUserByToken[msg.sender][tokenAddress] = 0;
-        unclaimedTokensByToken[tokenAddress] -= amount;
-        payable(msg.sender).transfer((amount * sales[tokenAddress].price * 80) / 100);
+        unclaimedTokensByUserByToken[msg.sender][_property] = 0;
+        unclaimedTokensByToken[_property] -= amount;
+        payable(msg.sender).transfer((amount * sales[_property].price * 80) / 100);
     }
 }

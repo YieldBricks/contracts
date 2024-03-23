@@ -29,7 +29,7 @@ import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Non
 
 import { Compliance } from "./Compliance.sol";
 
-contract Token is
+contract Property is
     Initializable,
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,

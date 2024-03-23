@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "./../SaleManager.sol";
-import "./../Token.sol";
+import "./../Property.sol";
 
 contract DenialOfService {
     bool called;
@@ -15,14 +15,14 @@ contract DenialOfService {
     }
 
     function buyTokens(address saleManager, address token, uint256 amount) external payable {
-        SaleManager(saleManager).buyTokens{ value: msg.value }(amount, Token(token));
+        SaleManager(saleManager).buyTokens{ value: msg.value }(amount, token);
     }
 
     function claimTokens(address saleManager, address token) external {
-        SaleManager(saleManager).claimTokens(Token(token));
+        SaleManager(saleManager).claimTokens(token);
     }
 
     function cancelPurchase(address saleManager, address token) external {
-        SaleManager(saleManager).cancelPurchase(Token(token));
+        SaleManager(saleManager).cancelPurchase(token);
     }
 }

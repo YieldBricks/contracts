@@ -24,11 +24,11 @@ describe("SaleManager", function () {
     });
 
     it("SaleManager should have correct tokenBeacon", async function () {
-      const { saleManager, tokenBeaconAddress } = this.fixture as FixtureReturnType;
+      const { saleManager, propertyBeaconAddress: tokenBeaconAddress } = this.fixture as FixtureReturnType;
       expect(await saleManager.tokenBeacon()).to.equal(tokenBeaconAddress);
     });
 
-    it("Create token and verify that the entire supply is on the SaleManager", async function () {
+    it("Create property and verify that the entire supply is on the SaleManager", async function () {
       const { saleManager, compliance, saleManagerAddress, complianceAddress, multisig } = this
         .fixture as FixtureReturnType;
 
@@ -43,10 +43,10 @@ describe("SaleManager", function () {
         saleManager,
         "TokenDeployed",
       );
-      const tokenAddress = await saleManager.tokenAddresses(0);
+      const propertyAddress = await saleManager.tokenAddresses(0);
 
-      const token = await ethers.getContractAt("Token", tokenAddress);
-      expect(await token.balanceOf(saleManagerAddress)).to.equal(cap);
+      const property = await ethers.getContractAt("Property", propertyAddress);
+      expect(await property.balanceOf(saleManagerAddress)).to.equal(cap);
     });
 
     // create sale by calling below function on saleManager
@@ -54,74 +54,73 @@ describe("SaleManager", function () {
     //     sales[_token] = Sale(_start, _end, _price);
     //     emit SaleCreated(_token, _start, _end, _price);
     // }
-    it("Create sale for token", async function () {
-      const { saleManager, multisig, saleManagerAddress, tokenBeaconAddress, complianceAddress } = this
-        .fixture as FixtureReturnType;
+    it("Create sale for property", async function () {
+      const { saleManager, multisig } = this.fixture as FixtureReturnType;
 
-      const tokenAddress = await saleManager.tokenAddresses(0);
+      const propertyAddress = await saleManager.tokenAddresses(0);
 
       const startTime = (await time.latest()) + DAY;
       const endTime = (await time.latest()) + 7 * DAY;
       const price = 100;
 
-      await expect(saleManager.connect(multisig).createSale(tokenAddress, startTime, endTime, price)).to.emit(
+      await expect(saleManager.connect(multisig).createSale(propertyAddress, startTime, endTime, price)).to.emit(
         saleManager,
         "SaleCreated",
       );
 
-      const sale = await saleManager.sales(tokenAddress);
+      const sale = await saleManager.sales(propertyAddress);
       expect(sale.start).to.equal(startTime);
       expect(sale.end).to.equal(endTime);
       expect(sale.price).to.equal(price);
     });
 
-    it("User can't buy token before sale starts", async function () {
+    it("User can't buy property before sale starts", async function () {
       const { saleManager, alice } = this.fixture as FixtureReturnType;
 
-      const tokenAddress = await saleManager.tokenAddresses(0);
+      const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await expect(saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 })).to.be.revertedWith(
+      await expect(saleManager.connect(alice).buyTokens(1, propertyAddress, { value: 100 })).to.be.revertedWith(
         "Sale not started",
       );
     });
 
-    it("User can buy token during sale duration", async function () {
+    it("User can buy property during sale duration", async function () {
       const { saleManager, alice } = this.fixture as FixtureReturnType;
 
       await time.increase(DAY);
 
-      const tokenAddress = await saleManager.tokenAddresses(0);
+      const propertyAddress = await saleManager.tokenAddresses(0);
 
-      expect(saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 }));
+      expect(saleManager.connect(alice).buyTokens(1, propertyAddress, { value: 100 }));
     });
 
     it("Denial of Service attempt", async function () {
-      const { saleManager, alice } = this.fixture as FixtureReturnType;
+      const { saleManager } = this.fixture as FixtureReturnType;
 
       const DenialOfService = (await ethers.getContractFactory("DenialOfService")) as DenialOfService__factory;
       const denialOfService = (await DenialOfService.deploy()) as DenialOfService;
 
-      const tokenAddress = await saleManager.tokenAddresses(0);
-      const token = await ethers.getContractAt("Token", tokenAddress);
+      const propertyAddress = await saleManager.tokenAddresses(0);
+      const property = await ethers.getContractAt("Property", propertyAddress);
 
-      expect(denialOfService.buyTokens(saleManager, token, 1, { value: 100 }));
+      expect(denialOfService.buyTokens(saleManager, property, 1, { value: 100 }));
 
-      await expect(await saleManager.unclaimedTokensByToken(tokenAddress)).to.equal(1);
+      await expect(await saleManager.unclaimedTokensByToken(propertyAddress)).to.equal(1);
       await expect(
-        await saleManager.unclaimedTokensByUserByToken(await denialOfService.getAddress(), tokenAddress),
+        await saleManager.unclaimedTokensByUserByToken(await denialOfService.getAddress(), propertyAddress),
       ).to.equal(1);
 
       // Try to claimTokens directly
     });
 
-    it("User can't buy token after sale ends", async function () {
+    it("User can't buy property after sale ends", async function () {
       const { saleManager, alice } = this.fixture as FixtureReturnType;
 
       await time.increase(7 * DAY);
 
-      const tokenAddress = await saleManager.tokenAddresses(0);
+      const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await expect(saleManager.connect(alice).buyTokens(1, tokenAddress, { value: 100 })).to.be.revertedWith(
+      await expect(saleManager.connect(alice).buyTokens(1, propertyAddress, { value: 100 })).to.be.revertedWith(
         "Sale ended",
       );
     });

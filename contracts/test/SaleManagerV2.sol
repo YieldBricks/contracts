@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-import "./TokenV2.sol";
+import { PropertyV2 } from "./PropertyV2.sol";
 
 contract SaleManagerV2 is Ownable2StepUpgradeable {
     event TokenDeployed(address indexed token, string name, string symbol, uint256 cap, address compliance);
@@ -68,37 +68,37 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
     }
 
     // Sale functions
-    function buyTokens(uint256 _amount, TokenV2 _token) external payable {
-        address tokenAddress = address(_token);
-
+    function buyTokens(uint256 _amount, address _token) external payable {
         // check that sale is open
-        require(block.timestamp >= sales[tokenAddress].start, "Sale not started");
-        require(block.timestamp <= sales[tokenAddress].end, "Sale ended");
+        require(block.timestamp >= sales[_token].start, "Sale not started");
+        require(block.timestamp <= sales[_token].end, "Sale ended");
+
+        PropertyV2 token = PropertyV2(_token);
 
         // Check there is enough supply left
         require(
-            _amount + unclaimedTokensByToken[tokenAddress] + _token.totalSupply() <= _token.cap(),
+            _amount + unclaimedTokensByToken[_token] + token.totalSupply() <= token.cap(),
             "Not enough tokens left"
         );
-        require(msg.value == _amount * sales[tokenAddress].price, "Not enough funds");
+        require(msg.value == _amount * sales[_token].price, "Not enough funds");
 
         // Try to mint tokens to user, if it fails, add the amount to unclaimed tokens
-        try _token.transfer(msg.sender, _amount) {
+        try token.transfer(msg.sender, _amount) {
             // success
         } catch {
-            unclaimedTokensByUserByToken[msg.sender][tokenAddress] += _amount;
-            unclaimedTokensByToken[tokenAddress] += _amount;
+            unclaimedTokensByUserByToken[msg.sender][_token] += _amount;
+            unclaimedTokensByToken[_token] += _amount;
         }
     }
 
-    function claimTokens(TokenV2 _token) external {
+    function claimTokens(address _token) external {
         address tokenAddress = address(_token);
 
         uint256 amount = unclaimedTokensByUserByToken[msg.sender][tokenAddress];
         require(amount > 0, "No unclaimed tokens");
         unclaimedTokensByUserByToken[msg.sender][tokenAddress] = 0;
         unclaimedTokensByToken[tokenAddress] -= amount;
-        _token.transfer(msg.sender, amount);
+        PropertyV2(_token).transfer(msg.sender, amount);
     }
 
     // Will result in a 20% penalty

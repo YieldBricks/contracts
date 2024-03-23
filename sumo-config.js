@@ -1,9 +1,9 @@
 module.exports = {
-  skipContracts: ["Compliance.sol", "SaleManager.sol", "Token.sol", "test"],
+  skipContracts: ["Compliance.sol", "SaleManager.sol", "Property.sol", "test"],
   skipTests: [
     "Compliance.ts",
     "SaleManager.ts",
-    "Token.ts",
+    "Property.ts",
     "System.ts",
     "YBR.gas.ts",
     // "YBR.ts",

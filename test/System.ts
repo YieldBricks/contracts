@@ -8,7 +8,7 @@ import { deploySystemFixture } from "./System.fixture";
 describe("System", function () {
   describe("Deployment And Upgrades", function () {
     it("All contracts should have the multisig as owner", async function () {
-      const { compliance, saleManager, tokenBeacon, multisig } = await loadFixture(deploySystemFixture);
+      const { compliance, saleManager, propertyBeacon: tokenBeacon, multisig } = await loadFixture(deploySystemFixture);
       expect(await compliance.owner()).to.equal(multisig.address);
       expect(await saleManager.owner()).to.equal(multisig.address);
       expect(await tokenBeacon.owner()).to.equal(multisig.address);
@@ -16,7 +16,7 @@ describe("System", function () {
 
     // Test upgradeability of all contracts
     it("All contracts should be upgradeable", async function () {
-      const { compliance, saleManager, tokenBeacon, multisig } = await loadFixture(deploySystemFixture);
+      const { compliance, saleManager, propertyBeacon: tokenBeacon, multisig } = await loadFixture(deploySystemFixture);
 
       // Upgrade Compliance
       const ComplianceV2 = await ethers.getContractFactory("ComplianceV2");
@@ -33,11 +33,11 @@ describe("System", function () {
       console.log("SaleManagerV2 deployed to:", await saleManagerV2.getAddress());
 
       // Upgrade TokenBeacon
-      const TokenV2 = await ethers.getContractFactory("TokenV2");
-      const tokenV2 = await upgrades.prepareUpgrade(tokenBeacon, TokenV2);
+      const PropertyV2 = await ethers.getContractFactory("PropertyV2");
+      const propertyV2 = await upgrades.prepareUpgrade(tokenBeacon, PropertyV2);
 
       const tokenBeaconWithMultisig = tokenBeacon.connect(multisig) as Contract;
-      await tokenBeaconWithMultisig.upgradeTo(await tokenV2);
+      await tokenBeaconWithMultisig.upgradeTo(await propertyV2);
 
       expect(await tokenBeacon.owner()).to.equal(multisig.address);
     });

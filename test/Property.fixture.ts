@@ -1,10 +1,10 @@
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-import { Compliance, Compliance__factory, Token, Token__factory } from "../types";
+import { Compliance, Compliance__factory, Property, Property__factory } from "../types";
 import { identityTypedMessage } from "./utils";
 
-export async function deployTokenFixture() {
+export async function deployPropertyFixture() {
   // Contracts are deployed using the first signer/account by default
   const [deployer, multisig, kycSigner, kycSigner2, alice, bob, charlie] = await ethers.getSigners();
 
@@ -55,16 +55,22 @@ export async function deployTokenFixture() {
   console.log("Compliance deployed to:", await compliance.getAddress());
 
   // Deploy Token contract
-  const Token = (await ethers.getContractFactory("Token")) as Token__factory;
-  const tokenProxy = await upgrades.deployProxy(Token, [complianceAddress, alice.address, "TestToken", "TT", 1000000]);
-  const token = Token.attach(await tokenProxy.getAddress()) as Token;
-  const tokenAddress = await token.getAddress();
+  const Property = (await ethers.getContractFactory("Property")) as Property__factory;
+  const propertyProxy = await upgrades.deployProxy(Property, [
+    complianceAddress,
+    alice.address,
+    "TestToken",
+    "TT",
+    1000000,
+  ]);
+  const property = Property.attach(await propertyProxy.getAddress()) as Property;
+  const propertyAddress = await property.getAddress();
 
   return {
     compliance,
     complianceAddress,
-    token,
-    tokenAddress,
+    property,
+    propertyAddress,
     deployer,
     multisig,
     alice,

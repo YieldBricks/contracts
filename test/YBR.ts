@@ -89,6 +89,14 @@ describe("YBR", function () {
       expect(await ybr.owner()).to.equal(multisig.address);
     });
 
+    // Check name and symbol here
+
+    it("Check token name and symbol", async function () {
+      const { ybr } = this.fixture as FixtureReturnType;
+      expect(await ybr.name()).to.equal("YieldBricks");
+      expect(await ybr.symbol()).to.equal("YBR");
+    });
+
     it("Multisig should be able to distribute tokens to Alice and Bob", async function () {
       const { ybr, alice, bob, multisig } = this.fixture as FixtureReturnType;
       await expect(ybr.connect(multisig).transfer(alice.address, 100_000)).to.be.fulfilled;
