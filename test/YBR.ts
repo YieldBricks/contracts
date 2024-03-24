@@ -169,6 +169,12 @@ describe("YBR", function () {
     it("Multisig should be able to unfreeze any wallet ", async function () {
       const { ybr, alice, bob, multisig } = this.fixture as FixtureReturnType;
 
+      // Non-multisig should not be able to unfreeze wallet
+      await expect(ybr.connect(bob).freezeWallet(alice.address, false)).to.be.revertedWithCustomError(
+        ybr,
+        "OwnableUnauthorizedAccount",
+      );
+
       // Multisig should be able to freeze wallet
       await ybr.connect(multisig).freezeWallet(alice.address, false);
       expect(await ybr.walletFrozen(alice.address)).to.be.false;

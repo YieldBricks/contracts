@@ -115,8 +115,8 @@ contract YBR is
     }
 
     /**
-     * @notice Emitted when a wallet is frozen
-     * @param wallet The address of the wallet that was frozen
+     * @notice Error when a wallet is frozen
+     * @param wallet The address of the wallet that is frozen
      */
     error WalletFrozen(address wallet);
 }

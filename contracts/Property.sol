@@ -39,7 +39,7 @@ contract Property is
     ERC20VotesUpgradeable
 {
     /// @notice Mapping to track frozen wallets
-    mapping(address => bool) public walletFrozen;
+    mapping(address wallet => bool isFrozen) public walletFrozen;
     /// @notice The Compliance contract responsible for KYC and AML checks
     Compliance private _compliance;
 
@@ -50,7 +50,8 @@ contract Property is
     }
 
     /**
-     * @dev Initializes the contract by setting a `name`, a `symbol`, a `compliance` contract address, a `saleManager` address,
+     * @dev Initializes the contract by setting a `name`, a `symbol`, a `compliance`
+     * contract address, a `saleManager` address,
      * and a `cap` on the total supply of tokens.
      * @param compliance_ The address of the Compliance contract
      * @param saleManager_ The address of the SaleManager contract
@@ -75,7 +76,8 @@ contract Property is
     }
 
     /**
-     * @dev Overrides for ERC20 inheritance chain, with added functionality for freezing wallets and vote self-delegation
+     * @dev Overrides for ERC20 inheritance chain, with added functionality for
+     * freezing wallets and vote self-delegation
      * @param from The address to transfer from.
      * @param to The address to transfer to.
      * @param value The amount to be transferred.
@@ -85,7 +87,12 @@ contract Property is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable, ERC20VotesUpgradeable) {
-        require(!walletFrozen[to] && !walletFrozen[from], "Wallet frozen");
+        if (walletFrozen[to]) {
+            revert WalletFrozen(to);
+        }
+        if (walletFrozen[from]) {
+            revert WalletFrozen(from);
+        }
         _compliance.canTransfer(from, to, value);
         if (to != address(0) && _numCheckpoints(to) == 0 && delegates(to) == address(0)) {
             _delegate(to, to);
@@ -140,5 +147,15 @@ contract Property is
             revert OwnableUnauthorizedAccount(_msgSender());
         }
         _;
+    }
+
+    /**
+     * @notice Error when a wallet is frozen
+     * @param wallet The address of the wallet that was frozen
+     */
+    error WalletFrozen(address wallet);
+
+    function owner() public view returns (address) {
+        return _compliance.owner();
     }
 }
