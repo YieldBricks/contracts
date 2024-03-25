@@ -29,6 +29,11 @@ import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Non
 
 import { Compliance } from "./Compliance.sol";
 
+/**
+ * @title YieldBricks Property Contract
+ * @notice This contract is for the YieldBricks property, which is a permissioned ERC20 token with additional features.
+ * @dev This contract externally depends on the Compliance for the `canTransfer` function.
+ */
 contract Property is
     Initializable,
     ERC20Upgradeable,
@@ -150,12 +155,15 @@ contract Property is
     }
 
     /**
+     * @notice Passthrough the for owner() function from the Compliance contract, since the owner is inherited
+     */
+    function owner() public view returns (address) {
+        return _compliance.owner();
+    }
+
+    /**
      * @notice Error when a wallet is frozen
      * @param wallet The address of the wallet that was frozen
      */
     error WalletFrozen(address wallet);
-
-    function owner() public view returns (address) {
-        return _compliance.owner();
-    }
 }
