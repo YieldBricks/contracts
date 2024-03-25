@@ -26,6 +26,54 @@ struct Identity {
 }
 ```
 
+### IdentityNotFound
+
+```solidity
+error IdentityNotFound()
+```
+
+### SignerBlacklisted
+
+```solidity
+error SignerBlacklisted()
+```
+
+### KYCExpired
+
+```solidity
+error KYCExpired()
+```
+
+### CountryBlacklisted
+
+```solidity
+error CountryBlacklisted()
+```
+
+### WalletBlacklisted
+
+```solidity
+error WalletBlacklisted()
+```
+
+### InvalidSignature
+
+```solidity
+error InvalidSignature()
+```
+
+### SignatureMismatch
+
+```solidity
+error SignatureMismatch()
+```
+
+### ExpiredSignerKey
+
+```solidity
+error ExpiredSignerKey()
+```
+
 ### initialize
 
 ```solidity

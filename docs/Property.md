@@ -2,6 +2,10 @@
 
 ## Property
 
+This contract is for the YieldBricks property, which is a permissioned ERC20 token with additional features.
+
+_This contract externally depends on the Compliance for the `canTransfer` function._
+
 ### walletFrozen
 
 ```solidity
@@ -24,7 +28,8 @@ Contract constructor - disabled due to upgradeability
 function initialize(address compliance_, address saleManager_, string name_, string symbol_, uint256 cap_) external
 ```
 
-_Initializes the contract by setting a `name`, a `symbol`, a `compliance` contract address, a `saleManager` address,
+_Initializes the contract by setting a `name`, a `symbol`, a `compliance`
+contract address, a `saleManager` address,
 and a `cap` on the total supply of tokens._
 
 #### Parameters
@@ -43,7 +48,8 @@ and a `cap` on the total supply of tokens._
 function _update(address from, address to, uint256 value) internal
 ```
 
-_Overrides for ERC20 inheritance chain, with added functionality for freezing wallets and vote self-delegation_
+_Overrides for ERC20 inheritance chain, with added functionality for
+freezing wallets and vote self-delegation_
 
 #### Parameters
 
@@ -124,4 +130,26 @@ modifier onlyOwner()
 Throws if called by any account other than the owner.
 
 _This modifier inherits the owner from the Compliance contract for central role management_
+
+### owner
+
+```solidity
+function owner() public view returns (address)
+```
+
+Passthrough the for owner() function from the Compliance contract, since the owner is inherited
+
+### WalletFrozen
+
+```solidity
+error WalletFrozen(address wallet)
+```
+
+Error when a wallet is frozen
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| wallet | address | The address of the wallet that was frozen |
 

@@ -96,11 +96,11 @@ Allows the owner to freeze or unfreeze a wallet
 error WalletFrozen(address wallet)
 ```
 
-Emitted when a wallet is frozen
+Error when a wallet is frozen
 
 #### Parameters
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| wallet | address | The address of the wallet that was frozen |
+| wallet | address | The address of the wallet that is frozen |
 
