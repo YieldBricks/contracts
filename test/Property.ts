@@ -199,7 +199,7 @@ describe("Property", function () {
 
     it("Check nonce of an address", async function () {
       const { property, alice } = this.fixture as FixtureReturnType;
-      await expect(property.nonces(alice.address)).to.be.fulfilled;
+      expect(await property.nonces(alice.address)).to.be.equal(0);
     });
   });
 

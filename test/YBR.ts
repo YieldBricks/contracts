@@ -235,6 +235,11 @@ describe("YBR", function () {
       await expect(ybr.connect(charlie).transferFrom(alice.address, bob.address, 1)).to.be.reverted;
     });
 
+    it("Check nonce of an address", async function () {
+      const { ybr, alice } = this.fixture as FixtureReturnType;
+      expect(await ybr.nonces(alice.address)).to.be.equal(0);
+    });
+
     it("Token supply should be correct", async function () {
       const { ybr } = this.fixture as FixtureReturnType;
       expect(await ybr.totalSupply()).to.equal(1_000_000_000);
