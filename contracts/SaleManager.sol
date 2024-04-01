@@ -4,6 +4,8 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Property.sol";
 
 contract SaleManager is Ownable2StepUpgradeable {
@@ -15,24 +17,29 @@ contract SaleManager is Ownable2StepUpgradeable {
     struct Sale {
         uint256 start;
         uint256 end;
-        uint256 price;
+        uint256 price; // Price in USDC
     }
 
     // Is the sale open for property with given address
     mapping(address => Sale) public sales;
 
-    // unclaimed tokens
+    // unclaimed tokens (DoS, canTransfer, other reasons)
     mapping(address => mapping(address => uint256)) public unclaimedTokensByUserByToken;
     mapping(address => uint256) public unclaimedTokensByToken;
 
     address[] public tokenAddresses;
     UpgradeableBeacon public tokenBeacon;
 
+    // Worth 1 USD
+    address[] public stablecoins;
+
     function initialize(address tokenBeacon_, address owner_) public initializer {
         __Ownable2Step_init();
         __Ownable_init(owner_);
         tokenBeacon = UpgradeableBeacon(tokenBeacon_);
     }
+
+    // Admin functions
 
     function createToken(
         string memory name_,
@@ -61,8 +68,14 @@ contract SaleManager is Ownable2StepUpgradeable {
         emit SaleModified(_token, _start, _end, _price);
     }
 
+    // Used to pull funds periodically
+    function withdrawFunds(address _token) external onlyOwner {
+        IERC20 token = IERC20(_token);
+        token.transfer(owner(), token.balanceOf(address(this)));
+    }
+
     // Sale functions
-    function buyTokens(uint256 _amount, address _property) external payable {
+    function buyTokens(uint256 _amount, address _property, uint256 _stablecoin) external payable {
         // check that sale is open
         require(block.timestamp >= sales[_property].start, "Sale not started");
         require(block.timestamp <= sales[_property].end, "Sale ended");
@@ -73,6 +86,8 @@ contract SaleManager is Ownable2StepUpgradeable {
             _amount + unclaimedTokensByToken[_property] <= property.balanceOf(address(this)),
             "Not enough tokens left"
         );
+
+        // Check that the correct amount of stablecoin was sent
         require(msg.value == _amount * sales[_property].price, "Not enough funds");
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
@@ -98,6 +113,7 @@ contract SaleManager is Ownable2StepUpgradeable {
         require(amount > 0, "No unclaimed tokens");
         unclaimedTokensByUserByToken[msg.sender][_property] = 0;
         unclaimedTokensByToken[_property] -= amount;
+        // stablecoins[0] send
         payable(msg.sender).transfer((amount * sales[_property].price * 80) / 100);
     }
 }

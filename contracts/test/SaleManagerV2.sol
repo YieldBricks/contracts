@@ -28,6 +28,8 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
     address[] public tokenAddresses;
     UpgradeableBeacon public tokenBeacon;
 
+    address[] public stablecoins;
+
     function initialize(address tokenBeacon_, address owner_) public initializer {
         __Ownable2Step_init();
         __Ownable_init(owner_);
