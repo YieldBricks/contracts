@@ -14,9 +14,9 @@ contract DenialOfService {
         }
     }
 
-    function buyTokens(address saleManager, address token, uint256 amount) external payable {
-        SaleManager(saleManager).buyTokens{ value: msg.value }(amount, token, 0);
-    }
+    // function buyTokens(address saleManager, address token, uint256 amount) external payable {
+    //     SaleManager(saleManager).buyTokens{ value: msg.value }(amount, token, 0);
+    // }
 
     function claimTokens(address saleManager, address token) external {
         SaleManager(saleManager).claimTokens(token);

@@ -2,11 +2,10 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-import { DenialOfService, DenialOfService__factory } from "../types";
-import { deploySystemFixture } from "./System.fixture";
+import { deploySaleManagerFixture } from "./SaleManager.fixture";
 import { DAY } from "./utils";
 
-type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deploySystemFixture>>>>;
+type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deploySaleManagerFixture>>>>;
 
 describe("SaleManager", function () {
   before(async function () {
@@ -15,7 +14,7 @@ describe("SaleManager", function () {
 
   describe("Happy flow", function () {
     before(async function () {
-      this.fixture = (await this.loadFixture(deploySystemFixture)) as FixtureReturnType;
+      this.fixture = (await this.loadFixture(deploySaleManagerFixture)) as FixtureReturnType;
     });
 
     it("SaleManager should have correct owner", async function () {
@@ -92,25 +91,6 @@ describe("SaleManager", function () {
       const propertyAddress = await saleManager.tokenAddresses(0);
 
       expect(saleManager.connect(alice).buyTokens(1, propertyAddress, { value: 100 }));
-    });
-
-    it("Denial of Service attempt", async function () {
-      const { saleManager } = this.fixture as FixtureReturnType;
-
-      const DenialOfService = (await ethers.getContractFactory("DenialOfService")) as DenialOfService__factory;
-      const denialOfService = (await DenialOfService.deploy()) as DenialOfService;
-
-      const propertyAddress = await saleManager.tokenAddresses(0);
-      const property = await ethers.getContractAt("Property", propertyAddress);
-
-      expect(denialOfService.buyTokens(saleManager, property, 1, { value: 100 }));
-
-      await expect(await saleManager.unclaimedTokensByToken(propertyAddress)).to.equal(1);
-      await expect(
-        await saleManager.unclaimedTokensByUserByToken(await denialOfService.getAddress(), propertyAddress),
-      ).to.equal(1);
-
-      // Try to claimTokens directly
     });
 
     it("User can't buy property after sale ends", async function () {

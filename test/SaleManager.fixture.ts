@@ -1,10 +1,18 @@
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-import { Compliance, Compliance__factory, Property__factory, SaleManager, SaleManager__factory } from "../types";
-import { ZERO_ADDRESS, identityTypedMessage } from "./utils";
+import {
+  Compliance,
+  Compliance__factory,
+  Property__factory,
+  SaleManager,
+  SaleManager__factory,
+  YBR,
+  YBR__factory,
+} from "../types";
+import { identityTypedMessage } from "./utils";
 
-export async function deploySystemFixture() {
+export async function deploySaleManagerFixture() {
   // Contracts are deployed using the first signer/account by default
   const [deployer, multisig, kycSigner, kycSigner2, alice, bob, charlie, eve] = await ethers.getSigners();
 
@@ -23,12 +31,17 @@ export async function deploySystemFixture() {
 
   console.log("TokenBeacon deployed to:", propertyBeaconAddress);
 
+  const YBR = (await ethers.getContractFactory("YBR")) as YBR__factory;
+  const ybrProxy = await upgrades.deployProxy(YBR, [multisig.address]);
+  const ybr = YBR.attach(await ybrProxy.getAddress()) as YBR;
+  const ybrAddress = await ybrProxy.getAddress();
+
   // Deploy SaleManager contract
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
   const saleManagerProxy = await upgrades.deployProxy(SaleManager, [
     propertyBeaconAddress,
     multisig.address,
-    ZERO_ADDRESS,
+    ybrAddress,
   ]);
   const saleManager = SaleManager.attach(await saleManagerProxy.getAddress()) as SaleManager;
   const saleManagerAddress = await saleManagerProxy.getAddress();
@@ -63,6 +76,8 @@ export async function deploySystemFixture() {
     saleManagerAddress,
     propertyBeacon,
     propertyBeaconAddress,
+    ybr,
+    ybrAddress,
     deployer,
     multisig,
     alice,
