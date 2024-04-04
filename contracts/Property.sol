@@ -58,26 +58,26 @@ contract Property is
      * @dev Initializes the contract by setting a `name`, a `symbol`, a `compliance`
      * contract address, a `saleManager` address,
      * and a `cap` on the total supply of tokens.
-     * @param compliance_ The address of the Compliance contract
-     * @param saleManager_ The address of the SaleManager contract
-     * @param name_ The name of the token
-     * @param symbol_ The symbol of the token
-     * @param cap_ The cap on the total supply of tokens
+     * @param compliance The address of the Compliance contract
+     * @param saleManager The address of the SaleManager contract
+     * @param name The name of the token
+     * @param symbol The symbol of the token
+     * @param cap The cap on the total supply of tokens
      */
     function initialize(
-        address compliance_,
-        address saleManager_,
-        string memory name_,
-        string memory symbol_,
-        uint256 cap_
+        address compliance,
+        address saleManager,
+        string memory name,
+        string memory symbol,
+        uint256 cap
     ) external initializer {
-        __ERC20_init(name_, symbol_);
+        __ERC20_init(name, symbol);
         __ERC20Burnable_init();
         __ERC20Pausable_init();
-        __ERC20Capped_init(cap_);
-        __ERC20Permit_init(name_);
-        _compliance = Compliance(compliance_);
-        _mint(saleManager_, cap_);
+        __ERC20Capped_init(cap);
+        __ERC20Permit_init(name);
+        _compliance = Compliance(compliance);
+        _mint(saleManager, cap);
     }
 
     /**
@@ -93,10 +93,10 @@ contract Property is
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable, ERC20VotesUpgradeable) {
         if (walletFrozen[to]) {
-            revert WalletFrozen(to);
+            revert FrozenWalletError(to);
         }
         if (walletFrozen[from]) {
-            revert WalletFrozen(from);
+            revert FrozenWalletError(from);
         }
         _compliance.canTransfer(from, to, value);
         if (to != address(0) && _numCheckpoints(to) == 0 && delegates(to) == address(0)) {
@@ -130,6 +130,7 @@ contract Property is
      */
     function pauseTransfers(bool isPaused) public onlyOwner {
         isPaused ? _pause() : _unpause();
+        emit PauseTransfers(isPaused);
     }
 
     /**
@@ -139,6 +140,7 @@ contract Property is
      */
     function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
         walletFrozen[wallet] = isFrozen;
+        emit WalletFrozen(wallet, isFrozen);
     }
 
     error OwnableUnauthorizedAccount(address sender);
@@ -165,5 +167,8 @@ contract Property is
      * @notice Error when a wallet is frozen
      * @param wallet The address of the wallet that was frozen
      */
-    error WalletFrozen(address wallet);
+    error FrozenWalletError(address wallet);
+
+    event WalletFrozen(address wallet, bool isFrozen);
+    event PauseTransfers(bool isPaused);
 }

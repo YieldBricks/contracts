@@ -26,6 +26,7 @@ import {
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
+import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 /**
  * @title YieldBricks (YBR) Token Contract
@@ -81,10 +82,10 @@ contract YBR is
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable, ERC20VotesUpgradeable) {
         if (walletFrozen[to]) {
-            revert WalletFrozen(to);
+            revert FrozenWalletError(to);
         }
         if (walletFrozen[from]) {
-            revert WalletFrozen(from);
+            revert FrozenWalletError(from);
         }
 
         super._update(from, to, value);
@@ -103,6 +104,7 @@ contract YBR is
      */
     function pauseTransfers(bool isPaused) public onlyOwner {
         isPaused ? _pause() : _unpause();
+        emit PauseTransfers(isPaused);
     }
 
     /**
@@ -112,11 +114,35 @@ contract YBR is
      */
     function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
         walletFrozen[wallet] = isFrozen;
+        emit WalletFrozen(wallet, isFrozen);
+    }
+
+    /**
+     * @notice Returns the current time as a uint48
+     * @dev Override for ERC20Votes clock functionality
+     */
+    function clock() public view override returns (uint48) {
+        return Time.timestamp();
+    }
+
+    /**
+     * @notice Returns the EIP6372 clock mode
+     * @dev Override for ERC20Votes clock functionality
+     */
+    function CLOCK_MODE() public view override returns (string memory) {
+        if (clock() != Time.timestamp()) {
+            revert ERC6372InconsistentClock();
+        }
+        return "mode=timestamp";
     }
 
     /**
      * @notice Error when a wallet is frozen
      * @param wallet The address of the wallet that is frozen
      */
-    error WalletFrozen(address wallet);
+    error FrozenWalletError(address wallet);
+
+    // Events
+    event WalletFrozen(address wallet, bool isFrozen);
+    event PauseTransfers(bool isPaused);
 }

@@ -83,6 +83,10 @@ contract SaleManager is Ownable2StepUpgradeable {
         oracle = IOracle(_oracle);
     }
 
+    function _verifyTier(address _property, address _user, uint256 _amount) internal {
+        //
+    }
+
     // Sale functions
     function buyTokens(uint256 _amount, address _property) external payable {
         // check that sale is open

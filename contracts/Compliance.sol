@@ -59,8 +59,6 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         Identity memory identityFrom = identities[_from];
         Identity memory identityTo = identities[_to];
 
-        console.log("canTransferDebug", msg.sender, identityTo.wallet, _to);
-
         if (_from != address(0)) {
             if (identityFrom.wallet == address(0)) {
                 revert IdentityNotFound();

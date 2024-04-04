@@ -48,11 +48,6 @@ describe("SaleManager", function () {
       expect(await property.balanceOf(saleManagerAddress)).to.equal(cap);
     });
 
-    // create sale by calling below function on saleManager
-    //    function createSale(address _token, uint256 _start, uint256 _end, uint256 _price) external onlyOwner {
-    //     sales[_token] = Sale(_start, _end, _price);
-    //     emit SaleCreated(_token, _start, _end, _price);
-    // }
     it("Create sale for property", async function () {
       const { saleManager, multisig } = this.fixture as FixtureReturnType;
 
@@ -60,7 +55,7 @@ describe("SaleManager", function () {
 
       const startTime = (await time.latest()) + DAY;
       const endTime = (await time.latest()) + 7 * DAY;
-      const price = 100;
+      const price = 100; // Price in USD
 
       await expect(saleManager.connect(multisig).createSale(propertyAddress, startTime, endTime, price)).to.emit(
         saleManager,
