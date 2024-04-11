@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: See LICENSE in root directory
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
-import "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
-
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "../Property.sol";
-import "../IOracle.sol";
-import "../YBR.sol";
+import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
+import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Property } from "../Property.sol";
+import { IOracle } from "../Oracle.sol";
+import { YBR } from "../YBR.sol";
 
 contract SaleManagerV2 is Ownable2StepUpgradeable {
     event TokenDeployed(address indexed property, string name, string symbol, uint256 cap, address compliance);
@@ -26,8 +25,13 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
     mapping(address => Sale) public sales;
 
     // unclaimed tokens (DoS, canTransfer, other reasons)
-    mapping(address user => mapping(address property => uint256 unclaimed)) public unclaimedPropertiesByUser;
-    mapping(address property => uint256 unclaimed) public unclaimedProperties;
+    mapping(address user => mapping(address property => Unclaimed unclaimed)) public unclaimedByUser;
+    mapping(address property => uint256 unclaimedProperties) public unclaimedProperties;
+
+    struct Unclaimed {
+        uint256 unclaimedProperties;
+        uint256 ybrAmount;
+    }
 
     address[] public tokenAddresses;
     UpgradeableBeacon public tokenBeacon;
@@ -78,7 +82,6 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
     }
 
     // Admin functions for YBR and Oracle
-
     function setOracle(address _oracle) external onlyOwner {
         oracle = IOracle(_oracle);
     }
@@ -107,27 +110,31 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
         try property.transfer(msg.sender, _amount) {
             // success
         } catch {
-            unclaimedPropertiesByUser[msg.sender][_property] += _amount;
+            Unclaimed memory unclaimed = unclaimedByUser[msg.sender][_property];
+            unclaimed.unclaimedProperties += _amount;
+            unclaimed.ybrAmount += totalCost;
             unclaimedProperties[_property] += _amount;
         }
     }
 
     function claimTokens(address _property) external {
-        uint256 amount = unclaimedPropertiesByUser[msg.sender][_property];
-        require(amount > 0, "No unclaimed tokens");
-        unclaimedPropertiesByUser[msg.sender][_property] = 0;
+        Unclaimed memory unclaimed = unclaimedByUser[msg.sender][_property];
+        require(unclaimed.unclaimedProperties > 0, "No unclaimed tokens");
+        uint256 amount = unclaimed.unclaimedProperties;
+        unclaimed.unclaimedProperties = 0;
+        unclaimed.ybrAmount = 0;
         unclaimedProperties[_property] -= amount;
         Property(_property).transfer(msg.sender, amount);
     }
 
     // Will result in a 20% penalty
     function cancelPurchase(address _property) external {
-        uint256 amount = unclaimedPropertiesByUser[msg.sender][_property];
-        require(amount > 0, "No unclaimed tokens");
-        unclaimedPropertiesByUser[msg.sender][_property] = 0;
-        unclaimedProperties[_property] -= amount;
-        // Send YBR back to user
-        uint256 returnAmount = ((amount * sales[_property].price) * oracle.getYBRPrice() * 4) / 5;
+        Unclaimed memory unclaimed = unclaimedByUser[msg.sender][_property];
+        require(unclaimed.unclaimedProperties > 0, "No unclaimed tokens");
+        uint256 returnAmount = (unclaimed.ybrAmount * 4) / 5;
+        unclaimedProperties[_property] -= unclaimed.unclaimedProperties;
+        unclaimed.unclaimedProperties = 0;
+        unclaimed.ybrAmount = 0;
         ybr.transfer(msg.sender, returnAmount);
     }
 }

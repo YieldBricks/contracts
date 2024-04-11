@@ -94,12 +94,12 @@ describe("Property", function () {
       // Alice should not be able to transfer tokens
       await expect(property.connect(alice).transfer(bob.address, 1)).to.be.revertedWithCustomError(
         property,
-        "WalletFrozen",
+        "FrozenWalletError",
       );
       // Alice should not be able to receive tokens
       await expect(property.connect(bob).transfer(alice.address, 1)).to.be.revertedWithCustomError(
         property,
-        "WalletFrozen",
+        "FrozenWalletError",
       );
 
       // Bob should be able to transfer tokens

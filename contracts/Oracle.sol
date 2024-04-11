@@ -5,7 +5,7 @@ interface IOracle {
     function getYBRPrice() external view returns (uint256);
 }
 
-contract Oracle is IOracle {
+contract MockOracle is IOracle {
     uint256 public price;
 
     function setPrice(uint256 _price) external {

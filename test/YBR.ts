@@ -158,9 +158,9 @@ describe("YBR", function () {
       expect(await ybr.walletFrozen(alice.address)).to.be.true;
 
       // Alice should not be able to transfer tokens
-      await expect(ybr.connect(alice).transfer(bob.address, 1)).to.be.revertedWithCustomError(ybr, "WalletFrozen");
+      await expect(ybr.connect(alice).transfer(bob.address, 1)).to.be.revertedWithCustomError(ybr, "FrozenWalletError");
       // Alice should not be able to receive tokens
-      await expect(ybr.connect(bob).transfer(alice.address, 1)).to.be.revertedWithCustomError(ybr, "WalletFrozen");
+      await expect(ybr.connect(bob).transfer(alice.address, 1)).to.be.revertedWithCustomError(ybr, "FrozenWalletError");
 
       // Bob should be able to transfer tokens
       await expect(ybr.connect(bob).transfer(multisig.address, 1)).to.be.fulfilled;

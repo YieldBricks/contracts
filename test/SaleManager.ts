@@ -27,6 +27,14 @@ describe("SaleManager", function () {
       expect(await saleManager.tokenBeacon()).to.equal(tokenBeaconAddress);
     });
 
+    it("Oracle should be able to set and return price", async function () {
+      const { mockOracle } = this.fixture as FixtureReturnType;
+
+      const price = 100;
+      await mockOracle.setPrice(price);
+      expect(await mockOracle.getYBRPrice()).to.equal(price);
+    });
+
     it("Create property and verify that the entire supply is on the SaleManager", async function () {
       const { saleManager, compliance, saleManagerAddress, complianceAddress, multisig } = this
         .fixture as FixtureReturnType;

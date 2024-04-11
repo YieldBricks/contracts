@@ -4,6 +4,8 @@ import { ethers, upgrades } from "hardhat";
 import {
   Compliance,
   Compliance__factory,
+  MockOracle,
+  MockOracle__factory,
   Property__factory,
   SaleManager,
   SaleManager__factory,
@@ -46,6 +48,11 @@ export async function deploySaleManagerFixture() {
   const saleManager = SaleManager.attach(await saleManagerProxy.getAddress()) as SaleManager;
   const saleManagerAddress = await saleManagerProxy.getAddress();
 
+  const MockOracle = (await ethers.getContractFactory("MockOracle")) as MockOracle__factory;
+  const mockOracle = (await MockOracle.deploy()) as MockOracle;
+  await mockOracle.waitForDeployment();
+  const mockOracleAddress = mockOracle.getAddress();
+
   console.log("SaleManager deployed to:", saleManagerAddress);
 
   // Add SaleManager to Compliance
@@ -78,6 +85,8 @@ export async function deploySaleManagerFixture() {
     propertyBeaconAddress,
     ybr,
     ybrAddress,
+    mockOracle,
+    mockOracleAddress,
     deployer,
     multisig,
     alice,
