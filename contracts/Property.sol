@@ -92,12 +92,6 @@ contract Property is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable, ERC20VotesUpgradeable) {
-        if (walletFrozen[to]) {
-            revert FrozenWalletError(to);
-        }
-        if (walletFrozen[from]) {
-            revert FrozenWalletError(from);
-        }
         _compliance.canTransfer(from, to, value);
         if (to != address(0) && _numCheckpoints(to) == 0 && delegates(to) == address(0)) {
             _delegate(to, to);
@@ -111,36 +105,6 @@ contract Property is
      */
     function nonces(address owner) public view override(ERC20PermitUpgradeable, NoncesUpgradeable) returns (uint256) {
         return super.nonces(owner);
-    }
-
-    /**
-     * @notice Allows the owner to force a transfer of tokens from one address to the owner
-     * @dev The closed nature of the system (only KYCed accounts can transfer) means that even if
-     * a user leaks their private key, a malicious actor cannot send the tokens to an anonymous wallet,
-     * so recovery conditions are very limited, and fully covered by our legal compliance model.
-     * @param from The address to transfer from
-     * @param value The amount to transfer
-     */
-    function forceTransfer(address from, uint256 value) public onlyOwner {
-        _update(from, _msgSender(), value);
-    }
-
-    /**
-     * @notice Controls contract pausing, preventing transfers
-     */
-    function pauseTransfers(bool isPaused) public onlyOwner {
-        isPaused ? _pause() : _unpause();
-        emit PauseTransfers(isPaused);
-    }
-
-    /**
-     * @notice Allows the owner to freeze or unfreeze a wallet
-     * @param wallet The address of the wallet to freeze or unfreeze
-     * @param isFrozen A boolean indicating whether the wallet should be frozen or unfrozen
-     */
-    function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
-        walletFrozen[wallet] = isFrozen;
-        emit WalletFrozen(wallet, isFrozen);
     }
 
     error OwnableUnauthorizedAccount(address sender);
@@ -162,13 +126,4 @@ contract Property is
     function owner() public view returns (address) {
         return _compliance.owner();
     }
-
-    /**
-     * @notice Error when a wallet is frozen
-     * @param wallet The address of the wallet that was frozen
-     */
-    error FrozenWalletError(address wallet);
-
-    event WalletFrozen(address wallet, bool isFrozen);
-    event PauseTransfers(bool isPaused);
 }

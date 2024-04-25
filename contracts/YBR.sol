@@ -81,13 +81,6 @@ contract YBR is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable, ERC20VotesUpgradeable) {
-        if (walletFrozen[to]) {
-            revert FrozenWalletError(to);
-        }
-        if (walletFrozen[from]) {
-            revert FrozenWalletError(from);
-        }
-
         super._update(from, to, value);
     }
 
@@ -97,24 +90,6 @@ contract YBR is
      */
     function nonces(address owner) public view override(ERC20PermitUpgradeable, NoncesUpgradeable) returns (uint256) {
         return super.nonces(owner);
-    }
-
-    /**
-     * @notice Pauses the contract, preventing transfers
-     */
-    function pauseTransfers(bool isPaused) public onlyOwner {
-        isPaused ? _pause() : _unpause();
-        emit PauseTransfers(isPaused);
-    }
-
-    /**
-     * @notice Allows the owner to freeze or unfreeze a wallet
-     * @param wallet The address of the wallet to freeze or unfreeze
-     * @param isFrozen A boolean indicating whether the wallet should be frozen or unfrozen
-     */
-    function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
-        walletFrozen[wallet] = isFrozen;
-        emit WalletFrozen(wallet, isFrozen);
     }
 
     /**
@@ -135,14 +110,4 @@ contract YBR is
         }
         return "mode=timestamp";
     }
-
-    /**
-     * @notice Error when a wallet is frozen
-     * @param wallet The address of the wallet that is frozen
-     */
-    error FrozenWalletError(address wallet);
-
-    // Events
-    event WalletFrozen(address wallet, bool isFrozen);
-    event PauseTransfers(bool isPaused);
 }
