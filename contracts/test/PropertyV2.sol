@@ -24,11 +24,17 @@ import {
 import {
     ERC20PermitUpgradeable
 } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20PermitUpgradeable.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
 
 import { ComplianceV2 } from "./ComplianceV2.sol";
 
+/**
+ * @title YieldBricks Property Contract
+ * @notice This contract is for the YieldBricks property, which is a permissioned ERC20 token with additional features.
+ * @dev This contract externally depends on the Compliance for the `canTransfer` function.
+ */
 contract PropertyV2 is
     Initializable,
     ERC20Upgradeable,
@@ -39,9 +45,20 @@ contract PropertyV2 is
     ERC20VotesUpgradeable
 {
     /// @notice Mapping to track frozen wallets
-    mapping(address => bool) public walletFrozen;
+    mapping(address wallet => bool isFrozen) public walletFrozen;
     /// @notice The Compliance contract responsible for KYC and AML checks
     ComplianceV2 private _compliance;
+
+    /// @notice Mapping to track how many claims a user has made
+    mapping(address user => uint256 nonce) public claimNonce;
+    /// @notice Array of claims made by the ownerha
+    Yield[] public claims;
+
+    struct Yield {
+        address rewardToken;
+        uint256 amount;
+        uint256 timestamp;
+    }
 
     /// @notice Contract constructor - disabled due to upgradeability
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -50,32 +67,34 @@ contract PropertyV2 is
     }
 
     /**
-     * @dev Initializes the contract by setting a `name`, a `symbol`, a `compliance` contract address, a `saleManager` address,
+     * @dev Initializes the contract by setting a `name`, a `symbol`, a `compliance`
+     * contract address, a `saleManager` address,
      * and a `cap` on the total supply of tokens.
-     * @param compliance_ The address of the Compliance contract
-     * @param saleManager_ The address of the SaleManager contract
-     * @param name_ The name of the token
-     * @param symbol_ The symbol of the token
-     * @param cap_ The cap on the total supply of tokens
+     * @param compliance The address of the Compliance contract
+     * @param saleManager The address of the SaleManager contract
+     * @param name The name of the token
+     * @param symbol The symbol of the token
+     * @param cap The cap on the total supply of tokens
      */
     function initialize(
-        address compliance_,
-        address saleManager_,
-        string memory name_,
-        string memory symbol_,
-        uint256 cap_
+        address compliance,
+        address saleManager,
+        string memory name,
+        string memory symbol,
+        uint256 cap
     ) external initializer {
-        __ERC20_init(name_, symbol_);
+        __ERC20_init(name, symbol);
         __ERC20Burnable_init();
         __ERC20Pausable_init();
-        __ERC20Capped_init(cap_);
-        __ERC20Permit_init(name_);
-        _compliance = ComplianceV2(compliance_);
-        _mint(saleManager_, cap_);
+        __ERC20Capped_init(cap);
+        __ERC20Permit_init(name);
+        _compliance = ComplianceV2(compliance);
+        _mint(saleManager, cap);
     }
 
     /**
-     * @dev Overrides for ERC20 inheritance chain, with added functionality for freezing wallets and vote self-delegation
+     * @dev Overrides for ERC20 inheritance chain, with added functionality for
+     * freezing wallets and vote self-delegation
      * @param from The address to transfer from.
      * @param to The address to transfer to.
      * @param value The amount to be transferred.
@@ -85,8 +104,13 @@ contract PropertyV2 is
         address to,
         uint256 value
     ) internal override(ERC20Upgradeable, ERC20PausableUpgradeable, ERC20CappedUpgradeable, ERC20VotesUpgradeable) {
-        require(!walletFrozen[to] && !walletFrozen[from], "Wallet frozen");
-        _compliance.canTransfer(from, to, value);
+        if (walletFrozen[to]) {
+            revert FrozenWalletError(to);
+        }
+        if (walletFrozen[from]) {
+            revert FrozenWalletError(from);
+        }
+        _compliance.canTransfer(from, to);
         if (to != address(0) && _numCheckpoints(to) == 0 && delegates(to) == address(0)) {
             _delegate(to, to);
         }
@@ -95,10 +119,10 @@ contract PropertyV2 is
 
     /**
      * @notice Override the nonces function to return the nonce for a given owner
-     * @param owner The address of the token holder
+     * @param owner_ The address of the token holder
      */
-    function nonces(address owner) public view override(ERC20PermitUpgradeable, NoncesUpgradeable) returns (uint256) {
-        return super.nonces(owner);
+    function nonces(address owner_) public view override(ERC20PermitUpgradeable, NoncesUpgradeable) returns (uint256) {
+        return super.nonces(owner_);
     }
 
     /**
@@ -114,10 +138,52 @@ contract PropertyV2 is
     }
 
     /**
-     * @notice Pauses the contract, preventing transfers
+     * @notice Controls contract pausing, preventing transfers
      */
     function pauseTransfers(bool isPaused) public onlyOwner {
         isPaused ? _pause() : _unpause();
+        emit PauseTransfers(isPaused);
+    }
+
+    /**
+     * @notice Allows the owner to add a claim to the contract
+     * @param rewardToken The address of the reward token
+     * @param amount The amount of the reward token
+     * @param timestamp The timestamp of the claim
+     */
+    function addYield(address rewardToken, uint256 amount, uint256 timestamp) public onlyOwner {
+        // Requires transfering the reward token to this contract in sufficient amount
+        IERC20(rewardToken).transferFrom(_msgSender(), address(this), amount);
+        claims.push(Yield(rewardToken, amount, timestamp));
+        emit YieldAdded(claims.length - 1, rewardToken, amount);
+    }
+
+    /**
+     * @notice Allows Property token holders to collect their property yield
+     * @dev This function is gas-optimized to allow for a large number of claims to be processed
+     * in a single transaction. The owner can add claims to the contract, and then users can collect
+     * their claims in batches of X at a time. The claim amount is proportional to the user's holdings
+     * at the time of the claim.
+     */
+    function collectYields() external {
+        uint256 lastClaimed = claimNonce[_msgSender()];
+        uint256 topClaimToProcess = claims.length < lastClaimed + 10 ? claims.length : lastClaimed + 10;
+
+        for (uint256 i = lastClaimed; i < topClaimToProcess; i++) {
+            Yield storage claim = claims[i];
+
+            // Calculate the claim amount
+            uint256 holdings = getPastVotes(_msgSender(), claim.timestamp);
+            uint256 totalSupply = getPastTotalSupply(claim.timestamp);
+            uint256 claimAmount = (claim.amount * holdings) / totalSupply;
+
+            // Transfer the claim amount to the user
+            IERC20(claim.rewardToken).transfer(_msgSender(), claimAmount);
+            emit YieldCollected(_msgSender(), claim.rewardToken, claimAmount);
+        }
+
+        // Update the nonce
+        claimNonce[_msgSender()] = topClaimToProcess;
     }
 
     /**
@@ -127,9 +193,8 @@ contract PropertyV2 is
      */
     function freezeWallet(address wallet, bool isFrozen) public onlyOwner {
         walletFrozen[wallet] = isFrozen;
+        emit WalletFrozen(wallet, isFrozen);
     }
-
-    error OwnableUnauthorizedAccount(address sender);
 
     /**
      * @notice Throws if called by any account other than the owner.
@@ -141,4 +206,23 @@ contract PropertyV2 is
         }
         _;
     }
+
+    /**
+     * @notice Passthrough the for owner() function from the Compliance contract, since the owner is inherited
+     */
+    function owner() public view returns (address) {
+        return _compliance.owner();
+    }
+
+    /**
+     * @notice Error when a wallet is frozen
+     * @param wallet The address of the wallet that was frozen
+     */
+    error FrozenWalletError(address wallet);
+    error OwnableUnauthorizedAccount(address sender);
+
+    event WalletFrozen(address wallet, bool isFrozen);
+    event PauseTransfers(bool isPaused);
+    event YieldAdded(uint256 indexed transactionId, address rewardToken, uint256 amount);
+    event YieldCollected(address indexed user, address rewardToken, uint256 amount);
 }

@@ -1,4 +1,4 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 
 import { deployPropertyFixture } from "./Property.fixture";
@@ -30,8 +30,8 @@ describe("Property", function () {
       expect(await compliance.owner()).to.equal(multisig.address);
     });
 
-    it("Send tokens from deploy to Alice and Bob", async function () {
-      const { property: property, alice, bob, charlie } = this.fixture as FixtureReturnType;
+    it("Send tokens from Alice to Bob and Charlie", async function () {
+      const { property, alice, bob, charlie } = this.fixture as FixtureReturnType;
       await property.connect(alice).transfer(bob.address, 500000);
       await property.connect(alice).transfer(charlie.address, 500000);
       expect(await property.balanceOf(bob.address)).to.equal(500000);
@@ -213,122 +213,77 @@ describe("Property", function () {
       expect(await property.owner()).to.equal(multisig.address);
     });
 
-    // it("Multisig should have all the tokens initially", async function () {
-    //   const { ybr, multisig } = this.fixture as FixtureReturnType;
-    //   expect(await ybr.balanceOf(multisig.address)).to.equal(1_000_000_000);
-    // });
+    it("Alice should have all the tokens initially", async function () {
+      const { property, alice } = this.fixture as FixtureReturnType;
+      expect(await property.balanceOf(alice.address)).to.equal(1_000_000);
+    });
 
-    // it("Multisig should have no votes prior to delegating", async function () {
-    //   const { ybr, multisig } = this.fixture as FixtureReturnType;
-    //   expect(await ybr.getVotes(multisig.address)).to.equal(0);
-    // });
+    it("Alice should have votes predeleageted", async function () {
+      const { property, alice } = this.fixture as FixtureReturnType;
+      expect(await property.getVotes(alice.address)).to.equal(1_000_000);
+    });
 
-    // it("Multisig should be able to delegate votes to itself", async function () {
-    //   const { ybr, multisig } = this.fixture as FixtureReturnType;
-    //   await ybr.connect(multisig).delegate(multisig.address);
-    //   expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
-    // });
+    it("Votes should automatically delegate when transferring to other users", async function () {
+      const { property, alice, bob, charlie } = this.fixture as FixtureReturnType;
+      await property.connect(alice).transfer(bob.address, 500_000);
+      await property.connect(alice).transfer(charlie.address, 500_000);
+      expect(await property.balanceOf(bob.address)).to.equal(500_000);
+      expect(await property.balanceOf(charlie.address)).to.equal(500_000);
+      expect(await property.getVotes(bob.address)).to.equal(500_000);
+      expect(await property.getVotes(charlie.address)).to.equal(500_000);
+    });
 
-    // it("Votes disappear when transferred to non-delegated address", async function () {
-    //   const { ybr, multisig, alice } = this.fixture as FixtureReturnType;
-    //   await ybr.connect(multisig).transfer(alice.address, 100_000_000);
-    //   expect(await ybr.getVotes(multisig.address)).to.equal(900_000_000);
-    //   expect(await ybr.getVotes(alice.address)).to.equal(0);
-    // });
-
-    // it("Votes reappear when transferred back to delegated address", async function () {
-    //   const { ybr, multisig, alice } = this.fixture as FixtureReturnType;
-    //   await ybr.connect(alice).transfer(multisig.address, 100_000_000);
-    //   expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
-    //   expect(await ybr.getVotes(alice.address)).to.equal(0);
-    // });
-
-    // it("User delegates votes to multisig after transfer", async function () {
-    //   const { ybr, multisig, bob } = this.fixture as FixtureReturnType;
-    //   await ybr.connect(multisig).transfer(bob.address, 100_000_000);
-    //   expect(await ybr.getVotes(multisig.address)).to.equal(900_000_000);
-    //   expect(await ybr.getVotes(bob.address)).to.equal(0);
-    //   await ybr.connect(bob).delegate(multisig.address);
-    //   expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
-    //   expect(await ybr.getVotes(bob.address)).to.equal(0);
-    //   expect(await ybr.balanceOf(bob.address)).to.equal(100_000_000);
-
-    //   await ybr.connect(bob).transfer(multisig.address, 100_000_000);
-    // });
-
-    // it("User delegates votes to multisig before transfer", async function () {
-    //   const { ybr, multisig, bob } = this.fixture as FixtureReturnType;
-    //   await ybr.connect(bob).delegate(multisig.address);
-    //   await ybr.connect(multisig).transfer(bob.address, 100_000_000);
-    //   expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
-    //   expect(await ybr.getVotes(bob.address)).to.equal(0);
-    //   expect(await ybr.balanceOf(bob.address)).to.equal(100_000_000);
-
-    //   await ybr.connect(bob).transfer(multisig.address, 100_000_000);
-    // });
+    it("Votes should return when reconsolidating", async function () {
+      const { property, alice, bob, charlie } = this.fixture as FixtureReturnType;
+      await property.connect(bob).transfer(alice.address, 500_000);
+      await property.connect(charlie).transfer(alice.address, 500_000);
+      expect(await property.balanceOf(alice.address)).to.equal(1_000_000);
+      expect(await property.getVotes(alice.address)).to.equal(1_000_000);
+    });
   });
 
-  // it("Pausing should work", async function () {
-  //   const { property, bob, alice, charlie, multisig } = this.fixture as FixtureReturnType;
-  //   await property.connect(multisig).pause();
-  //   expect(await property.paused()).to.be.true;
+  describe("Reward Distribution", function () {
+    before(async function () {
+      this.fixture = (await this.loadFixture(deployPropertyFixture)) as FixtureReturnType;
+    });
 
-  //   // Non multisig should not be able to pause
-  //   await expect(property.connect(alice).pause()).to.be.revertedWithCustomError(property, "OwnableUnauthorizedAccount");
+    it("Property should have correct owner", async function () {
+      const { property, multisig } = this.fixture as FixtureReturnType;
+      expect(await property.owner()).to.equal(multisig.address);
+    });
 
-  //   // Noone should be able to transfer while paused
-  //   await expect(property.connect(bob).transfer(alice.address, 1)).to.be.revertedWithCustomError(property, "EnforcedPause");
-  //   await expect(property.connect(charlie).transfer(bob.address, 1)).to.be.revertedWithCustomError(
-  //     property,
-  //     "EnforcedPause",
-  //   );
-  // });
+    it("Alice distributes 200_000 tokens each to Bob and Charlie", async function () {
+      const { property, alice, bob, charlie } = this.fixture as FixtureReturnType;
+      await property.connect(alice).transfer(bob.address, 200_000);
+      await property.connect(alice).transfer(charlie.address, 200_000);
+      expect(await property.balanceOf(bob.address)).to.equal(200_000);
+      expect(await property.balanceOf(charlie.address)).to.equal(200_000);
+    });
 
-  // it("Unpausing should work", async function () {
-  //   const { property, alice, bob, multisig } = this.fixture as FixtureReturnType;
-  //   await property.connect(multisig).unpause();
-  //   expect(await property.paused()).to.be.false;
+    it("Create a new reward distribution claim with YBR for Property", async function () {
+      const { property, ybr, multisig, propertyAddress, ybrAddress } = this.fixture as FixtureReturnType;
+      const rewardAmount = 100_000;
+      await ybr.connect(multisig).approve(propertyAddress, rewardAmount);
+      await property.connect(multisig).addYield(ybrAddress, rewardAmount, await time.latest());
 
-  //   // Non multisig should not be able to unpause
-  //   await expect(property.connect(alice).unpause()).to.be.revertedWithCustomError(property, "OwnableUnauthorizedAccount");
+      const claim = await property.claims(0);
+      expect(claim.rewardToken).to.equal(ybrAddress);
+      expect(claim.amount).to.equal(rewardAmount);
+    });
 
-  //   // Everyone should be able to transfer now
-  //   await expect(property.connect(bob).transfer(alice.address, 1)).to.be.fulfilled;
-  //   await expect(property.connect(alice).transfer(bob.address, 1)).to.be.fulfilled;
-  // });
+    it("Users can claim their rewards proportionally", async function () {
+      const { property, alice, bob, charlie, ybr } = this.fixture as FixtureReturnType;
+      await property.connect(alice).collectYields();
+      await property.connect(bob).collectYields();
+      await property.connect(charlie).collectYields();
 
-  // it("Freezing of addresses should work", async function () {
-  //   const { property, alice, bob, multisig } = this.fixture as FixtureReturnType;
-  //   await property.connect(multisig).freezeWallet(alice.address, true);
-  //   expect(await property.frozen(alice.address)).to.be.true;
+      const aliceYield = await ybr.balanceOf(alice.address);
+      const bobYield = await ybr.balanceOf(bob.address);
+      const charlieYield = await ybr.balanceOf(charlie.address);
 
-  //   await expect(property.connect(alice).transfer(bob.address, 1)).to.be.revertedWith("Wallet frozen");
-
-  //   // Non multisig should not be able to freeze wallet
-  //   await expect(property.connect(alice).freezeWallet(bob.address, true)).to.be.reverted;
-  // });
-
-  // it("Unfreezing of addresses should work", async function () {
-  //   const { property, alice, multisig } = this.fixture as FixtureReturnType;
-  //   await property.connect(multisig).freezeWallet(alice.address, false);
-  //   expect(await property.frozen(alice.address)).to.be.false;
-  // });
-
-  // it("The updateStakeValue function should update the stake value correctly", async function () {
-  //   const { property, alice } = this.fixture as FixtureReturnType;
-
-  //   // Mint some property to the user
-  //   //const initialBalance = ethers.utils.parseEther("1.0");
-  //   await property.mint(alice.address, 1);
-
-  //   // Wait for some time
-  //   await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  //   // Action
-  //   await property.updateStakeValue(alice.address);
-
-  //   // Assertion
-  //   const updatedStakeValue = await property.stakeValue(alice.address);
-  //   expect(updatedStakeValue).to.be.above(0);
-  //});
+      expect(aliceYield).to.equal(33_333);
+      expect(bobYield).to.equal(33_333);
+      expect(charlieYield).to.equal(33_334);
+    });
+  });
 });

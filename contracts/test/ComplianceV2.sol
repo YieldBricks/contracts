@@ -1,22 +1,27 @@
 // SPDX-License-Identifier: See LICENSE in root directory
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { PropertyV2 } from "./PropertyV2.sol";
+
+import "hardhat/console.sol";
 
 contract ComplianceV2 is Ownable2StepUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
 
+    // Define const default signer duration to be 7 days
+    uint256 public constant DEFAULT_SIGNER_DURATION = 7 days;
+
     // Signers are on a hot wallet, so they are rotated on a weekly basis to optimize the RTO
     address private _identitySigner;
     uint256 private _identitySignerExpiration;
-    mapping(address => bool) private _signerBlacklist;
+    mapping(address signer => bool isBlacklisted) private _signerBlacklist;
 
-    mapping(address => Identity) public identities;
-    mapping(uint16 => bool) private _countryBlacklist;
-    mapping(address => bool) private _walletBlacklist;
+    mapping(address wallet => Identity identity) public identities;
+    mapping(uint16 country => bool isBlacklisted) private _countryBlacklist;
+    mapping(address wallet => bool isBlacklisted) private _walletBlacklist;
 
     struct Identity {
         address wallet; // The wallet which is being KYCed
@@ -26,6 +31,17 @@ contract ComplianceV2 is Ownable2StepUpgradeable, EIP712Upgradeable {
         uint16 country; // According to https://en.wikipedia.org/wiki/ISO_3166-1_numeric
     }
 
+    // Define custom errors
+    error IdentityNotFound();
+    error SignerBlacklisted();
+    error KYCExpired();
+    error CountryBlacklisted();
+    error WalletBlacklisted();
+
+    error InvalidSignature();
+    error SignatureMismatch();
+    error ExpiredSignerKey();
+
     bytes32 private constant IDENTITY_TYPEHASH =
         keccak256("Identity(address wallet,address signer,bytes32 emailHash,uint256 expiration,uint16 country)");
 
@@ -34,36 +50,53 @@ contract ComplianceV2 is Ownable2StepUpgradeable, EIP712Upgradeable {
         __Ownable2Step_init();
         __Ownable_init(owner_);
         _identitySigner = identitySigner_;
+        _identitySignerExpiration = block.timestamp + DEFAULT_SIGNER_DURATION;
     }
 
     // compliance check and state update
-    function canTransfer(address _from, address _to, uint256 _amount) external view returns (bool) {
+    function canTransfer(address _from, address _to) external view {
         // get Identity for _from and _to
         Identity memory identityFrom = identities[_from];
-        Identity memory identitiyTo = identities[_to];
+        Identity memory identityTo = identities[_to];
 
-        // Check if signer is blacklisted
-        require(!_signerBlacklist[identityFrom.signer], "Signer is blacklisted");
-        require(!_signerBlacklist[identitiyTo.signer], "Signer is blacklisted");
+        if (_from != address(0)) {
+            if (identityFrom.wallet == address(0)) {
+                revert IdentityNotFound();
+            }
+            if (_signerBlacklist[identityFrom.signer]) {
+                revert SignerBlacklisted();
+            }
+            if (block.timestamp >= identityFrom.expiration) {
+                revert KYCExpired();
+            }
+            if (_countryBlacklist[identityFrom.country]) {
+                revert CountryBlacklisted();
+            }
+            if (_walletBlacklist[_from]) {
+                revert WalletBlacklisted();
+            }
+        }
 
-        // Check if KYC expired
-        require(block.timestamp < identityFrom.expiration, "KYC expired");
-        require(block.timestamp < identitiyTo.expiration, "KYC expired");
-
-        // Check if country is blacklisted
-        require(!_countryBlacklist[identityFrom.country], "Sender country is blacklisted");
-        require(!_countryBlacklist[identitiyTo.country], "Receiver country is blacklisted");
-
-        // Check if wallet is blacklisted
-        require(!_walletBlacklist[_from], "Sender wallet is blacklisted");
-        require(!_walletBlacklist[_to], "Receiver wallet is blacklisted");
+        if (identityTo.wallet == address(0)) {
+            revert IdentityNotFound();
+        }
+        if (_signerBlacklist[identityTo.signer]) {
+            revert SignerBlacklisted();
+        }
+        if (block.timestamp >= identityTo.expiration) {
+            revert KYCExpired();
+        }
+        if (_countryBlacklist[identityTo.country]) {
+            revert CountryBlacklisted();
+        }
+        if (_walletBlacklist[_to]) {
+            revert WalletBlacklisted();
+        }
 
         // Check if the amount transfered is a significant part of the users supply
-        PropertyV2 token = PropertyV2(msg.sender);
-        uint256 balance = token.balanceOf(_from);
-        require(_amount < balance / 10, "Transfer amount is too high");
-
-        return true;
+        // Token token = Token(msg.sender);
+        // uint256 balance = token.balanceOf(_from);
+        // require(_amount < balance / 10, "Transfer amount is too high");
     }
 
     function addIdentity(Identity memory _identity, bytes memory signature) external {
@@ -80,14 +113,22 @@ contract ComplianceV2 is Ownable2StepUpgradeable, EIP712Upgradeable {
             )
         );
         address signer = ECDSA.recover(digest, signature);
-        require(signer == _identitySigner, "Invalid signature");
-        require(block.timestamp < _identitySignerExpiration, "Expired signer key");
+        if (signer != _identitySigner) {
+            revert InvalidSignature();
+        }
+        if (_identity.signer != signer) {
+            revert SignatureMismatch();
+        }
+        if (block.timestamp >= _identitySignerExpiration) {
+            revert ExpiredSignerKey();
+        }
+
         identities[_identity.wallet] = _identity;
     }
 
-    function setIdentitySigner(address _signer, uint256 duration) external onlyOwner {
+    function setIdentitySigner(address _signer) external onlyOwner {
         _identitySigner = _signer;
-        _identitySignerExpiration = block.timestamp + duration;
+        _identitySignerExpiration = block.timestamp + DEFAULT_SIGNER_DURATION;
     }
 
     function blacklistSigner(address _signer, bool isBlacklisted) external onlyOwner {

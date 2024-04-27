@@ -6,8 +6,8 @@ import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.so
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Property } from "./Property.sol";
-import { IOracle } from "./Oracle.sol";
 import { YBR } from "./YBR.sol";
+import { IOracle } from "./Oracle.sol";
 
 contract SaleManager is Ownable2StepUpgradeable {
     event TokenDeployed(address indexed property, string name, string symbol, uint256 cap, address compliance);
@@ -18,32 +18,34 @@ contract SaleManager is Ownable2StepUpgradeable {
     struct Sale {
         uint256 start;
         uint256 end;
-        uint256 price; // Price in stablecoin (any can be used)
+        uint256 price; // Price in USD
     }
 
     // Is the sale open for property with given address
     mapping(address => Sale) public sales;
 
     // unclaimed tokens (DoS, canTransfer, other reasons)
-    mapping(address user => mapping(address property => Unclaimed unclaimed)) public unclaimedByUser;
+    mapping(address user => Unclaimed[] unclaimed) public unclaimedByUser;
     mapping(address property => uint256 unclaimedProperties) public unclaimedProperties;
+    mapping(address paymentToken => bool isWhitelisted) public whitelistedPaymentTokens;
 
     struct Unclaimed {
-        uint256 unclaimedProperties;
-        uint256 ybrAmount;
+        address propertyAddress;
+        address paymentTokenAddress;
+        uint256 propertyAmount;
+        uint256 paymentTokenAmount;
     }
 
     address[] public tokenAddresses;
     UpgradeableBeacon public tokenBeacon;
 
-    YBR public ybr;
     IOracle public oracle;
 
-    function initialize(address tokenBeacon_, address owner_, address _ybr) public initializer {
+    function initialize(address tokenBeacon_, address owner_, address oracle_) public initializer {
         __Ownable2Step_init();
         __Ownable_init(owner_);
         tokenBeacon = UpgradeableBeacon(tokenBeacon_);
-        ybr = YBR(_ybr);
+        oracle = IOracle(oracle_);
     }
 
     // Admin functions
@@ -82,12 +84,12 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     // Admin functions for YBR and Oracle
-    function setOracle(address _oracle) external onlyOwner {
-        oracle = IOracle(_oracle);
+    function setFeedRegistry(address oracle_) external onlyOwner {
+        oracle = IOracle(oracle_);
     }
 
     // Sale functions
-    function buyTokens(uint256 _amount, address _property) external payable {
+    function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external payable {
         // check that sale is open
         require(block.timestamp >= sales[_property].start, "Sale not started");
         require(block.timestamp <= sales[_property].end, "Sale ended");
@@ -99,42 +101,44 @@ contract SaleManager is Ownable2StepUpgradeable {
             "Not enough tokens left"
         );
 
-        // Calculate the amount of YBR needed for the transaction
-        uint256 totalCost = (_amount * sales[_property].price) * oracle.getYBRPrice();
+        require(whitelistedPaymentTokens[paymentTokenAddress], "Payment token not whitelisted");
+
+        // Calculate the amount of payment token needed for the transaction
+        uint256 totalCost = (_amount * sales[_property].price) / oracle.getUSDPrice(paymentTokenAddress);
+
+        IERC20 paymentToken = IERC20(paymentTokenAddress);
 
         // Check that the sender has enough YBR and transfer
-        require(ybr.balanceOf(msg.sender) >= totalCost, "Not enough funds");
-        require(ybr.transferFrom(msg.sender, address(this), totalCost), "Transfer failed");
+        require(paymentToken.balanceOf(msg.sender) >= totalCost, "Not enough funds");
+        require(paymentToken.transferFrom(msg.sender, address(this), totalCost), "Transfer failed");
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
         try property.transfer(msg.sender, _amount) {
             // success
         } catch {
-            Unclaimed memory unclaimed = unclaimedByUser[msg.sender][_property];
-            unclaimed.unclaimedProperties += _amount;
-            unclaimed.ybrAmount += totalCost;
+            unclaimedByUser[msg.sender].push(Unclaimed(_property, paymentTokenAddress, _amount, totalCost));
             unclaimedProperties[_property] += _amount;
         }
     }
 
-    function claimTokens(address _property) external {
-        Unclaimed memory unclaimed = unclaimedByUser[msg.sender][_property];
-        require(unclaimed.unclaimedProperties > 0, "No unclaimed tokens");
-        uint256 amount = unclaimed.unclaimedProperties;
-        unclaimed.unclaimedProperties = 0;
-        unclaimed.ybrAmount = 0;
-        unclaimedProperties[_property] -= amount;
-        Property(_property).transfer(msg.sender, amount);
+    function claimTokens() external {
+        for (uint256 i = 0; i < unclaimedByUser[msg.sender].length; i++) {
+            Unclaimed memory unclaimed = unclaimedByUser[msg.sender][i];
+            Property property = Property(unclaimed.propertyAddress);
+            property.transfer(msg.sender, unclaimed.propertyAmount);
+            unclaimedProperties[unclaimed.propertyAddress] -= unclaimed.propertyAmount;
+        }
+        delete unclaimedByUser[msg.sender];
     }
 
     // Will result in a 20% penalty
-    function cancelPurchase(address _property) external {
-        Unclaimed memory unclaimed = unclaimedByUser[msg.sender][_property];
-        require(unclaimed.unclaimedProperties > 0, "No unclaimed tokens");
-        uint256 returnAmount = (unclaimed.ybrAmount * 4) / 5;
-        unclaimedProperties[_property] -= unclaimed.unclaimedProperties;
-        unclaimed.unclaimedProperties = 0;
-        unclaimed.ybrAmount = 0;
-        ybr.transfer(msg.sender, returnAmount);
+    function cancelPurchases() external {
+        for (uint256 i = 0; i < unclaimedByUser[msg.sender].length; i++) {
+            Unclaimed memory unclaimed = unclaimedByUser[msg.sender][i];
+            IERC20 paymentToken = IERC20(unclaimed.paymentTokenAddress);
+            paymentToken.transfer(msg.sender, (unclaimed.paymentTokenAmount * 80) / 100);
+            unclaimedProperties[unclaimed.propertyAddress] -= unclaimed.propertyAmount;
+        }
+        delete unclaimedByUser[msg.sender];
     }
 }

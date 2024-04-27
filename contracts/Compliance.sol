@@ -54,7 +54,7 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     }
 
     // compliance check and state update
-    function canTransfer(address _from, address _to, uint256 _amount) external view {
+    function canTransfer(address _from, address _to) external view {
         // get Identity for _from and _to
         Identity memory identityFrom = identities[_from];
         Identity memory identityTo = identities[_to];

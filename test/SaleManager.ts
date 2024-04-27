@@ -28,11 +28,11 @@ describe("SaleManager", function () {
     });
 
     it("Oracle should be able to set and return price", async function () {
-      const { mockOracle } = this.fixture as FixtureReturnType;
+      const { mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
 
       const price = 100;
       await mockOracle.setPrice(price);
-      expect(await mockOracle.getYBRPrice()).to.equal(price);
+      expect(await mockOracle.getUSDPrice(ybrAddress)).to.equal(price);
     });
 
     it("Create property and verify that the entire supply is on the SaleManager", async function () {
@@ -44,7 +44,7 @@ describe("SaleManager", function () {
       const cap = 1000000;
       console.log("SaleManager", saleManagerAddress);
 
-      expect(compliance.canTransfer(saleManagerAddress, saleManagerAddress, 1));
+      expect(compliance.canTransfer(saleManagerAddress, saleManagerAddress));
 
       await expect(saleManager.connect(multisig).createToken(name, symbol, cap, complianceAddress)).to.emit(
         saleManager,
@@ -77,35 +77,35 @@ describe("SaleManager", function () {
     });
 
     it("User can't buy property before sale starts", async function () {
-      const { saleManager, alice } = this.fixture as FixtureReturnType;
+      const { saleManager, alice, ybrAddress } = this.fixture as FixtureReturnType;
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await expect(saleManager.connect(alice).buyTokens(1, propertyAddress, { value: 100 })).to.be.revertedWith(
-        "Sale not started",
-      );
+      await expect(
+        saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress, { value: 100 }),
+      ).to.be.revertedWith("Sale not started");
     });
 
     it("User can buy property during sale duration", async function () {
-      const { saleManager, alice } = this.fixture as FixtureReturnType;
+      const { saleManager, alice, ybrAddress } = this.fixture as FixtureReturnType;
 
       await time.increase(DAY);
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      expect(saleManager.connect(alice).buyTokens(1, propertyAddress, { value: 100 }));
+      expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress, { value: 100 }));
     });
 
     it("User can't buy property after sale ends", async function () {
-      const { saleManager, alice } = this.fixture as FixtureReturnType;
+      const { saleManager, alice, ybrAddress } = this.fixture as FixtureReturnType;
 
       await time.increase(7 * DAY);
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await expect(saleManager.connect(alice).buyTokens(1, propertyAddress, { value: 100 })).to.be.revertedWith(
-        "Sale ended",
-      );
+      await expect(
+        saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress, { value: 100 }),
+      ).to.be.revertedWith("Sale ended");
     });
   });
 });

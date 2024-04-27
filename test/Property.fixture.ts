@@ -1,7 +1,7 @@
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-import { Compliance, Compliance__factory, Property, Property__factory } from "../types";
+import { Compliance, Compliance__factory, Property, Property__factory, YBR, YBR__factory } from "../types";
 import { identityTypedMessage } from "./utils";
 
 export async function deployPropertyFixture() {
@@ -81,11 +81,19 @@ export async function deployPropertyFixture() {
   const property = Property.attach(await propertyProxy.getAddress()) as Property;
   const propertyAddress = await property.getAddress();
 
+  // Deploy YBR contract
+  const YBR = (await ethers.getContractFactory("YBR")) as YBR__factory;
+  const YBRProxy = await upgrades.deployProxy(YBR, [multisig.address]);
+  const ybr = YBR.attach(await YBRProxy.getAddress()) as YBR;
+  const ybrAddress = await ybr.getAddress();
+
   return {
     compliance,
     complianceAddress,
     property,
     propertyAddress,
+    ybr,
+    ybrAddress,
     deployer,
     multisig,
     alice,

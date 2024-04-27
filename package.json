@@ -7,7 +7,8 @@
     "url": "https://github.com/njelich"
   },
   "devDependencies": {
-    "@chainlink/contracts": "^1.0.0",
+    "@chainlink/contracts": "^1.1.0",
+    "@chainlink/hardhat-chainlink": "^0.0.4",
     "@morenabarboni/sumo": "^2.5.4",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
