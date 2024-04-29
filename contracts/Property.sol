@@ -27,6 +27,7 @@ import {
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
+import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 import { Compliance } from "./Compliance.sol";
 
@@ -212,6 +213,25 @@ contract Property is
      */
     function owner() public view returns (address) {
         return _compliance.owner();
+    }
+
+    /**
+     * @notice Returns the current time as a uint48
+     * @dev Override for ERC20Votes clock functionality
+     */
+    function clock() public view override returns (uint48) {
+        return Time.timestamp();
+    }
+
+    /**
+     * @notice Returns the EIP6372 clock mode
+     * @dev Override for ERC20Votes clock functionality
+     */
+    function CLOCK_MODE() public view override returns (string memory) {
+        if (clock() != Time.timestamp()) {
+            revert ERC6372InconsistentClock();
+        }
+        return "mode=timestamp";
     }
 
     /**

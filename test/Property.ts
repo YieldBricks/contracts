@@ -213,6 +213,13 @@ describe("Property", function () {
       expect(await property.owner()).to.equal(multisig.address);
     });
 
+    it("Property should have correct CLOCK_MODE", async function () {
+      const { property } = this.fixture as FixtureReturnType;
+      expect(await property.clock()).to.equal(await time.latest());
+
+      expect(await property.CLOCK_MODE()).to.equal("mode=timestamp");
+    });
+
     it("Alice should have all the tokens initially", async function () {
       const { property, alice } = this.fixture as FixtureReturnType;
       expect(await property.balanceOf(alice.address)).to.equal(1_000_000);
@@ -271,8 +278,22 @@ describe("Property", function () {
       expect(claim.amount).to.equal(rewardAmount);
     });
 
+    it("Test pastVotes and pastTotalSupply from ERC20Votes", async function () {
+      const { property, alice } = this.fixture as FixtureReturnType;
+
+      const claim = await property.claims(0);
+      const currentTime = await time.latest();
+
+      expect(await property.getPastTotalSupply(claim.timestamp)).to.equal(1_000_000);
+      expect(await property.getPastVotes(alice.address, claim.timestamp)).to.equal(600_000);
+      // Use current time - 1, to get current block just getVotes should be used
+      expect(await property.getPastTotalSupply(currentTime - 1)).to.equal(1_000_000);
+      expect(await property.getPastVotes(alice.address, currentTime - 1)).to.equal(600_000);
+    });
+
     it("Users can claim their rewards proportionally", async function () {
       const { property, alice, bob, charlie, ybr } = this.fixture as FixtureReturnType;
+
       await property.connect(alice).collectYields();
       await property.connect(bob).collectYields();
       await property.connect(charlie).collectYields();
@@ -281,9 +302,9 @@ describe("Property", function () {
       const bobYield = await ybr.balanceOf(bob.address);
       const charlieYield = await ybr.balanceOf(charlie.address);
 
-      expect(aliceYield).to.equal(33_333);
-      expect(bobYield).to.equal(33_333);
-      expect(charlieYield).to.equal(33_334);
+      expect(aliceYield).to.equal(60_000);
+      expect(bobYield).to.equal(20_000);
+      expect(charlieYield).to.equal(20_000);
     });
   });
 });
