@@ -5,11 +5,14 @@ import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/acc
 import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Property } from "./Property.sol";
 import { YBR } from "./YBR.sol";
 import { IOracle } from "./Oracle.sol";
 
 contract SaleManager is Ownable2StepUpgradeable {
+    using SafeERC20 for IERC20;
+
     event TokenDeployed(address indexed property, string name, string symbol, uint256 cap, address compliance);
     event SaleCreated(address indexed property, uint256 start, uint256 end, uint256 price);
     event SaleModified(address indexed property, uint256 start, uint256 end, uint256 price);
@@ -80,12 +83,16 @@ contract SaleManager is Ownable2StepUpgradeable {
     // Used to pull funds periodically
     function withdrawFunds(address _token) external onlyOwner {
         IERC20 token = IERC20(_token);
-        token.transfer(owner(), token.balanceOf(address(this)));
+        token.safeTransfer(msg.sender, token.balanceOf(address(this)));
     }
 
     // Admin functions for YBR and Oracle
-    function setFeedRegistry(address oracle_) external onlyOwner {
+    function setOracle(address oracle_) external onlyOwner {
         oracle = IOracle(oracle_);
+    }
+
+    function whitelistPaymentToken(address paymentToken, bool isWhitelisted) external onlyOwner {
+        whitelistedPaymentTokens[paymentToken] = isWhitelisted;
     }
 
     // Sale functions
@@ -104,7 +111,7 @@ contract SaleManager is Ownable2StepUpgradeable {
         require(whitelistedPaymentTokens[paymentTokenAddress], "Payment token not whitelisted");
 
         // Calculate the amount of payment token needed for the transaction
-        uint256 totalCost = (_amount * sales[_property].price) / oracle.getUSDPrice(paymentTokenAddress);
+        uint256 totalCost = _amount * sales[_property].price * oracle.getTokensPerUSD(paymentTokenAddress);
 
         IERC20 paymentToken = IERC20(paymentTokenAddress);
 
@@ -113,15 +120,14 @@ contract SaleManager is Ownable2StepUpgradeable {
         require(paymentToken.transferFrom(msg.sender, address(this), totalCost), "Transfer failed");
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
-        try property.transfer(msg.sender, _amount) {
-            // success
-        } catch {
+        try property.transfer(msg.sender, _amount) {} catch {
             unclaimedByUser[msg.sender].push(Unclaimed(_property, paymentTokenAddress, _amount, totalCost));
             unclaimedProperties[_property] += _amount;
         }
     }
 
     function claimTokens() external {
+        require(unclaimedByUser[msg.sender].length > 0, "No unclaimed tokens");
         for (uint256 i = 0; i < unclaimedByUser[msg.sender].length; i++) {
             Unclaimed memory unclaimed = unclaimedByUser[msg.sender][i];
             Property property = Property(unclaimed.propertyAddress);
@@ -133,6 +139,7 @@ contract SaleManager is Ownable2StepUpgradeable {
 
     // Will result in a 20% penalty
     function cancelPurchases() external {
+        require(unclaimedByUser[msg.sender].length > 0, "No unclaimed tokens");
         for (uint256 i = 0; i < unclaimedByUser[msg.sender].length; i++) {
             Unclaimed memory unclaimed = unclaimedByUser[msg.sender][i];
             IERC20 paymentToken = IERC20(unclaimed.paymentTokenAddress);

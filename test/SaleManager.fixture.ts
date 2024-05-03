@@ -38,20 +38,22 @@ export async function deploySaleManagerFixture() {
   const ybr = YBR.attach(await ybrProxy.getAddress()) as YBR;
   const ybrAddress = await ybrProxy.getAddress();
 
+  const MockOracle = (await ethers.getContractFactory("MockOracle")) as MockOracle__factory;
+  const mockOracle = (await MockOracle.deploy()) as MockOracle;
+  await mockOracle.waitForDeployment();
+  const mockOracleAddress = await mockOracle.getAddress();
+
+  console.log("mockOracleAddress", mockOracleAddress);
+
   // Deploy SaleManager contract
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
   const saleManagerProxy = await upgrades.deployProxy(SaleManager, [
     propertyBeaconAddress,
     multisig.address,
-    ybrAddress,
+    mockOracleAddress,
   ]);
   const saleManager = SaleManager.attach(await saleManagerProxy.getAddress()) as SaleManager;
   const saleManagerAddress = await saleManagerProxy.getAddress();
-
-  const MockOracle = (await ethers.getContractFactory("MockOracle")) as MockOracle__factory;
-  const mockOracle = (await MockOracle.deploy()) as MockOracle;
-  await mockOracle.waitForDeployment();
-  const mockOracleAddress = mockOracle.getAddress();
 
   console.log("SaleManager deployed to:", saleManagerAddress);
 

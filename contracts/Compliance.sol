@@ -32,11 +32,11 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     }
 
     // Define custom errors
-    error IdentityNotFound();
-    error SignerBlacklisted();
-    error KYCExpired();
-    error CountryBlacklisted();
-    error WalletBlacklisted();
+    error IdentityNotFound(address user);
+    error SignerBlacklisted(address user);
+    error KYCExpired(address user);
+    error CountryBlacklisted(address user);
+    error WalletBlacklisted(address user);
 
     error InvalidSignature();
     error SignatureMismatch();
@@ -61,36 +61,36 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
 
         if (_from != address(0)) {
             if (identityFrom.wallet == address(0)) {
-                revert IdentityNotFound();
+                revert IdentityNotFound(_from);
             }
             if (_signerBlacklist[identityFrom.signer]) {
-                revert SignerBlacklisted();
+                revert SignerBlacklisted(_from);
             }
             if (block.timestamp >= identityFrom.expiration) {
-                revert KYCExpired();
+                revert KYCExpired(_from);
             }
             if (_countryBlacklist[identityFrom.country]) {
-                revert CountryBlacklisted();
+                revert CountryBlacklisted(_from);
             }
             if (_walletBlacklist[_from]) {
-                revert WalletBlacklisted();
+                revert WalletBlacklisted(_from);
             }
         }
 
         if (identityTo.wallet == address(0)) {
-            revert IdentityNotFound();
+            revert IdentityNotFound(_to);
         }
         if (_signerBlacklist[identityTo.signer]) {
-            revert SignerBlacklisted();
+            revert SignerBlacklisted(_to);
         }
         if (block.timestamp >= identityTo.expiration) {
-            revert KYCExpired();
+            revert KYCExpired(_to);
         }
         if (_countryBlacklist[identityTo.country]) {
-            revert CountryBlacklisted();
+            revert CountryBlacklisted(_to);
         }
         if (_walletBlacklist[_to]) {
-            revert WalletBlacklisted();
+            revert WalletBlacklisted(_to);
         }
 
         // Check if the amount transfered is a significant part of the users supply

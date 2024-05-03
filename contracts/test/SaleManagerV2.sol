@@ -104,7 +104,7 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
         require(whitelistedPaymentTokens[paymentTokenAddress], "Payment token not whitelisted");
 
         // Calculate the amount of payment token needed for the transaction
-        uint256 totalCost = (_amount * sales[_property].price) / oracle.getUSDPrice(paymentTokenAddress);
+        uint256 totalCost = (_amount * sales[_property].price) / oracle.getTokensPerUSD(paymentTokenAddress);
 
         IERC20 paymentToken = IERC20(paymentTokenAddress);
 

@@ -1,71 +1,9 @@
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 
 import { deployYBRFixture } from "./YBR.fixture";
 
 type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deployYBRFixture>>>>;
-
-// User stories for tests
-
-/*
-
-Basic Usage Flow
-
-1. Multisig should have all the tokens initially - done
-2. Multisig should be able to distribute tokens to alice and bob - done
-3. Alice and bob should have the correct amount of tokens - done
-
-4. Multisig should be able to pause the contract - done
- - Alice and bob should not be able to transfer tokens - done
-
-5. Multisig should be able to unpause the contract - done
-  - Alice and bob should be able to transfer tokens - done
-
-6. Multisig should be able to freeze any wallet (alice) by calling freezeWallet - done
-  - Alice should not be able to transfer tokens - done
-  - Bob should be able to transfer tokens - done
-
-7. Multisig should be able to unfreeze any wallet (alice) by calling unfreezeWallet - done
-  - Alice should be able to transfer tokens - done
-  - Bob should be able to transfer tokens - done
-
-8. Token holder (alice) should be able to transfer tokens to any other wallet (bob) - done
-  - Alice should be able to transfer tokens - done
-  - Bob should have the correct amount of tokens - done
-
-9. Token holder (alice) should be able to give permission (allowance) to any other wallet (charlie) to spend her tokens - done
-  - Charlie should be able to spend alice's tokens - done
-  - Charlie shouldn't be able to spend bob's tokens - done
-
-10. Token holder (alice) should be able to revoke permission (allowance) to any other wallet (charlie) to spend her tokens - done
-  - Charlie shouldn't be able to spend alice's tokens - done
-  - Charlie shouldn't be able to spend bob's tokens - done
-
-11. Token holder (alice) should be able to give permission using ERC20Permit extension
-  - Charlie should be able to spend alice's tokens
-  - Charlie shouldn't be able to spend bob's tokens
-
-12. Token holder (alice) should be able to revoke permission using ERC20Permit extension
-  - Charlie shouldn't be able to spend alice's tokens
-  - Charlie shouldn't be able to spend bob's tokens
-
-14. Token supply should be correct
-
-Votes tests
-
-1. Multisig should have all the tokens initially
-2. Multisig should be able to distribute tokens to alice and bob
-
-3. Check voting power at current block of alice and bob (should be 0)
-4. Alice delegates voting power to herself
-5. Check voting power at current block of alice (should be non-zero), bob should still be zero
-6. Alice transfers tokens to bob, alice and bob should again have voting power zero
-7. What happens when bob transfers back to alice etc?
-
-
-
-
-*/
 
 describe("YBR", function () {
   before(async function () {
@@ -89,8 +27,6 @@ describe("YBR", function () {
       expect(await ybr.owner()).to.equal(multisig.address);
     });
 
-    // Check name and symbol here
-
     it("Check token name and symbol", async function () {
       const { ybr } = this.fixture as FixtureReturnType;
       expect(await ybr.name()).to.equal("YieldBricks");
@@ -101,6 +37,13 @@ describe("YBR", function () {
       const { ybr, alice, bob, multisig } = this.fixture as FixtureReturnType;
       await expect(ybr.connect(multisig).transfer(alice.address, 100_000)).to.be.fulfilled;
       await expect(ybr.connect(multisig).transfer(bob.address, 100_000)).to.be.fulfilled;
+    });
+
+    it("Property should have correct CLOCK_MODE", async function () {
+      const { ybr } = this.fixture as FixtureReturnType;
+      expect(await ybr.clock()).to.equal(await time.latest());
+
+      expect(await ybr.CLOCK_MODE()).to.equal("mode=timestamp");
     });
 
     it("Alice and Bob should have the correct amount of tokens", async function () {
