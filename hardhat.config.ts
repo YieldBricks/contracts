@@ -1,7 +1,11 @@
+import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
 import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
+import { NetworkUserConfig } from "hardhat/types";
 import "solidity-docgen";
 
 import "./tasks/accounts";
@@ -64,6 +68,11 @@ const config: HardhatUserConfig = {
       sepolia: vars.get("ETHERSCAN_API_KEY", ""),
     },
   },
+  namedAccounts: {
+    deployer: 0,
+    multisig: 1,
+  },
+
   gasReporter: {
     currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,
