@@ -1,5 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
+import { parseEther } from "ethers";
 
 import { deployYBRFixture } from "./YBR.fixture";
 
@@ -35,11 +36,11 @@ describe("YBR", function () {
 
     it("Multisig should be able to distribute tokens to Alice and Bob", async function () {
       const { ybr, alice, bob, multisig } = this.fixture as FixtureReturnType;
-      await expect(ybr.connect(multisig).transfer(alice.address, 100_000)).to.be.fulfilled;
-      await expect(ybr.connect(multisig).transfer(bob.address, 100_000)).to.be.fulfilled;
+      await expect(ybr.connect(multisig).transfer(alice.address, parseEther("100000"))).to.be.fulfilled;
+      await expect(ybr.connect(multisig).transfer(bob.address, parseEther("100000"))).to.be.fulfilled;
     });
 
-    it("Property should have correct CLOCK_MODE", async function () {
+    it("Property should have correct CLOCKMODE", async function () {
       const { ybr } = this.fixture as FixtureReturnType;
       expect(await ybr.clock()).to.equal(await time.latest());
 
@@ -49,8 +50,8 @@ describe("YBR", function () {
     it("Alice and Bob should have the correct amount of tokens", async function () {
       const { ybr, alice, bob } = this.fixture as FixtureReturnType;
 
-      expect(await ybr.balanceOf(alice.address)).to.equal(100_000);
-      expect(await ybr.balanceOf(bob.address)).to.equal(100_000);
+      expect(await ybr.balanceOf(alice.address)).to.equal(parseEther("100000"));
+      expect(await ybr.balanceOf(bob.address)).to.equal(parseEther("100000"));
     });
 
     it("Multisig should be able to pause the contract and Alice and bob should not be able to transfer tokens", async function () {
@@ -66,8 +67,14 @@ describe("YBR", function () {
       expect(await ybr.paused()).to.be.true;
 
       // Noone should be able to transfer while paused
-      await expect(ybr.connect(bob).transfer(alice.address, 1)).to.be.revertedWithCustomError(ybr, "EnforcedPause");
-      await expect(ybr.connect(alice).transfer(bob.address, 1)).to.be.revertedWithCustomError(ybr, "EnforcedPause");
+      await expect(ybr.connect(bob).transfer(alice.address, parseEther("1"))).to.be.revertedWithCustomError(
+        ybr,
+        "EnforcedPause",
+      );
+      await expect(ybr.connect(alice).transfer(bob.address, parseEther("1"))).to.be.revertedWithCustomError(
+        ybr,
+        "EnforcedPause",
+      );
     });
 
     it("Multisig should be able to unpause the contract and Alice and bob should be able to transfer tokens", async function () {
@@ -83,8 +90,8 @@ describe("YBR", function () {
       expect(await ybr.paused()).to.be.false;
 
       //Alice and Bob should be able to transfer
-      await expect(ybr.connect(bob).transfer(alice.address, 1)).to.be.fulfilled;
-      await expect(ybr.connect(alice).transfer(bob.address, 1)).to.be.fulfilled;
+      await expect(ybr.connect(bob).transfer(alice.address, parseEther("1"))).to.be.fulfilled;
+      await expect(ybr.connect(alice).transfer(bob.address, parseEther("1"))).to.be.fulfilled;
     });
 
     it("Multisig should be able to freeze any wallet ", async function () {
@@ -101,12 +108,18 @@ describe("YBR", function () {
       expect(await ybr.walletFrozen(alice.address)).to.be.true;
 
       // Alice should not be able to transfer tokens
-      await expect(ybr.connect(alice).transfer(bob.address, 1)).to.be.revertedWithCustomError(ybr, "FrozenWalletError");
+      await expect(ybr.connect(alice).transfer(bob.address, parseEther("1"))).to.be.revertedWithCustomError(
+        ybr,
+        "FrozenWalletError",
+      );
       // Alice should not be able to receive tokens
-      await expect(ybr.connect(bob).transfer(alice.address, 1)).to.be.revertedWithCustomError(ybr, "FrozenWalletError");
+      await expect(ybr.connect(bob).transfer(alice.address, parseEther("1"))).to.be.revertedWithCustomError(
+        ybr,
+        "FrozenWalletError",
+      );
 
       // Bob should be able to transfer tokens
-      await expect(ybr.connect(bob).transfer(multisig.address, 1)).to.be.fulfilled;
+      await expect(ybr.connect(bob).transfer(multisig.address, parseEther("1"))).to.be.fulfilled;
     });
 
     it("Multisig should be able to unfreeze any wallet ", async function () {
@@ -123,15 +136,15 @@ describe("YBR", function () {
       expect(await ybr.walletFrozen(alice.address)).to.be.false;
 
       // Alice should be able to transfer tokens
-      await expect(ybr.connect(alice).transfer(bob.address, 1)).to.be.fulfilled;
+      await expect(ybr.connect(alice).transfer(bob.address, parseEther("1"))).to.be.fulfilled;
       // Bob should be able to transfer tokens
-      await expect(ybr.connect(bob).transfer(alice.address, 1)).to.be.fulfilled;
+      await expect(ybr.connect(bob).transfer(alice.address, parseEther("1"))).to.be.fulfilled;
     });
 
     it("Token holder (alice) should be able to transfer tokens to any other wallet (bob)", async function () {
       const { ybr, alice, bob } = this.fixture as FixtureReturnType;
 
-      const transferAmount = BigInt(2);
+      const transferAmount = parseEther("2");
       const expectedBobBalance = (await ybr.balanceOf(bob.address)) + transferAmount;
 
       await expect(ybr.connect(alice).transfer(bob.address, transferAmount)).to.be.fulfilled;
@@ -142,17 +155,17 @@ describe("YBR", function () {
       const { ybr, alice, bob, charlie } = this.fixture as FixtureReturnType;
 
       // Alice can give permission to Charlie to spend her tokens
-      await expect(ybr.connect(alice).approve(charlie.address, 1)).to.be.fulfilled;
-      expect(await ybr.allowance(alice.address, charlie.address)).to.equal(1);
+      await expect(ybr.connect(alice).approve(charlie.address, parseEther("1"))).to.be.fulfilled;
+      expect(await ybr.allowance(alice.address, charlie.address)).to.equal(parseEther("1"));
 
       // Charlie should be able to spend alice's tokens
-      await expect(ybr.connect(charlie).transferFrom(alice.address, bob.address, 1)).to.be.fulfilled;
+      await expect(ybr.connect(charlie).transferFrom(alice.address, bob.address, parseEther("1"))).to.be.fulfilled;
 
       // Charlie shouldn't be able to spend bob's tokens
-      await expect(ybr.connect(charlie).transferFrom(bob.address, alice.address, 1)).to.be.reverted;
+      await expect(ybr.connect(charlie).transferFrom(bob.address, alice.address, parseEther("1"))).to.be.reverted;
 
       // Charlie shouldn't be able to spend more of alice's tokens
-      await expect(ybr.connect(charlie).transferFrom(alice.address, bob.address, 1)).to.be.reverted;
+      await expect(ybr.connect(charlie).transferFrom(alice.address, bob.address, parseEther("1"))).to.be.reverted;
     });
 
     it("Token holder (alice) should be able to revoke permission (allowance) to any other wallet (charlie) to spend her tokens", async function () {
@@ -162,20 +175,20 @@ describe("YBR", function () {
       expect(await ybr.allowance(alice.address, charlie.address)).to.equal(0);
 
       // Alice gives more allowance to Charlie
-      await ybr.connect(alice).approve(charlie.address, 2);
+      await ybr.connect(alice).approve(charlie.address, parseEther("2"));
 
       // Make sure charlie has no allowance
-      expect(await ybr.allowance(alice.address, charlie.address)).to.equal(2);
+      expect(await ybr.allowance(alice.address, charlie.address)).to.equal(parseEther("2"));
 
       // Let Charlie spend of Alice's tokens
-      await ybr.connect(charlie).transferFrom(alice.address, bob.address, 1);
+      await ybr.connect(charlie).transferFrom(alice.address, bob.address, parseEther("1"));
 
       // Alice can revoke permission to Charlie to spend 1 token
       await expect(ybr.connect(alice).approve(charlie.address, 0)).to.be.fulfilled;
       expect(await ybr.allowance(alice.address, charlie.address)).to.equal(0);
 
       // Charlie shouldn't be able to spend alice's tokens
-      await expect(ybr.connect(charlie).transferFrom(alice.address, bob.address, 1)).to.be.reverted;
+      await expect(ybr.connect(charlie).transferFrom(alice.address, bob.address, parseEther("1"))).to.be.reverted;
     });
 
     it("Check nonce of an address", async function () {
@@ -185,7 +198,7 @@ describe("YBR", function () {
 
     it("Token supply should be correct", async function () {
       const { ybr } = this.fixture as FixtureReturnType;
-      expect(await ybr.totalSupply()).to.equal(1_000_000_000);
+      expect(await ybr.totalSupply()).to.equal(parseEther("1000000000"));
     });
   });
 
@@ -201,7 +214,7 @@ describe("YBR", function () {
 
     it("Multisig should have all the tokens initially", async function () {
       const { ybr, multisig } = this.fixture as FixtureReturnType;
-      expect(await ybr.balanceOf(multisig.address)).to.equal(1_000_000_000);
+      expect(await ybr.balanceOf(multisig.address)).to.equal(parseEther("1000000000"));
     });
 
     it("Multisig should have no votes prior to delegating", async function () {
@@ -212,45 +225,45 @@ describe("YBR", function () {
     it("Multisig should be able to delegate votes to itself", async function () {
       const { ybr, multisig } = this.fixture as FixtureReturnType;
       await ybr.connect(multisig).delegate(multisig.address);
-      expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
+      expect(await ybr.getVotes(multisig.address)).to.equal(parseEther("1000000000"));
     });
 
     it("Votes disappear when transferred to non-delegated address", async function () {
       const { ybr, multisig, alice } = this.fixture as FixtureReturnType;
-      await ybr.connect(multisig).transfer(alice.address, 100_000_000);
-      expect(await ybr.getVotes(multisig.address)).to.equal(900_000_000);
+      await ybr.connect(multisig).transfer(alice.address, parseEther("100000000"));
+      expect(await ybr.getVotes(multisig.address)).to.equal(parseEther("900000000"));
       expect(await ybr.getVotes(alice.address)).to.equal(0);
     });
 
     it("Votes reappear when transferred back to delegated address", async function () {
       const { ybr, multisig, alice } = this.fixture as FixtureReturnType;
-      await ybr.connect(alice).transfer(multisig.address, 100_000_000);
-      expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
+      await ybr.connect(alice).transfer(multisig.address, parseEther("100000000"));
+      expect(await ybr.getVotes(multisig.address)).to.equal(parseEther("1000000000"));
       expect(await ybr.getVotes(alice.address)).to.equal(0);
     });
 
     it("User delegates votes to multisig after transfer", async function () {
       const { ybr, multisig, bob } = this.fixture as FixtureReturnType;
-      await ybr.connect(multisig).transfer(bob.address, 100_000_000);
-      expect(await ybr.getVotes(multisig.address)).to.equal(900_000_000);
+      await ybr.connect(multisig).transfer(bob.address, parseEther("100000000"));
+      expect(await ybr.getVotes(multisig.address)).to.equal(parseEther("900000000"));
       expect(await ybr.getVotes(bob.address)).to.equal(0);
       await ybr.connect(bob).delegate(multisig.address);
-      expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
+      expect(await ybr.getVotes(multisig.address)).to.equal(parseEther("1000000000"));
       expect(await ybr.getVotes(bob.address)).to.equal(0);
-      expect(await ybr.balanceOf(bob.address)).to.equal(100_000_000);
+      expect(await ybr.balanceOf(bob.address)).to.equal(parseEther("100000000"));
 
-      await ybr.connect(bob).transfer(multisig.address, 100_000_000);
+      await ybr.connect(bob).transfer(multisig.address, parseEther("100000000"));
     });
 
     it("User delegates votes to multisig before transfer", async function () {
       const { ybr, multisig, bob } = this.fixture as FixtureReturnType;
       await ybr.connect(bob).delegate(multisig.address);
-      await ybr.connect(multisig).transfer(bob.address, 100_000_000);
-      expect(await ybr.getVotes(multisig.address)).to.equal(1_000_000_000);
+      await ybr.connect(multisig).transfer(bob.address, parseEther("100000000"));
+      expect(await ybr.getVotes(multisig.address)).to.equal(parseEther("1000000000"));
       expect(await ybr.getVotes(bob.address)).to.equal(0);
-      expect(await ybr.balanceOf(bob.address)).to.equal(100_000_000);
+      expect(await ybr.balanceOf(bob.address)).to.equal(parseEther("100000000"));
 
-      await ybr.connect(bob).transfer(multisig.address, 100_000_000);
+      await ybr.connect(bob).transfer(multisig.address, parseEther("100000000"));
     });
   });
 });

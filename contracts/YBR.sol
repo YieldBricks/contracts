@@ -44,6 +44,7 @@ contract YBR is
 {
     /// @notice Mapping to track frozen wallets
     mapping(address wallet => bool isFrozen) public walletFrozen;
+    uint private constant _CAP = 1_000_000_000 ether;
 
     /// @notice Contract constructor - disabled due to upgradeability
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -60,13 +61,13 @@ contract YBR is
         __ERC20_init("YieldBricks", "YBR");
         __ERC20Burnable_init();
         __ERC20Pausable_init();
-        __ERC20Capped_init(1_000_000_000);
+        __ERC20Capped_init(_CAP);
         __ERC20Permit_init("YieldBricks");
         __ERC20Votes_init();
         __Ownable2Step_init();
         __Ownable_init(owner_);
 
-        _mint(owner_, 1_000_000_000);
+        _mint(owner_, _CAP);
     }
 
     /**

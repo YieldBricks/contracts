@@ -85,6 +85,7 @@
     "docgen": "hardhat docgen",
     "gas": "REPORT_GAS=true hardhat test",
     "gas:ybr": "REPORT_GAS=true yarn test test/YBR.gas.ts && REPORT_GAS=true DELEGATED=true yarn test test/YBR.gas.ts",
-    "mutate": "sumo test"
+    "mutate": "sumo test",
+    "verify": "hardhat --network arbitrum etherscan-verify --license BUSL-1.1 --force-license"
   }
 }

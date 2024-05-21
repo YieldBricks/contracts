@@ -7,7 +7,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { deployer, multisig } = await getNamedAccounts();
 
-  await deploy("YBR", {
+  const res = await deploy("YBR", {
     contract: "YBR",
     from: deployer,
 
@@ -23,6 +23,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     },
     log: true,
   });
+
+  console.log(res);
 };
 export default func;
 func.tags = ["YBR"];

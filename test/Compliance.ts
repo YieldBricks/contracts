@@ -35,6 +35,8 @@ describe("Compliance", function () {
 
       const eip712Domain = await compliance.eip712Domain();
 
+      console.log("EIP domain", eip712Domain);
+
       const aliceIdentity = {
         wallet: alice.address,
         signer: kycSigner.address,
