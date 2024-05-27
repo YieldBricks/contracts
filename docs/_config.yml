@@ -19,3 +19,5 @@ aux_links_new_tab: false
 nav_enabled: true
 
 footer_content: "Copyright &copy; 2023-2024 YieldBricks.</a>"
+
+color_scheme: foo
