@@ -8,6 +8,8 @@ remote_theme: just-the-docs/just-the-docs
 logo: "/docs/images/logo.png"
 favicon_ico: "/docs/images/favicon.png"
 
+url: "https:/docs.yieldbricks.com"
+
 aux_links:
   "Website":
     - "yieldbricks.com"
