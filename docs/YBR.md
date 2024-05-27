@@ -90,10 +90,30 @@ Allows the owner to freeze or unfreeze a wallet
 | wallet | address | The address of the wallet to freeze or unfreeze |
 | isFrozen | bool | A boolean indicating whether the wallet should be frozen or unfrozen |
 
-### WalletFrozen
+### clock
 
 ```solidity
-error WalletFrozen(address wallet)
+function clock() public view returns (uint48)
+```
+
+Returns the current time as a uint48
+
+_Override for ERC20Votes clock functionality_
+
+### CLOCK_MODE
+
+```solidity
+function CLOCK_MODE() public view returns (string)
+```
+
+Returns the EIP6372 clock mode
+
+_Override for ERC20Votes clock functionality_
+
+### FrozenWalletError
+
+```solidity
+error FrozenWalletError(address wallet)
 ```
 
 Error when a wallet is frozen
@@ -103,4 +123,16 @@ Error when a wallet is frozen
 | Name | Type | Description |
 | ---- | ---- | ----------- |
 | wallet | address | The address of the wallet that is frozen |
+
+### WalletFrozen
+
+```solidity
+event WalletFrozen(address wallet, bool isFrozen)
+```
+
+### PauseTransfers
+
+```solidity
+event PauseTransfers(bool isPaused)
+```
 

@@ -42,16 +42,33 @@ struct Sale {
 mapping(address => struct SaleManager.Sale) sales
 ```
 
-### unclaimedTokensByUserByToken
+### unclaimedByUser
 
 ```solidity
-mapping(address => mapping(address => uint256)) unclaimedTokensByUserByToken
+mapping(address => struct SaleManager.Unclaimed[]) unclaimedByUser
 ```
 
-### unclaimedTokensByToken
+### unclaimedProperties
 
 ```solidity
-mapping(address => uint256) unclaimedTokensByToken
+mapping(address => uint256) unclaimedProperties
+```
+
+### whitelistedPaymentTokens
+
+```solidity
+mapping(address => bool) whitelistedPaymentTokens
+```
+
+### Unclaimed
+
+```solidity
+struct Unclaimed {
+  address propertyAddress;
+  address paymentTokenAddress;
+  uint256 propertyAmount;
+  uint256 paymentTokenAmount;
+}
 ```
 
 ### tokenAddresses
@@ -66,10 +83,16 @@ address[] tokenAddresses
 contract UpgradeableBeacon tokenBeacon
 ```
 
+### oracle
+
+```solidity
+contract IOracle oracle
+```
+
 ### initialize
 
 ```solidity
-function initialize(address tokenBeacon_, address owner_) public
+function initialize(address tokenBeacon_, address owner_, address oracle_) public
 ```
 
 ### createToken
@@ -90,21 +113,39 @@ function createSale(address _token, uint256 _start, uint256 _end, uint256 _price
 function editSale(address _token, uint256 _start, uint256 _end, uint256 _price) external
 ```
 
+### withdrawFunds
+
+```solidity
+function withdrawFunds(address _token) external
+```
+
+### setOracle
+
+```solidity
+function setOracle(address oracle_) external
+```
+
+### whitelistPaymentToken
+
+```solidity
+function whitelistPaymentToken(address paymentToken, bool isWhitelisted) external
+```
+
 ### buyTokens
 
 ```solidity
-function buyTokens(uint256 _amount, address _property) external payable
+function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external payable
 ```
 
 ### claimTokens
 
 ```solidity
-function claimTokens(address _property) external
+function claimTokens() external
 ```
 
-### cancelPurchase
+### cancelPurchases
 
 ```solidity
-function cancelPurchase(address _property) external
+function cancelPurchases() external
 ```
 

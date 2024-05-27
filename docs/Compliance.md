@@ -29,31 +29,31 @@ struct Identity {
 ### IdentityNotFound
 
 ```solidity
-error IdentityNotFound()
+error IdentityNotFound(address user)
 ```
 
 ### SignerBlacklisted
 
 ```solidity
-error SignerBlacklisted()
+error SignerBlacklisted(address user)
 ```
 
 ### KYCExpired
 
 ```solidity
-error KYCExpired()
+error KYCExpired(address user)
 ```
 
 ### CountryBlacklisted
 
 ```solidity
-error CountryBlacklisted()
+error CountryBlacklisted(address user)
 ```
 
 ### WalletBlacklisted
 
 ```solidity
-error WalletBlacklisted()
+error WalletBlacklisted(address user)
 ```
 
 ### InvalidSignature
@@ -83,7 +83,7 @@ function initialize(address identitySigner_, address owner_) public
 ### canTransfer
 
 ```solidity
-function canTransfer(address _from, address _to, uint256 _amount) external view
+function canTransfer(address _from, address _to) external view
 ```
 
 ### addIdentity
