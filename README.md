@@ -12,7 +12,8 @@ exceed 16 trillion USD. This provides an opportunity to leverage advanced invest
 passive income!
 
 For learning more about how YieldBricks works, you can visit the
-[YieldBricks documentation](https://yieldbricks.com/faq.html).
+[YieldBricks documentation](https://yieldbricks.com/faq.html). The contract documentation can be found in the
+[docs](./docs) folder.
 
 ## Getting started
 
@@ -55,3 +56,5 @@ yarn gas:ybr
 ```
 
 ## License
+
+The license can be found in the [LICENSE](./LICENSE) file.
