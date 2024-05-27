@@ -3,7 +3,7 @@ import { task } from "hardhat/config";
 import path from "path";
 
 const directoryPath = path.join(__dirname, "..", "docs");
-const indexPath = path.join(directoryPath, "Index.md");
+const indexPath = path.join(directoryPath, "README.md");
 
 task("docs-index", "Generates an Index for solidity-docgen docs", async (_taskArgs) => {
   console.log("Generating Index for solidity-docgen docs");
