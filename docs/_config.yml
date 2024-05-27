@@ -5,7 +5,7 @@ description: DeFi Powerhouse of RWA Space
 # Theme settings
 remote_theme: just-the-docs/just-the-docs
 
-logo: "/images/logo.png"
+logo: "/images/logo.svg"
 favicon_ico: "/images/favicon.png"
 
 url: "https:/docs.yieldbricks.com"
