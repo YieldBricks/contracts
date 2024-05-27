@@ -37,6 +37,10 @@ yarn test
 
 A regular expression can be used to only run specific tests.
 
+user=phron-ai repo=phron; gh api repos/$user/$repo/actions/runs \
+--paginate -q '.workflow_runs[] | select(.head_branch != "master") | "\(.id)"' | \
+xargs -n1 -I % gh api repos/$user/$repo/actions/runs/% -X DELETE
+
 ```bash
 npx hardhat test <file-path> --grep <REGEX>
 ```
