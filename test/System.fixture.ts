@@ -1,8 +1,8 @@
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-import { Compliance, Compliance__factory, SaleManager, SaleManager__factory, Token__factory } from "../types";
-import { identityTypedMessage } from "./utils";
+import { Compliance, Compliance__factory, Property__factory, SaleManager, SaleManager__factory } from "../types";
+import { ZERO_ADDRESS, identityTypedMessage } from "./utils";
 
 export async function deploySystemFixture() {
   // Contracts are deployed using the first signer/account by default
@@ -17,15 +17,19 @@ export async function deploySystemFixture() {
   console.log("Compliance deployed to:", complianceAddress);
 
   // Deploy BeaconProxy contract
-  const Token = (await ethers.getContractFactory("Token")) as Token__factory;
-  const tokenBeacon = await upgrades.deployBeacon(Token, { initialOwner: multisig.address });
-  const tokenBeaconAddress = await tokenBeacon.getAddress();
+  const Property = (await ethers.getContractFactory("Property")) as Property__factory;
+  const propertyBeacon = await upgrades.deployBeacon(Property, { initialOwner: multisig.address });
+  const propertyBeaconAddress = await propertyBeacon.getAddress();
 
-  console.log("TokenBeacon deployed to:", tokenBeaconAddress);
+  console.log("TokenBeacon deployed to:", propertyBeaconAddress);
 
   // Deploy SaleManager contract
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
-  const saleManagerProxy = await upgrades.deployProxy(SaleManager, [tokenBeaconAddress, multisig.address]);
+  const saleManagerProxy = await upgrades.deployProxy(SaleManager, [
+    propertyBeaconAddress,
+    multisig.address,
+    ZERO_ADDRESS,
+  ]);
   const saleManager = SaleManager.attach(await saleManagerProxy.getAddress()) as SaleManager;
   const saleManagerAddress = await saleManagerProxy.getAddress();
 
@@ -57,8 +61,8 @@ export async function deploySystemFixture() {
     complianceAddress,
     saleManager,
     saleManagerAddress,
-    tokenBeacon,
-    tokenBeaconAddress,
+    propertyBeacon,
+    propertyBeaconAddress,
     deployer,
     multisig,
     alice,

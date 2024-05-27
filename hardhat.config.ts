@@ -1,11 +1,15 @@
+import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-toolbox";
 import "@openzeppelin/hardhat-upgrades";
+import "hardhat-deploy";
+import "hardhat-deploy-ethers";
 import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
-import type { NetworkUserConfig } from "hardhat/types";
+import { NetworkUserConfig } from "hardhat/types";
 import "solidity-docgen";
 
 import "./tasks/accounts";
+import "./tasks/docs";
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
 
@@ -50,28 +54,27 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
-  // namedAccounts: {
-  //   deployer: 0,
-  // },
   etherscan: {
     apiKey: {
       arbitrumOne: vars.get("ARBISCAN_API_KEY", ""),
-      avalanche: vars.get("SNOWTRACE_API_KEY", ""),
-      bsc: vars.get("BSCSCAN_API_KEY", ""),
-      mainnet: vars.get("ETHERSCAN_API_KEY", ""),
-      optimisticEthereum: vars.get("OPTIMISM_API_KEY", ""),
-      polygon: vars.get("POLYGONSCAN_API_KEY", ""),
-      polygonMumbai: vars.get("POLYGONSCAN_API_KEY", ""),
-      sepolia: vars.get("ETHERSCAN_API_KEY", ""),
     },
   },
+  namedAccounts: {
+    deployer: 0,
+    multisig: "0xC4116De72f8e038A67656860EEe4322d0289598e",
+  },
+
   gasReporter: {
     currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,
     excludeContracts: [],
     src: "./contracts",
   },
-  docgen: {},
+  docgen: {
+    outputDir: "./docs",
+    pages: "files",
+    exclude: ["test"],
+  },
   networks: {
     hardhat: {
       accounts: {
@@ -86,7 +89,16 @@ const config: HardhatUserConfig = {
       chainId: chainIds.ganache,
       url: "http://localhost:8545",
     },
-    arbitrum: getChainConfig("arbitrum-mainnet"),
+    arbitrum: {
+      ...getChainConfig("arbitrum-mainnet"),
+      verify: {
+        etherscan: {
+          apiKey: vars.get("ARBISCAN_API_KEY", ""),
+        },
+      },
+
+      accounts: [vars.get("DEPLOYER_PRIVATE_KEY", "")],
+    },
     avalanche: getChainConfig("avalanche"),
     bsc: getChainConfig("bsc"),
     mainnet: getChainConfig("mainnet"),

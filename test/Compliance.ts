@@ -35,6 +35,8 @@ describe("Compliance", function () {
 
       const eip712Domain = await compliance.eip712Domain();
 
+      console.log("EIP domain", eip712Domain);
+
       const aliceIdentity = {
         wallet: alice.address,
         signer: kycSigner.address,
@@ -99,80 +101,83 @@ describe("Compliance", function () {
     it("Alice and Bob can transfer, but Eve cannot", async function () {
       const { compliance, alice, bob, eve } = this.fixture;
 
-      expect(compliance.canTransfer(alice, bob, 1));
-      expect(compliance.canTransfer(bob, alice, 1));
-      await expect(compliance.canTransfer(eve, alice, 1)).to.be.revertedWith("Sender identity not found");
+      expect(compliance.canTransfer(alice, bob));
+      expect(compliance.canTransfer(bob, alice));
+      await expect(compliance.canTransfer(eve, alice)).to.be.revertedWithCustomError(compliance, "IdentityNotFound");
     });
 
     it("Blacklist Alice's country", async function () {
       const { compliance, multisig, alice, bob } = this.fixture;
 
       await compliance.connect(multisig).blacklistCountry(840, true);
-      await expect(compliance.canTransfer(alice, alice, 1)).to.be.revertedWith("Sender country is blacklisted");
-      expect(compliance.canTransfer(bob, bob, 1));
+      await expect(compliance.canTransfer(alice, alice)).to.be.revertedWithCustomError(
+        compliance,
+        "CountryBlacklisted",
+      );
+      expect(compliance.canTransfer(bob, bob));
     });
 
     it("Unblacklist Alice's country", async function () {
       const { compliance, multisig, alice } = this.fixture;
 
       await compliance.connect(multisig).blacklistCountry(840, false);
-      expect(compliance.canTransfer(alice, alice, 1));
+      expect(compliance.canTransfer(alice, alice));
     });
 
     it("Blacklist Bob's country", async function () {
       const { compliance, multisig, alice, bob } = this.fixture;
 
       await compliance.connect(multisig).blacklistCountry(550, true);
-      await expect(compliance.canTransfer(alice, bob, 1)).to.be.revertedWith("Receiver country is blacklisted");
-      expect(compliance.canTransfer(alice, alice, 1));
+      await expect(compliance.canTransfer(alice, bob)).to.be.revertedWithCustomError(compliance, "CountryBlacklisted");
+      expect(compliance.canTransfer(alice, alice));
     });
 
     it("Unblacklist Bob's country", async function () {
       const { compliance, multisig, bob } = this.fixture;
 
       await compliance.connect(multisig).blacklistCountry(550, false);
-      expect(compliance.canTransfer(bob, bob, 1));
+      expect(compliance.canTransfer(bob, bob));
     });
 
     it("Blacklist Alice's wallet", async function () {
       const { compliance, multisig, alice, bob } = this.fixture;
 
       await compliance.connect(multisig).blacklistWallet(alice.address, true);
-      await expect(compliance.canTransfer(alice, alice, 1)).to.be.revertedWith("Sender wallet is blacklisted");
-      expect(compliance.canTransfer(bob, bob, 1));
+      await expect(compliance.canTransfer(alice, alice)).to.be.revertedWithCustomError(compliance, "WalletBlacklisted");
+      expect(compliance.canTransfer(bob, bob));
     });
 
     it("Unblacklist Alice's wallet", async function () {
       const { compliance, multisig, alice } = this.fixture;
 
       await compliance.connect(multisig).blacklistWallet(alice.address, false);
-      expect(compliance.canTransfer(alice, alice, 1));
+      expect(compliance.canTransfer(alice, alice));
     });
 
     it("Blacklist Bob's wallet", async function () {
       const { compliance, multisig, alice, bob } = this.fixture;
 
       await compliance.connect(multisig).blacklistWallet(bob.address, true);
-      await expect(compliance.canTransfer(alice, bob, 1)).to.be.revertedWith("Receiver wallet is blacklisted");
-      expect(compliance.canTransfer(alice, alice, 1));
+      await expect(compliance.canTransfer(alice, bob)).to.be.revertedWithCustomError(compliance, "WalletBlacklisted");
+      expect(compliance.canTransfer(alice, alice));
     });
 
     it("Unblacklist Bob's wallet", async function () {
       const { compliance, multisig, bob } = this.fixture;
 
       await compliance.connect(multisig).blacklistWallet(bob.address, false);
-      expect(compliance.canTransfer(bob, bob, 1));
+      expect(compliance.canTransfer(bob, bob));
     });
 
     it("Blacklist Sender Signer", async function () {
       const { compliance, multisig, kycSigner, alice } = this.fixture;
 
       await compliance.connect(multisig).blacklistSigner(kycSigner, true);
-      await expect(compliance.canTransfer(alice, alice, 1)).to.be.revertedWith("Sender signer is blacklisted");
+      await expect(compliance.canTransfer(alice, alice)).to.be.revertedWithCustomError(compliance, "SignerBlacklisted");
 
       await compliance.connect(multisig).blacklistSigner(kycSigner.address, false);
 
-      expect(compliance.canTransfer(alice, alice, 1));
+      expect(compliance.canTransfer(alice, alice));
     });
 
     it("Sender and Receiver KYC expiration", async function () {
@@ -180,8 +185,8 @@ describe("Compliance", function () {
 
       await time.increase(7 * DAY); // Increase by 7 days
 
-      await expect(compliance.canTransfer(alice, bob, 1)).to.be.revertedWith("Sender KYC expired");
-      await expect(compliance.canTransfer(bob, alice, 1)).to.be.revertedWith("Receiver KYC expired");
+      await expect(compliance.canTransfer(alice, bob)).to.be.revertedWithCustomError(compliance, "KYCExpired");
+      await expect(compliance.canTransfer(bob, alice)).to.be.revertedWithCustomError(compliance, "KYCExpired");
     });
 
     it("Signer expiration", async function () {
@@ -203,7 +208,10 @@ describe("Compliance", function () {
 
       const eveSignature = await kycSigner.signTypedData(eveData.domain, eveData.types, eveData.identity);
 
-      await expect(compliance.addIdentity(eveIdentity, eveSignature)).to.be.revertedWith("Expired signer key");
+      await expect(compliance.addIdentity(eveIdentity, eveSignature)).to.be.revertedWithCustomError(
+        compliance,
+        "ExpiredSignerKey",
+      );
     });
   });
 
@@ -255,10 +263,69 @@ describe("Compliance", function () {
 
       await expect(compliance.addIdentity(bobIdentity, bobSignature)).to.be.fulfilled;
 
-      await expect(compliance.addIdentity(aliceIdentity, bobSignature)).to.be.revertedWith("Invalid signature");
+      await expect(compliance.addIdentity(aliceIdentity, bobSignature)).to.be.revertedWithCustomError(
+        compliance,
+        "InvalidSignature",
+      );
 
       const badSignature = await kycSigner2.signTypedData(aliceData.domain, aliceData.types, aliceData.identity);
-      await expect(compliance.addIdentity(aliceIdentity, badSignature)).to.be.revertedWith("Signature mismatch");
+      await expect(compliance.addIdentity(aliceIdentity, badSignature)).to.be.revertedWithCustomError(
+        compliance,
+        "SignatureMismatch",
+      );
+    });
+
+    it("Make sure _identitySigner == signer", async function () {
+      const { compliance, alice, bob, kycSigner, kycSigner2 } = this.fixture;
+
+      const eip712Domain = await compliance.eip712Domain();
+
+      const aliceIdentity = {
+        wallet: alice.address,
+        signer: kycSigner.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("alice@example.com")),
+        expiration: (await time.latest()) + 7 * DAY, // 7 days
+        country: 840,
+      };
+
+      const bobIdentity = {
+        wallet: bob.address,
+        signer: kycSigner2.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("bob@example.com")),
+        expiration: (await time.latest()) + 14 * DAY, // 7 days,
+        country: 550,
+      };
+
+      const bobData = identityTypedMessage(eip712Domain, bobIdentity);
+
+      const bobSignature = await kycSigner2.signTypedData(bobData.domain, bobData.types, bobData.identity);
+
+      await expect(compliance.addIdentity(aliceIdentity, bobSignature)).to.be.revertedWithCustomError(
+        compliance,
+        "InvalidSignature",
+      );
+    });
+
+    it("Make sure _identitySigner == signer == _identitySigner", async function () {
+      const { compliance, alice, kycSigner, kycSigner2 } = this.fixture;
+
+      const eip712Domain = await compliance.eip712Domain();
+
+      const aliceIdentity = {
+        wallet: alice.address,
+        signer: kycSigner.address,
+        emailHash: ethers.keccak256(ethers.toUtf8Bytes("alice@example.com")),
+        expiration: (await time.latest()) + 7 * DAY, // 7 days
+        country: 840,
+      };
+
+      const aliceData = identityTypedMessage(eip712Domain, aliceIdentity);
+
+      const badSignature = await kycSigner2.signTypedData(aliceData.domain, aliceData.types, aliceData.identity);
+      await expect(compliance.addIdentity(aliceIdentity, badSignature)).to.be.revertedWithCustomError(
+        compliance,
+        "SignatureMismatch",
+      );
     });
 
     it("Blacklist Alice's signer but not Bob's, then check canTransfer from Bob to Alice", async function () {
@@ -268,8 +335,9 @@ describe("Compliance", function () {
       await compliance.connect(multisig).blacklistSigner(kycSigner, true);
 
       // Check if Bob can transfer to Alice
-      await expect(compliance.canTransfer(bob.address, alice.address, 1)).to.be.revertedWith(
-        "Receiver signer is blacklisted",
+      await expect(compliance.canTransfer(bob.address, alice.address)).to.be.revertedWithCustomError(
+        compliance,
+        "SignerBlacklisted",
       );
 
       // Unblacklist Alice
@@ -277,7 +345,7 @@ describe("Compliance", function () {
 
       // Check again if Bob can transfer to Alice
       // This call should not be reverted because Alice's signer is not blacklisted anymore
-      await expect(compliance.canTransfer(bob.address, alice.address, 1)).to.not.be.reverted;
+      await expect(compliance.canTransfer(bob.address, alice.address)).to.not.be.reverted;
     });
   });
 });

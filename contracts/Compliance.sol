@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: GPL-3.0-or-later
+// SPDX-License-Identifier: See LICENSE in root directory
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./Token.sol";
+import { Property } from "./Property.sol";
 
 import "hardhat/console.sol";
 
@@ -17,11 +17,11 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     // Signers are on a hot wallet, so they are rotated on a weekly basis to optimize the RTO
     address private _identitySigner;
     uint256 private _identitySignerExpiration;
-    mapping(address => bool) private _signerBlacklist;
+    mapping(address signer => bool isBlacklisted) private _signerBlacklist;
 
-    mapping(address => Identity) public identities;
-    mapping(uint16 => bool) private _countryBlacklist;
-    mapping(address => bool) private _walletBlacklist;
+    mapping(address wallet => Identity identity) public identities;
+    mapping(uint16 country => bool isBlacklisted) private _countryBlacklist;
+    mapping(address wallet => bool isBlacklisted) private _walletBlacklist;
 
     struct Identity {
         address wallet; // The wallet which is being KYCed
@@ -30,6 +30,17 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         uint256 expiration; // Expiration date of the KYC validation
         uint16 country; // According to https://en.wikipedia.org/wiki/ISO_3166-1_numeric
     }
+
+    // Define custom errors
+    error IdentityNotFound(address user);
+    error SignerBlacklisted(address user);
+    error KYCExpired(address user);
+    error CountryBlacklisted(address user);
+    error WalletBlacklisted(address user);
+
+    error InvalidSignature();
+    error SignatureMismatch();
+    error ExpiredSignerKey();
 
     bytes32 private constant IDENTITY_TYPEHASH =
         keccak256("Identity(address wallet,address signer,bytes32 emailHash,uint256 expiration,uint16 country)");
@@ -43,26 +54,44 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     }
 
     // compliance check and state update
-    function canTransfer(address _from, address _to, uint256 _amount) external view {
+    function canTransfer(address _from, address _to) external view {
         // get Identity for _from and _to
         Identity memory identityFrom = identities[_from];
         Identity memory identityTo = identities[_to];
 
-        console.log("canTransferDebug", msg.sender, identityTo.wallet, _to);
-
         if (_from != address(0)) {
-            require(identityFrom.wallet != address(0), "Sender identity not found");
-            require(!_signerBlacklist[identityFrom.signer], "Sender signer is blacklisted");
-            require(block.timestamp < identityFrom.expiration, "Sender KYC expired");
-            require(!_countryBlacklist[identityFrom.country], "Sender country is blacklisted");
-            require(!_walletBlacklist[_from], "Sender wallet is blacklisted");
+            if (identityFrom.wallet == address(0)) {
+                revert IdentityNotFound(_from);
+            }
+            if (_signerBlacklist[identityFrom.signer]) {
+                revert SignerBlacklisted(_from);
+            }
+            if (block.timestamp >= identityFrom.expiration) {
+                revert KYCExpired(_from);
+            }
+            if (_countryBlacklist[identityFrom.country]) {
+                revert CountryBlacklisted(_from);
+            }
+            if (_walletBlacklist[_from]) {
+                revert WalletBlacklisted(_from);
+            }
         }
 
-        require(identityTo.wallet != address(0), "Receiver identity not found");
-        require(!_signerBlacklist[identityTo.signer], "Receiver signer is blacklisted");
-        require(block.timestamp < identityTo.expiration, "Receiver KYC expired");
-        require(!_countryBlacklist[identityTo.country], "Receiver country is blacklisted");
-        require(!_walletBlacklist[_to], "Receiver wallet is blacklisted");
+        if (identityTo.wallet == address(0)) {
+            revert IdentityNotFound(_to);
+        }
+        if (_signerBlacklist[identityTo.signer]) {
+            revert SignerBlacklisted(_to);
+        }
+        if (block.timestamp >= identityTo.expiration) {
+            revert KYCExpired(_to);
+        }
+        if (_countryBlacklist[identityTo.country]) {
+            revert CountryBlacklisted(_to);
+        }
+        if (_walletBlacklist[_to]) {
+            revert WalletBlacklisted(_to);
+        }
 
         // Check if the amount transfered is a significant part of the users supply
         // Token token = Token(msg.sender);
@@ -84,9 +113,15 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
             )
         );
         address signer = ECDSA.recover(digest, signature);
-        require(signer == _identitySigner, "Invalid signature");
-        require(_identity.signer == signer, "Signature mismatch");
-        require(block.timestamp < _identitySignerExpiration, "Expired signer key");
+        if (signer != _identitySigner) {
+            revert InvalidSignature();
+        }
+        if (_identity.signer != signer) {
+            revert SignatureMismatch();
+        }
+        if (block.timestamp >= _identitySignerExpiration) {
+            revert ExpiredSignerKey();
+        }
 
         identities[_identity.wallet] = _identity;
     }

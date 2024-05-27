@@ -1,27 +1,56 @@
 # YieldBricks Smart Contracts
 
-## Usage
+Open source implementation of YieldBricks in Solidity. This repository contains the core contracts of YieldBricks.
 
-First, you need to setup the environment:
+YieldBricks is a pioneering DeFi platform offering tokenized yield pools backed by real estate assets. We stand out as
+one of the few platforms that are fully compliant with legal regulations, successfully navigating the complexities of
+securities classification. Our mission is to democratize access to premium investment opportunities, making them
+available to retail and small investors from the outset.
 
-```sh
-yarn install # install project dependencies
-yarn hardhat vars setup # set MNEMONIC and INFURA_API_KEY
+For learning more about how YieldBricks works, you can visit the
+[YieldBricks documentation](https://yieldbricks.com/faq.html). The contract documentation can be found in the
+[docs](./docs) folder.
+
+## Getting started
+
+YieldBricks uses [Hardhat](https://hardhat.org/) for development. Run the following command to install the dependencies:
+
+```bash
+yarn install
 ```
 
-Then follow the normal development loop with:
+## Testing
 
-```sh
-yarn compile # compile the contracts
-yarn test # run the tests
+The tests for YieldBricks are written in Solidity
+
+### Run all tests
+
+```bash
+yarn test
 ```
 
-For all other commands, take a peek in the `package.json` file.
+### Run specific tests
 
-### Report Gas
+A regular expression can be used to only run specific tests.
 
-See the gas usage per unit test and average gas per method call:
-
-```sh
-REPORT_GAS=true yarn test
+```bash
+npx hardhat test <file-path> --grep <REGEX>
 ```
+
+### Gas Measurement
+
+To measure the gas usage of a test, run the following command:
+
+```bash
+yarn gas
+```
+
+There is also a special gas report test for the YBR snapshot feature, that can be run using:
+
+```bash
+yarn gas:ybr
+```
+
+## License
+
+The license can be found in the [LICENSE](./LICENSE) file.

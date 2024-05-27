@@ -21,3 +21,5 @@ export function identityTypedMessage(eip712Domain: any, identity: any) {
 }
 
 export const DAY = 60 * 60 * 24;
+
+export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
