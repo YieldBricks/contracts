@@ -9,6 +9,7 @@ import { NetworkUserConfig } from "hardhat/types";
 import "solidity-docgen";
 
 import "./tasks/accounts";
+import "./tasks/docs";
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
 

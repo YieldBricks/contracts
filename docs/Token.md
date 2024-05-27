@@ -1,3 +1,25 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Solidity API](#solidity-api)
+  - [Token](#token)
+    - [frozen](#frozen)
+    - [lastUpdate](#lastupdate)
+    - [stakeValue](#stakevalue)
+    - [initialize](#initialize)
+    - [pause](#pause)
+    - [unpause](#unpause)
+    - [\_update](#%5C_update)
+    - [updateStakeValue](#updatestakevalue)
+    - [\_updateStakeValue](#%5C_updatestakevalue)
+    - [forceTransfer](#forcetransfer)
+    - [freezeWallet](#freezewallet)
+    - [OwnableUnauthorizedAccount](#ownableunauthorizedaccount)
+    - [onlyOwner](#onlyowner)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Solidity API
 
 ## Token

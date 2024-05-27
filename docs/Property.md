@@ -1,3 +1,42 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Solidity API](#solidity-api)
+  - [Property](#property)
+    - [walletFrozen](#walletfrozen)
+    - [claimNonce](#claimnonce)
+    - [claims](#claims)
+    - [Yield](#yield)
+    - [constructor](#constructor)
+    - [initialize](#initialize)
+      - [Parameters](#parameters)
+    - [_update](#_update)
+      - [Parameters](#parameters-1)
+    - [nonces](#nonces)
+      - [Parameters](#parameters-2)
+    - [forceTransfer](#forcetransfer)
+      - [Parameters](#parameters-3)
+    - [pauseTransfers](#pausetransfers)
+    - [addYield](#addyield)
+      - [Parameters](#parameters-4)
+    - [collectYields](#collectyields)
+    - [freezeWallet](#freezewallet)
+      - [Parameters](#parameters-5)
+    - [onlyOwner](#onlyowner)
+    - [owner](#owner)
+    - [clock](#clock)
+    - [CLOCK_MODE](#clock_mode)
+    - [FrozenWalletError](#frozenwalleterror)
+      - [Parameters](#parameters-6)
+    - [OwnableUnauthorizedAccount](#ownableunauthorizedaccount)
+    - [WalletFrozen](#walletfrozen)
+    - [PauseTransfers](#pausetransfers)
+    - [YieldAdded](#yieldadded)
+    - [YieldCollected](#yieldcollected)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Solidity API
 
 ## Property

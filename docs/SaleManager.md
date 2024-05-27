@@ -1,3 +1,35 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [Solidity API](#solidity-api)
+  - [SaleManager](#salemanager)
+    - [TokenDeployed](#tokendeployed)
+    - [SaleCreated](#salecreated)
+    - [SaleModified](#salemodified)
+    - [ClaimAdded](#claimadded)
+    - [Sale](#sale)
+    - [sales](#sales)
+    - [unclaimedByUser](#unclaimedbyuser)
+    - [unclaimedProperties](#unclaimedproperties)
+    - [whitelistedPaymentTokens](#whitelistedpaymenttokens)
+    - [Unclaimed](#unclaimed)
+    - [tokenAddresses](#tokenaddresses)
+    - [tokenBeacon](#tokenbeacon)
+    - [oracle](#oracle)
+    - [initialize](#initialize)
+    - [createToken](#createtoken)
+    - [createSale](#createsale)
+    - [editSale](#editsale)
+    - [withdrawFunds](#withdrawfunds)
+    - [setOracle](#setoracle)
+    - [whitelistPaymentToken](#whitelistpaymenttoken)
+    - [buyTokens](#buytokens)
+    - [claimTokens](#claimtokens)
+    - [cancelPurchases](#cancelpurchases)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Solidity API
 
 ## SaleManager
