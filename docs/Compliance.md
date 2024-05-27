@@ -1,29 +1,8 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Solidity API](#solidity-api)
-  - [Compliance](#compliance)
-    - [DEFAULT_SIGNER_DURATION](#default_signer_duration)
-    - [identities](#identities)
-    - [Identity](#identity)
-    - [IdentityNotFound](#identitynotfound)
-    - [SignerBlacklisted](#signerblacklisted)
-    - [KYCExpired](#kycexpired)
-    - [CountryBlacklisted](#countryblacklisted)
-    - [WalletBlacklisted](#walletblacklisted)
-    - [InvalidSignature](#invalidsignature)
-    - [SignatureMismatch](#signaturemismatch)
-    - [ExpiredSignerKey](#expiredsignerkey)
-    - [initialize](#initialize)
-    - [canTransfer](#cantransfer)
-    - [addIdentity](#addidentity)
-    - [setIdentitySigner](#setidentitysigner)
-    - [blacklistSigner](#blacklistsigner)
-    - [blacklistCountry](#blacklistcountry)
-    - [blacklistWallet](#blacklistwallet)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+---
+layout: default
+title: Compliance
+nav_order: 2
+---
 
 # Solidity API
 

@@ -3,31 +3,30 @@ import { task } from "hardhat/config";
 import path from "path";
 
 const directoryPath = path.join(__dirname, "..", "docs");
-const indexPath = path.join(directoryPath, "README.md");
 
-task("docs-index", "Generates an Index for solidity-docgen docs", async (_taskArgs) => {
-  console.log("Generating Index for solidity-docgen docs");
-
-  console.log(directoryPath, indexPath);
-
+task("docs", "Additonal docs processing", async (_taskArgs) => {
   try {
     const files = await fs.promises.readdir(directoryPath);
-    console.log("Reading directory: ", files);
 
-    let indexContent = "# Index\n\n";
-
-    files.forEach((file) => {
-      if (file.endsWith(".md") && file !== indexPath) {
+    for (const file of files) {
+      if (file.endsWith(".md")) {
         const fileNameWithoutExtension = path.parse(file).name;
-        indexContent += `- [${fileNameWithoutExtension}](./${file})\n`;
+
+        const filePath = path.join(directoryPath, file);
+        let fileContent = (await fs.promises.readFile(filePath)).toString();
+
+        const frontMatter = `---
+layout: default
+title: ${fileNameWithoutExtension}
+nav_order: 2
+---
+
+`;
+
+        fileContent = frontMatter + fileContent;
+        await fs.promises.writeFile(filePath, fileContent);
       }
-    });
-
-    console.log("Writing contents: ", indexContent);
-
-    await fs.promises.writeFile(indexPath, indexContent);
-
-    console.log("Successfully written to: ", indexPath);
+    }
   } catch (err) {
     console.log("Unable to scan directory: " + err);
   }

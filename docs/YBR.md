@@ -1,28 +1,8 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
-
-- [Solidity API](#solidity-api)
-  - [YBR](#ybr)
-    - [walletFrozen](#walletfrozen)
-    - [constructor](#constructor)
-    - [initialize](#initialize)
-      - [Parameters](#parameters)
-    - [_update](#_update)
-      - [Parameters](#parameters-1)
-    - [nonces](#nonces)
-      - [Parameters](#parameters-2)
-    - [pauseTransfers](#pausetransfers)
-    - [freezeWallet](#freezewallet)
-      - [Parameters](#parameters-3)
-    - [clock](#clock)
-    - [CLOCK_MODE](#clock_mode)
-    - [FrozenWalletError](#frozenwalleterror)
-      - [Parameters](#parameters-4)
-    - [WalletFrozen](#walletfrozen)
-    - [PauseTransfers](#pausetransfers)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+---
+layout: default
+title: YBR
+nav_order: 2
+---
 
 # Solidity API
 

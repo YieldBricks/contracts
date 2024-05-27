@@ -3,7 +3,17 @@ title: YieldBricks
 description: DeFi Powerhouse of RWA Space
 
 # Theme settings
-remote_theme: just-the-docs/just-the-docs
+remote_theme: just-the-docs
 
-# Breadcrumbs
-breadcrumbs: true
+logo: "/docs/images/logo.png"
+favicon_ico: "/docs/images/favicon.png"
+
+aux_links:
+  "Website":
+    - "yieldbricks.com"
+
+aux_links_new_tab: false
+
+nav_enabled: true
+
+footer_content: "Copyright &copy; 2023-2024 YieldBricks.</a>"
