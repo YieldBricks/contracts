@@ -1,3 +1,9 @@
+---
+layout: default
+title: Home
+nav_order: 1
+---
+
 # YieldBricks Smart Contracts
 
 Open source implementation of YieldBricks in Solidity. This repository contains the core contracts of YieldBricks.
