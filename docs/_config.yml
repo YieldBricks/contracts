@@ -3,7 +3,7 @@ title: YieldBricks
 description: DeFi Powerhouse of RWA Space
 
 # Theme settings
-theme: just-the-docs
+remote_theme: just-the-docs
 
 # Breadcrumbs
 breadcrumbs: true
