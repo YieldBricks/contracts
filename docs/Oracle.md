@@ -4,6 +4,8 @@ title: Oracle
 nav_order: 2
 ---
 
+{:toc}
+
 # Solidity API
 
 ## IOracle
@@ -33,4 +35,3 @@ function setPrice(uint256 _price) external
 ```solidity
 function getTokensPerUSD(address tokenAddress) external view returns (uint256)
 ```
-

@@ -4,6 +4,8 @@ title: Compliance
 nav_order: 2
 ---
 
+{:toc}
+
 # Solidity API
 
 ## Compliance
@@ -121,4 +123,3 @@ function blacklistCountry(uint16 _country, bool isBlacklisted) external
 ```solidity
 function blacklistWallet(address _wallet, bool isBlacklisted) external
 ```
-

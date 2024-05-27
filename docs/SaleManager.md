@@ -4,6 +4,8 @@ title: SaleManager
 nav_order: 2
 ---
 
+{:toc}
+
 # Solidity API
 
 ## SaleManager
@@ -154,4 +156,3 @@ function claimTokens() external
 ```solidity
 function cancelPurchases() external
 ```
-

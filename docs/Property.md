@@ -4,6 +4,8 @@ title: Property
 nav_order: 2
 ---
 
+{:toc}
+
 # Solidity API
 
 ## Property
@@ -60,35 +62,33 @@ Contract constructor - disabled due to upgradeability
 function initialize(address compliance, address saleManager, string name, string symbol, uint256 cap) external
 ```
 
-_Initializes the contract by setting a `name`, a `symbol`, a `compliance`
-contract address, a `saleManager` address,
-and a `cap` on the total supply of tokens._
+_Initializes the contract by setting a `name`, a `symbol`, a `compliance` contract address, a `saleManager` address, and
+a `cap` on the total supply of tokens._
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| compliance | address | The address of the Compliance contract |
+| Name        | Type    | Description                             |
+| ----------- | ------- | --------------------------------------- |
+| compliance  | address | The address of the Compliance contract  |
 | saleManager | address | The address of the SaleManager contract |
-| name | string | The name of the token |
-| symbol | string | The symbol of the token |
-| cap | uint256 | The cap on the total supply of tokens |
+| name        | string  | The name of the token                   |
+| symbol      | string  | The symbol of the token                 |
+| cap         | uint256 | The cap on the total supply of tokens   |
 
-### _update
+### \_update
 
 ```solidity
 function _update(address from, address to, uint256 value) internal
 ```
 
-_Overrides for ERC20 inheritance chain, with added functionality for
-freezing wallets and vote self-delegation_
+_Overrides for ERC20 inheritance chain, with added functionality for freezing wallets and vote self-delegation_
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| from | address | The address to transfer from. |
-| to | address | The address to transfer to. |
+| Name  | Type    | Description                   |
+| ----- | ------- | ----------------------------- |
+| from  | address | The address to transfer from. |
+| to    | address | The address to transfer to.   |
 | value | uint256 | The amount to be transferred. |
 
 ### nonces
@@ -101,9 +101,9 @@ Override the nonces function to return the nonce for a given owner
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| owner_ | address | The address of the token holder |
+| Name    | Type    | Description                     |
+| ------- | ------- | ------------------------------- |
+| owner\_ | address | The address of the token holder |
 
 ### forceTransfer
 
@@ -113,16 +113,16 @@ function forceTransfer(address from, uint256 value) public
 
 Allows the owner to force a transfer of tokens from one address to the owner
 
-_The closed nature of the system (only KYCed accounts can transfer) means that even if
-a user leaks their private key, a malicious actor cannot send the tokens to an anonymous wallet,
-so recovery conditions are very limited, and fully covered by our legal compliance model._
+_The closed nature of the system (only KYCed accounts can transfer) means that even if a user leaks their private key, a
+malicious actor cannot send the tokens to an anonymous wallet, so recovery conditions are very limited, and fully
+covered by our legal compliance model._
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| from | address | The address to transfer from |
-| value | uint256 | The amount to transfer |
+| Name  | Type    | Description                  |
+| ----- | ------- | ---------------------------- |
+| from  | address | The address to transfer from |
+| value | uint256 | The amount to transfer       |
 
 ### pauseTransfers
 
@@ -142,11 +142,11 @@ Allows the owner to add a claim to the contract
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name        | Type    | Description                     |
+| ----------- | ------- | ------------------------------- |
 | rewardToken | address | The address of the reward token |
-| amount | uint256 | The amount of the reward token |
-| timestamp | uint256 | The timestamp of the claim |
+| amount      | uint256 | The amount of the reward token  |
+| timestamp   | uint256 | The timestamp of the claim      |
 
 ### collectYields
 
@@ -156,10 +156,9 @@ function collectYields() external
 
 Allows Property token holders to collect their property yield
 
-_This function is gas-optimized to allow for a large number of claims to be processed
-in a single transaction. The owner can add claims to the contract, and then users can collect
-their claims in batches of X at a time. The claim amount is proportional to the user's holdings
-at the time of the claim._
+_This function is gas-optimized to allow for a large number of claims to be processed in a single transaction. The owner
+can add claims to the contract, and then users can collect their claims in batches of X at a time. The claim amount is
+proportional to the user's holdings at the time of the claim._
 
 ### freezeWallet
 
@@ -171,10 +170,10 @@ Allows the owner to freeze or unfreeze a wallet
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| wallet | address | The address of the wallet to freeze or unfreeze |
-| isFrozen | bool | A boolean indicating whether the wallet should be frozen or unfrozen |
+| Name     | Type    | Description                                                          |
+| -------- | ------- | -------------------------------------------------------------------- |
+| wallet   | address | The address of the wallet to freeze or unfreeze                      |
+| isFrozen | bool    | A boolean indicating whether the wallet should be frozen or unfrozen |
 
 ### onlyOwner
 
@@ -224,8 +223,8 @@ Error when a wallet is frozen
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description                               |
+| ------ | ------- | ----------------------------------------- |
 | wallet | address | The address of the wallet that was frozen |
 
 ### OwnableUnauthorizedAccount
@@ -257,4 +256,3 @@ event YieldAdded(uint256 transactionId, address rewardToken, uint256 amount)
 ```solidity
 event YieldCollected(address user, address rewardToken, uint256 amount)
 ```
-

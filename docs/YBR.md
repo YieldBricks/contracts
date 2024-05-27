@@ -4,6 +4,8 @@ title: YBR
 nav_order: 2
 ---
 
+{:toc}
+
 # Solidity API
 
 ## YBR
@@ -38,26 +40,26 @@ _This function replaces the constructor for upgradeable contracts._
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| owner_ | address | The initial owner of the contract. |
+| Name    | Type    | Description                        |
+| ------- | ------- | ---------------------------------- |
+| owner\_ | address | The initial owner of the contract. |
 
-### _update
+### \_update
 
 ```solidity
 function _update(address from, address to, uint256 value) internal
 ```
 
-Overrides the ERC20 _beforeTokenTransfer function to add wallet freezing functionality
-as well incorporate the other inherited functions.
+Overrides the ERC20 \_beforeTokenTransfer function to add wallet freezing functionality as well incorporate the other
+inherited functions.
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| from | address | The address from which the tokens are being transferred |
-| to | address | The address to which the tokens are being transferred |
-| value | uint256 | The amount of tokens being transferred |
+| Name  | Type    | Description                                             |
+| ----- | ------- | ------------------------------------------------------- |
+| from  | address | The address from which the tokens are being transferred |
+| to    | address | The address to which the tokens are being transferred   |
+| value | uint256 | The amount of tokens being transferred                  |
 
 ### nonces
 
@@ -69,8 +71,8 @@ Override the nonces function to return the nonce for a given owner
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name  | Type    | Description                     |
+| ----- | ------- | ------------------------------- |
 | owner | address | The address of the token holder |
 
 ### pauseTransfers
@@ -91,10 +93,10 @@ Allows the owner to freeze or unfreeze a wallet
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| wallet | address | The address of the wallet to freeze or unfreeze |
-| isFrozen | bool | A boolean indicating whether the wallet should be frozen or unfrozen |
+| Name     | Type    | Description                                                          |
+| -------- | ------- | -------------------------------------------------------------------- |
+| wallet   | address | The address of the wallet to freeze or unfreeze                      |
+| isFrozen | bool    | A boolean indicating whether the wallet should be frozen or unfrozen |
 
 ### clock
 
@@ -126,8 +128,8 @@ Error when a wallet is frozen
 
 #### Parameters
 
-| Name | Type | Description |
-| ---- | ---- | ----------- |
+| Name   | Type    | Description                              |
+| ------ | ------- | ---------------------------------------- |
 | wallet | address | The address of the wallet that is frozen |
 
 ### WalletFrozen
@@ -141,4 +143,3 @@ event WalletFrozen(address wallet, bool isFrozen)
 ```solidity
 event PauseTransfers(bool isPaused)
 ```
-
