@@ -7,10 +7,6 @@ one of the few platforms that are fully compliant with legal regulations, succes
 securities classification. Our mission is to democratize access to premium investment opportunities, making them
 available to retail and small investors from the outset.
 
-By participating in YieldBricks, users can tap into the burgeoning Real-World Assets (RWA) sector, which is projected to
-exceed 16 trillion USD. This provides an opportunity to leverage advanced investment strategies and secure a high-yield
-passive income!
-
 For learning more about how YieldBricks works, you can visit the
 [YieldBricks documentation](https://yieldbricks.com/faq.html). The contract documentation can be found in the
 [docs](./docs) folder.
