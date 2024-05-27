@@ -1,0 +1,9 @@
+# Site settings
+title: YieldBricks
+description: DeFi Powerhouse of RWA Space
+
+# Theme settings
+theme: jekyll-theme-just-the-docs
+
+# Breadcrumbs
+breadcrumbs: true
