@@ -96,7 +96,7 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     // Sale functions
-    function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external payable {
+    function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external {
         // check that sale is open
         require(block.timestamp >= sales[_property].start, "Sale not started");
         require(block.timestamp <= sales[_property].end, "Sale ended");
