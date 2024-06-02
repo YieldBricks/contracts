@@ -54,6 +54,10 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
 
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
+  defender: {
+    apiKey: process.env.DEFENDER_KEY as string,
+    apiSecret: process.env.DEFENDER_SECRET as string,
+  },
   etherscan: {
     apiKey: {
       arbitrumOne: vars.get("ARBISCAN_API_KEY", ""),
