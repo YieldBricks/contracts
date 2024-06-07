@@ -1,6 +1,6 @@
 ---
 layout: default
-title: YBR.md
+title: YBR
 nav_order: 2
 ---
 

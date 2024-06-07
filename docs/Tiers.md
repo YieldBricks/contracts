@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Tiers.md
+title: Tiers
 nav_order: 2
 ---
 

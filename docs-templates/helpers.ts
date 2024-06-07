@@ -67,3 +67,7 @@ export function formatVariable(v: VariableDeclaration): string {
 }
 
 export const eq = (a: unknown, b: unknown) => a === b;
+
+export function removeExtension(path: string): string {
+  return path.replace(/\.[^/.]+$/, "");
+}

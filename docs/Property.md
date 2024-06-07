@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Property.md
+title: Property
 nav_order: 2
 ---
 

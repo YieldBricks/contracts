@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Oracle.md
+title: Oracle
 nav_order: 2
 ---
 

@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Compliance.md
+title: Compliance
 nav_order: 2
 ---
 

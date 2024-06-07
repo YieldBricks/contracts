@@ -1,6 +1,6 @@
 ---
 layout: default
-title: SaleManager.md
+title: SaleManager
 nav_order: 2
 ---
 
