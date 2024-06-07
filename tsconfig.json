@@ -18,5 +18,13 @@
   },
   "exclude": ["node_modules", "sumo"],
   "files": ["./hardhat.config.ts"],
-  "include": ["src/**/*", "tasks/**/*", "test/**/*", "deploy/**/*", "types/", "migrations/**/*"]
+  "include": [
+    "src/**/*",
+    "tasks/**/*",
+    "test/**/*",
+    "deploy/**/*",
+    "types/",
+    "migrations/**/*",
+    "docs-templates/helpers.ts"
+  ]
 }

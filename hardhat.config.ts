@@ -9,7 +9,9 @@ import { NetworkUserConfig } from "hardhat/types";
 import "solidity-docgen";
 
 import "./tasks/accounts";
-import "./tasks/docs";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+require("dotenv").config();
 
 // Run 'npx hardhat vars setup' to see the list of variables that need to be set
 
@@ -76,6 +78,7 @@ const config: HardhatUserConfig = {
   },
   docgen: {
     outputDir: "./docs",
+    templates: "docs-templates",
     pages: "files",
     exclude: ["test"],
   },
@@ -109,7 +112,10 @@ const config: HardhatUserConfig = {
     optimism: getChainConfig("optimism-mainnet"),
     "polygon-mainnet": getChainConfig("polygon-mainnet"),
     "polygon-mumbai": getChainConfig("polygon-mumbai"),
-    sepolia: getChainConfig("sepolia"),
+    sepolia: {
+      ...getChainConfig("sepolia"),
+      accounts: [""],
+    },
   },
   paths: {
     artifacts: "./artifacts",

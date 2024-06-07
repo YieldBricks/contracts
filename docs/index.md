@@ -1,8 +1,10 @@
 ---
-title: Home
-layout: home
+layout: default
+title: index
 nav_order: 1
 ---
+
+{:toc}
 
 # YieldBricks Smart Contracts
 

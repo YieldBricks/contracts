@@ -55,6 +55,9 @@ contract Property is
     /// @notice Array of claims made by the ownerha
     Yield[] public claims;
 
+    /**
+     * @notice Struct to represent a yield claim
+     */
     struct Yield {
         address rewardToken;
         uint256 amount;
@@ -241,8 +244,32 @@ contract Property is
     error FrozenWalletError(address wallet);
     error OwnableUnauthorizedAccount(address sender);
 
+    /**
+     * @dev Emitted when the frozen status of a wallet is changed.
+     * @param wallet The address of the wallet.
+     * @param isFrozen The new frozen status of the wallet.
+     */
     event WalletFrozen(address wallet, bool isFrozen);
+
+    /**
+     * @dev Emitted when the pause status of transfers is changed.
+     * @param isPaused The new pause status of transfers.
+     */
     event PauseTransfers(bool isPaused);
+
+    /**
+     * @dev Emitted when yield is added.
+     * @param transactionId The ID of the transaction.
+     * @param rewardToken The address of the reward token.
+     * @param amount The amount of yield added.
+     */
     event YieldAdded(uint256 indexed transactionId, address rewardToken, uint256 amount);
+
+    /**
+     * @dev Emitted when yield is collected.
+     * @param user The address of the user who collected the yield.
+     * @param rewardToken The address of the reward token.
+     * @param amount The amount of yield collected.
+     */
     event YieldCollected(address indexed user, address rewardToken, uint256 amount);
 }

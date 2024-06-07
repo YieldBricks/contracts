@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Compliance
+title: Compliance.md
 nav_order: 2
 ---
 
@@ -123,3 +123,4 @@ function blacklistCountry(uint16 _country, bool isBlacklisted) external
 ```solidity
 function blacklistWallet(address _wallet, bool isBlacklisted) external
 ```
+

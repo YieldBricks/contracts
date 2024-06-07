@@ -1,6 +1,6 @@
 ---
 layout: default
-title: Tiers
+title: Tiers.md
 nav_order: 2
 ---
 
@@ -9,3 +9,4 @@ nav_order: 2
 # Solidity API
 
 ## Tiers
+
