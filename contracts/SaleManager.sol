@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: See LICENSE in root directory
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
@@ -98,26 +98,34 @@ contract SaleManager is Ownable2StepUpgradeable {
     // Sale functions
     function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external {
         // check that sale is open
-        require(block.timestamp >= sales[_property].start, "Sale not started");
-        require(block.timestamp <= sales[_property].end, "Sale ended");
+        if (block.timestamp < sales[_property].start) {
+            revert SaleNotStarted(_property);
+        }
+        if (block.timestamp > sales[_property].end) {
+            revert SaleEnded(_property);
+        }
 
         Property property = Property(_property);
         // Check there is enough supply left
-        require(
-            _amount + unclaimedProperties[_property] <= property.balanceOf(address(this)),
-            "Not enough tokens left"
-        );
+        if (_amount + unclaimedProperties[_property] > property.balanceOf(address(this))) {
+            revert NotEnoughTokensLeft();
+        }
 
-        require(whitelistedPaymentTokens[paymentTokenAddress], "Payment token not whitelisted");
+        if (!whitelistedPaymentTokens[paymentTokenAddress]) {
+            revert PaymentTokenNotWhitelisted(paymentTokenAddress);
+        }
 
         // Calculate the amount of payment token needed for the transaction
         uint256 totalCost = _amount * sales[_property].price * oracle.getTokensPerUSD(paymentTokenAddress);
 
         IERC20 paymentToken = IERC20(paymentTokenAddress);
 
-        // Check that the sender has enough YBR and transfer
-        require(paymentToken.balanceOf(msg.sender) >= totalCost, "Not enough funds");
-        require(paymentToken.transferFrom(msg.sender, address(this), totalCost), "Transfer failed");
+        // Check that the sender has enough payment token and transfer
+        if (paymentToken.allowance(msg.sender, address(this)) < totalCost) {
+            revert InsufficientAllowance();
+        }
+
+        paymentToken.safeTransferFrom(msg.sender, address(this), totalCost);
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
         try property.transfer(msg.sender, _amount) {} catch {
@@ -127,7 +135,9 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     function claimTokens() external {
-        require(unclaimedByUser[msg.sender].length > 0, "No unclaimed tokens");
+        if (unclaimedByUser[msg.sender].length == 0) {
+            revert NoUnclaimedTokens(msg.sender);
+        }
         for (uint256 i = 0; i < unclaimedByUser[msg.sender].length; i++) {
             Unclaimed memory unclaimed = unclaimedByUser[msg.sender][i];
             Property property = Property(unclaimed.propertyAddress);
@@ -139,7 +149,9 @@ contract SaleManager is Ownable2StepUpgradeable {
 
     // Will result in a 20% penalty
     function cancelPurchases() external {
-        require(unclaimedByUser[msg.sender].length > 0, "No unclaimed tokens");
+        if (unclaimedByUser[msg.sender].length == 0) {
+            revert NoUnclaimedTokens(msg.sender);
+        }
         for (uint256 i = 0; i < unclaimedByUser[msg.sender].length; i++) {
             Unclaimed memory unclaimed = unclaimedByUser[msg.sender][i];
             IERC20 paymentToken = IERC20(unclaimed.paymentTokenAddress);
@@ -148,4 +160,11 @@ contract SaleManager is Ownable2StepUpgradeable {
         }
         delete unclaimedByUser[msg.sender];
     }
+
+    error NoUnclaimedTokens(address user);
+    error SaleNotStarted(address property);
+    error SaleEnded(address property);
+    error NotEnoughTokensLeft();
+    error PaymentTokenNotWhitelisted(address paymentToken);
+    error InsufficientAllowance();
 }

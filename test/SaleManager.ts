@@ -106,9 +106,10 @@ describe("SaleManager", function () {
       // Give approval for price * ybrPerUSD
       await ybr.connect(alice).approve(saleManagerAddress, 100);
 
-      await expect(
-        saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress, { value: 100 }),
-      ).to.be.revertedWith("Sale not started");
+      await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
+        saleManager,
+        "SaleNotStarted",
+      );
     });
 
     it("Non-KYCed user can start to buy property during sale duration", async function () {
@@ -151,7 +152,10 @@ describe("SaleManager", function () {
     it("User tries to claim when there are no unclaimed properties", async function () {
       const { saleManager, bob } = this.fixture as FixtureReturnType;
 
-      await expect(saleManager.connect(bob).claimTokens()).to.be.revertedWith("No unclaimed tokens");
+      await expect(saleManager.connect(bob).claimTokens()).to.be.revertedWithCustomError(
+        saleManager,
+        "NoUnclaimedTokens",
+      );
     });
 
     it("Add KYC data for user", async function () {
@@ -182,7 +186,10 @@ describe("SaleManager", function () {
 
       expect(unclaimedProperties).to.equal(0);
 
-      await expect(saleManager.connect(alice).claimTokens()).to.be.revertedWith("No unclaimed tokens");
+      await expect(saleManager.connect(alice).claimTokens()).to.be.revertedWithCustomError(
+        saleManager,
+        "NoUnclaimedTokens",
+      );
     });
 
     it("User can get partial refund if not passing KYC", async function () {
@@ -202,7 +209,10 @@ describe("SaleManager", function () {
 
       await saleManager.connect(bob).cancelPurchases();
 
-      await expect(saleManager.connect(bob).cancelPurchases()).to.be.revertedWith("No unclaimed tokens");
+      await expect(saleManager.connect(bob).cancelPurchases()).to.be.revertedWithCustomError(
+        saleManager,
+        "NoUnclaimedTokens",
+      );
     });
 
     it("Set Oracle address", async function () {
@@ -272,9 +282,10 @@ describe("SaleManager", function () {
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await expect(
-        saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress, { value: 100 }),
-      ).to.be.revertedWith("Sale ended");
+      await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
+        saleManager,
+        "SaleEnded",
+      );
     });
   });
 });
