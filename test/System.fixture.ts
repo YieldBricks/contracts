@@ -18,7 +18,10 @@ export async function deploySystemFixture() {
 
   // Deploy BeaconProxy contract
   const Property = (await ethers.getContractFactory("Property")) as Property__factory;
-  const propertyBeacon = await upgrades.deployBeacon(Property, { initialOwner: multisig.address });
+  const propertyBeacon = await upgrades.deployBeacon(Property, {
+    initialOwner: multisig.address,
+    unsafeAllow: ["internal-function-storage"],
+  });
   const propertyBeaconAddress = await propertyBeacon.getAddress();
 
   console.log("TokenBeacon deployed to:", propertyBeaconAddress);

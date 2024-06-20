@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.20;
 
-// import { Oracle } from "./Oracle.sol";
 import { ERC20Votes } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 import { Checkpoints } from "@openzeppelin/contracts/utils/structs/Checkpoints.sol";
-
-import "hardhat/console.sol";
 
 abstract contract Tiers {
     // uint256 public constant TIER_ROOKIE_THRESHOLD = 0;

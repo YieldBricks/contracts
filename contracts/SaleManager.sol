@@ -224,10 +224,12 @@ contract SaleManager is Ownable2StepUpgradeable {
             revert PaymentTokenNotWhitelisted(paymentTokenAddress);
         }
 
-        // Calculate the amount of payment token needed for the transaction
-        uint256 totalCost = _amount * sales[_property].price * oracle.getTokensPerUSD(paymentTokenAddress);
-
         IERC20 paymentToken = IERC20(paymentTokenAddress);
+
+        (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) = oracle.getTokenUSDPrice(paymentTokenAddress);
+
+        // Calculate the amount of payment token needed for the transaction
+        uint256 totalCost = (_amount * sales[_property].price * (10 ** priceDecimals) * (10 ** tokenDecimals)) / price;
 
         // Check that the sender has enough payment token and transfer
         if (paymentToken.allowance(msg.sender, address(this)) < totalCost) {

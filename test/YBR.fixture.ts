@@ -8,7 +8,7 @@ export async function deployYBRFixture() {
 
   // Deploy YBR contract
   const YBR = (await ethers.getContractFactory("YBR")) as YBR__factory;
-  const YBRProxy = await upgrades.deployProxy(YBR, [multisig.address]);
+  const YBRProxy = await upgrades.deployProxy(YBR, [multisig.address], { unsafeAllow: ["internal-function-storage"] });
   const ybr = YBR.attach(await YBRProxy.getAddress()) as YBR;
   const ybrAddress = await ybr.getAddress();
 

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title YieldBrick Platform Property Token
+ * @title YieldBrick Platform PropertyV2 Token
  * @dev This contract implements an ERC20 token with additional features like burnability,
  * pausability, capping, and permit. It also includes a feature to freeze wallets.
  * @notice This contract is used for YieldBrick tokenized RWA properties.
@@ -27,11 +27,12 @@ import {
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
+import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 import { ComplianceV2 } from "./ComplianceV2.sol";
 
 /**
- * @title YieldBricks Property Contract
+ * @title YieldBricks PropertyV2 Contract
  * @notice This contract is for the YieldBricks property, which is a permissioned ERC20 token with additional features.
  * @dev This contract externally depends on the Compliance for the `canTransfer` function.
  */
@@ -54,6 +55,9 @@ contract PropertyV2 is
     /// @notice Array of claims made by the ownerha
     Yield[] public claims;
 
+    /**
+     * @notice Struct to represent a yield claim
+     */
     struct Yield {
         address rewardToken;
         uint256 amount;
@@ -159,7 +163,7 @@ contract PropertyV2 is
     }
 
     /**
-     * @notice Allows Property token holders to collect their property yield
+     * @notice Allows PropertyV2 token holders to collect their property yield
      * @dev This function is gas-optimized to allow for a large number of claims to be processed
      * in a single transaction. The owner can add claims to the contract, and then users can collect
      * their claims in batches of X at a time. The claim amount is proportional to the user's holdings
@@ -215,14 +219,57 @@ contract PropertyV2 is
     }
 
     /**
+     * @notice Returns the current time as a uint48
+     * @dev Override for ERC20Votes clock functionality
+     */
+    function clock() public view override returns (uint48) {
+        return Time.timestamp();
+    }
+
+    /**
+     * @notice Returns the EIP6372 clock mode
+     * @dev Override for ERC20Votes clock functionality
+     */
+    function CLOCK_MODE() public view override returns (string memory) {
+        if (clock() != Time.timestamp()) {
+            revert ERC6372InconsistentClock();
+        }
+        return "mode=timestamp";
+    }
+
+    /**
      * @notice Error when a wallet is frozen
      * @param wallet The address of the wallet that was frozen
      */
     error FrozenWalletError(address wallet);
     error OwnableUnauthorizedAccount(address sender);
 
+    /**
+     * @dev Emitted when the frozen status of a wallet is changed.
+     * @param wallet The address of the wallet.
+     * @param isFrozen The new frozen status of the wallet.
+     */
     event WalletFrozen(address wallet, bool isFrozen);
+
+    /**
+     * @dev Emitted when the pause status of transfers is changed.
+     * @param isPaused The new pause status of transfers.
+     */
     event PauseTransfers(bool isPaused);
+
+    /**
+     * @dev Emitted when yield is added.
+     * @param transactionId The ID of the transaction.
+     * @param rewardToken The address of the reward token.
+     * @param amount The amount of yield added.
+     */
     event YieldAdded(uint256 indexed transactionId, address rewardToken, uint256 amount);
+
+    /**
+     * @dev Emitted when yield is collected.
+     * @param user The address of the user who collected the yield.
+     * @param rewardToken The address of the reward token.
+     * @param amount The amount of yield collected.
+     */
     event YieldCollected(address indexed user, address rewardToken, uint256 amount);
 }

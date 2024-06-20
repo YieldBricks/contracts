@@ -34,7 +34,9 @@ describe("System", function () {
 
       // Upgrade TokenBeacon
       const PropertyV2 = await ethers.getContractFactory("PropertyV2");
-      const propertyV2 = await upgrades.prepareUpgrade(tokenBeacon, PropertyV2);
+      const propertyV2 = await upgrades.prepareUpgrade(tokenBeacon, PropertyV2, {
+        unsafeAllow: ["internal-function-storage"],
+      });
 
       const tokenBeaconWithMultisig = tokenBeacon.connect(multisig) as Contract;
       await tokenBeaconWithMultisig.upgradeTo(await propertyV2);

@@ -28,13 +28,16 @@ export async function deploySaleManagerFixture() {
 
   // Deploy BeaconProxy contract
   const Property = (await ethers.getContractFactory("Property")) as Property__factory;
-  const propertyBeacon = await upgrades.deployBeacon(Property, { initialOwner: multisig.address });
+  const propertyBeacon = await upgrades.deployBeacon(Property, {
+    initialOwner: multisig.address,
+    unsafeAllow: ["internal-function-storage"],
+  });
   const propertyBeaconAddress = await propertyBeacon.getAddress();
 
   console.log("TokenBeacon deployed to:", propertyBeaconAddress);
 
   const YBR = (await ethers.getContractFactory("YBR")) as YBR__factory;
-  const ybrProxy = await upgrades.deployProxy(YBR, [multisig.address]);
+  const ybrProxy = await upgrades.deployProxy(YBR, [multisig.address], { unsafeAllow: ["internal-function-storage"] });
   const ybr = YBR.attach(await ybrProxy.getAddress()) as YBR;
   const ybrAddress = await ybrProxy.getAddress();
 

@@ -50,7 +50,7 @@ describe("SaleManager", function () {
 
       const price = 100;
       await mockOracle.setPrice(price);
-      expect(await mockOracle.getTokensPerUSD(ybrAddress)).to.equal(price);
+      expect(await mockOracle.getTokenUSDPrice(ybrAddress)).to.deep.equal([BigInt(price), 1n, 18n]);
     });
 
     it("Create property and verify that the entire supply is on the SaleManager", async function () {
