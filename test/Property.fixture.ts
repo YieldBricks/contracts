@@ -1,8 +1,8 @@
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-import { Compliance, Compliance__factory, Property, Property__factory, YBR, YBR__factory } from "../types";
-import { identityTypedMessage } from "./utils";
+import { Compliance, Compliance__factory, EthYBR, EthYBR__factory, Property, Property__factory } from "../types";
+import { ZERO_ADDRESS, identityTypedMessage } from "./utils";
 
 export async function deployPropertyFixture() {
   // Contracts are deployed using the first signer/account by default
@@ -80,9 +80,12 @@ export async function deployPropertyFixture() {
   const propertyAddress = await property.getAddress();
 
   // Deploy YBR contract
-  const YBR = (await ethers.getContractFactory("YBR")) as YBR__factory;
-  const YBRProxy = await upgrades.deployProxy(YBR, [multisig.address], { unsafeAllow: ["internal-function-storage"] });
-  const ybr = YBR.attach(await YBRProxy.getAddress()) as YBR;
+  const YBR = (await ethers.getContractFactory("EthYBR")) as EthYBR__factory;
+  const YBRProxy = await upgrades.deployProxy(YBR, [multisig.address, ZERO_ADDRESS, ZERO_ADDRESS], {
+    unsafeAllow: ["internal-function-storage"],
+    initializer: "initialize",
+  });
+  const ybr = YBR.attach(await YBRProxy.getAddress()) as EthYBR;
   const ybrAddress = await ybr.getAddress();
 
   return {

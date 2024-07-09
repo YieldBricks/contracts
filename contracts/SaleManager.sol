@@ -7,8 +7,8 @@ import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/Upgradea
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Property } from "./Property.sol";
-import { YBR } from "./YBR.sol";
 import { IOracle } from "./Oracle.sol";
+import { Tiers } from "./Tiers.sol";
 
 /**
  * @title SaleManager
@@ -86,6 +86,16 @@ contract SaleManager is Ownable2StepUpgradeable {
     mapping(address => bool) public whitelistedPaymentTokens;
 
     /**
+     * @dev Mapping of user to number of bought tokens.
+     */
+    mapping(address property => mapping(address user => uint256 purchasedTokens)) public purchasesPerPropertyPerUser;
+
+    /**
+     * @dev Mapping of tier to number of bought tokens.
+     */
+    mapping(address property => mapping(Tiers.Tier tier => uint256 purchasedTokens)) public purchasesPerPropertyPerTier;
+
+    /**
      * @dev Struct representing unclaimed tokens.
      * @param propertyAddress The address of the token.
      * @param paymentTokenAddress The address of the payment token.
@@ -113,6 +123,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @dev Oracle for price feeds.
      */
     IOracle public oracle;
+    Tiers public tiers;
 
     /**
      * @dev Initializes the contract.
@@ -120,11 +131,12 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param owner_ The address of the owner.
      * @param oracle_ The address of the oracle.
      */
-    function initialize(address tokenBeacon_, address owner_, address oracle_) public initializer {
+    function initialize(address tokenBeacon_, address owner_, address oracle_, address tiers_) public initializer {
         __Ownable2Step_init();
         __Ownable_init(owner_);
         tokenBeacon = UpgradeableBeacon(tokenBeacon_);
         oracle = IOracle(oracle_);
+        tiers = Tiers(tiers_);
     }
 
     /**
@@ -191,6 +203,14 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     /**
+     * @dev Sets a new tier calculator for the contract.
+     * @param tiers_ The address of the new tier calculator.
+     */
+    function setTiers(address tiers_) external onlyOwner {
+        tiers = Tiers(tiers_);
+    }
+
+    /**
      * @dev Whitelists a payment token.
      * @param paymentToken The address of the payment token.
      * @param isWhitelisted The new whitelist status of the payment token.
@@ -206,8 +226,11 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param _property The address of the token to buy.
      */
     function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external {
+        Tiers.TierBenefits memory tierBenefits = tiers.getTierBenefits(msg.sender);
+        (Tiers.Tier tier, , , ) = tiers.tiers(msg.sender);
+
         // check that sale is open
-        if (block.timestamp < sales[_property].start) {
+        if (block.timestamp < sales[_property].start - tierBenefits.earlyAccess) {
             revert SaleNotStarted(_property);
         }
         if (block.timestamp > sales[_property].end) {
@@ -218,6 +241,21 @@ contract SaleManager is Ownable2StepUpgradeable {
         // Check there is enough supply left
         if (_amount + unclaimedProperties[_property] > property.balanceOf(address(this))) {
             revert NotEnoughTokensLeft();
+        }
+
+        if (block.timestamp < sales[_property].start) {
+            if (
+                (10000 * (_amount + purchasesPerPropertyPerUser[_property][msg.sender])) / property.totalSupply() >
+                tierBenefits.walletLimit
+            ) {
+                revert TierWalletLimitReached();
+            }
+            if (
+                (10000 * (_amount + purchasesPerPropertyPerTier[_property][tier])) / property.totalSupply() >
+                tierBenefits.tierAllocation
+            ) {
+                revert TierTotalLimitReached();
+            }
         }
 
         if (!whitelistedPaymentTokens[paymentTokenAddress]) {
@@ -237,6 +275,9 @@ contract SaleManager is Ownable2StepUpgradeable {
         }
 
         paymentToken.safeTransferFrom(msg.sender, address(this), totalCost);
+
+        purchasesPerPropertyPerUser[_property][msg.sender] += _amount;
+        purchasesPerPropertyPerTier[_property][tier] += _amount;
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
         try property.transfer(msg.sender, _amount) {} catch {
@@ -310,4 +351,14 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @dev This error is thrown when a user does not have enough allowance to buy the desired amount of tokens.
      */
     error InsufficientAllowance();
+
+    /**
+     * @dev This error is thrown when a user tries to buy more tokens than their wallet limit allows.
+     */
+    error TierWalletLimitReached();
+
+    /**
+     * @dev This error is thrown when a user tries to buy more tokens than the entire tier has allocated.
+     */
+    error TierTotalLimitReached();
 }

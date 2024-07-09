@@ -1,5 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
+import { parseEther } from "ethers";
 import { ethers } from "hardhat";
 
 import { deploySaleManagerFixture } from "./SaleManager.fixture";
@@ -30,11 +31,11 @@ describe("SaleManager", function () {
     it("Distribute YBR tokens to alice and bob", async function () {
       const { ybr, multisig, alice, bob } = this.fixture as FixtureReturnType;
 
-      await ybr.connect(multisig).transfer(alice.address, 100_000);
-      await ybr.connect(multisig).transfer(bob.address, 100_000);
+      await ybr.connect(multisig).transfer(alice.address, parseEther("1000"));
+      await ybr.connect(multisig).transfer(bob.address, parseEther("1000"));
 
-      expect(await ybr.balanceOf(alice.address)).to.equal(100_000);
-      expect(await ybr.balanceOf(bob.address)).to.equal(100_000);
+      expect(await ybr.balanceOf(alice.address)).to.equal(parseEther("1000"));
+      expect(await ybr.balanceOf(bob.address)).to.equal(parseEther("1000"));
     });
 
     it("Whitelist YBR token", async function () {
@@ -59,7 +60,7 @@ describe("SaleManager", function () {
 
       const name = "TestToken";
       const symbol = "TT";
-      const cap = 1000000;
+      const cap = 1000;
 
       expect(await compliance.canTransfer(saleManagerAddress, saleManagerAddress));
 
@@ -120,7 +121,7 @@ describe("SaleManager", function () {
       const propertyAddress = await saleManager.tokenAddresses(0);
 
       // Give approval for price * tokensPerUSD
-      await ybr.connect(alice).approve(saleManagerAddress, 10000);
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("100"));
 
       await saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress);
 
@@ -134,7 +135,7 @@ describe("SaleManager", function () {
       expect(propertyAddress_).to.equal(propertyAddress);
       expect(paymentTokenAddress).to.equal(ybrAddress);
       expect(propertyAmount).to.equal(1);
-      expect(paymentTokenAmount).to.equal(10000);
+      expect(paymentTokenAmount).to.equal(parseEther("10"));
 
       const unclaimedProperties = await saleManager.unclaimedProperties(propertyAddress);
 
@@ -198,7 +199,7 @@ describe("SaleManager", function () {
       const propertyAddress = await saleManager.tokenAddresses(0);
 
       // Give approval for price * ybrPerUSD
-      await ybr.connect(bob).approve(saleManagerAddress, 10000);
+      await ybr.connect(bob).approve(saleManagerAddress, parseEther("100"));
 
       await saleManager.connect(bob).buyTokens(1, ybrAddress, propertyAddress);
 
@@ -248,7 +249,7 @@ describe("SaleManager", function () {
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await ybr.connect(alice).approve(saleManagerAddress, 20000);
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("100"));
 
       await saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress);
 
@@ -286,6 +287,161 @@ describe("SaleManager", function () {
         saleManager,
         "SaleEnded",
       );
+    });
+  });
+
+  describe("Higher Tier Pre-Sale", function () {
+    before(async function () {
+      this.fixture = (await this.loadFixture(deploySaleManagerFixture)) as FixtureReturnType;
+    });
+
+    it("Distribute YBR tokens to alice and bob", async function () {
+      const { ybr, multisig, alice, bob } = this.fixture as FixtureReturnType;
+
+      await ybr.connect(multisig).transfer(alice.address, parseEther("10000"));
+      await ybr.connect(multisig).transfer(bob.address, parseEther("10000"));
+
+      expect(await ybr.balanceOf(alice.address)).to.equal(parseEther("10000"));
+      expect(await ybr.balanceOf(bob.address)).to.equal(parseEther("10000"));
+    });
+
+    it("Give Alice the GURU tier", async function () {
+      const { tiers, alice, multisig } = this.fixture as FixtureReturnType;
+
+      await tiers.connect(multisig).adminSetTier([alice.address], 5); // 5 is GURU
+
+      expect(await tiers.getTierBenefits(alice.address)).to.deep.equal([5n, 259200n, 3000n, 1000n]);
+    });
+
+    it("Whitelist YBR token", async function () {
+      const { multisig, saleManager, ybrAddress } = this.fixture as FixtureReturnType;
+
+      await saleManager.connect(multisig).whitelistPaymentToken(ybrAddress, true);
+
+      expect(await saleManager.whitelistedPaymentTokens(ybrAddress)).to.be.true;
+    });
+
+    it("Oracle should be able to set and return price", async function () {
+      const { mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
+
+      const price = 100;
+      await mockOracle.setPrice(price);
+      expect(await mockOracle.getTokenUSDPrice(ybrAddress)).to.deep.equal([BigInt(price), 1n, 18n]);
+    });
+
+    it("Create property and verify that the entire supply is on the SaleManager", async function () {
+      const { saleManager, compliance, saleManagerAddress, complianceAddress, multisig } = this
+        .fixture as FixtureReturnType;
+
+      const name = "TestToken";
+      const symbol = "TT";
+      const cap = 1000;
+
+      expect(await compliance.canTransfer(saleManagerAddress, saleManagerAddress));
+
+      await expect(saleManager.createToken(name, symbol, cap, complianceAddress)).to.be.revertedWithCustomError(
+        saleManager,
+        "OwnableUnauthorizedAccount",
+      );
+
+      await expect(saleManager.connect(multisig).createToken(name, symbol, cap, complianceAddress)).to.emit(
+        saleManager,
+        "TokenDeployed",
+      );
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      const property = await ethers.getContractAt("Property", propertyAddress);
+      expect(await property.balanceOf(saleManagerAddress)).to.equal(cap);
+    });
+
+    it("Create sale for property", async function () {
+      const { saleManager, multisig } = this.fixture as FixtureReturnType;
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      const startTime = (await time.latest()) + DAY;
+      const endTime = (await time.latest()) + 7 * DAY;
+      const price = 100; // Price in USD
+
+      await expect(saleManager.connect(multisig).createSale(propertyAddress, startTime, endTime, price)).to.emit(
+        saleManager,
+        "SaleCreated",
+      );
+
+      const sale = await saleManager.sales(propertyAddress);
+      expect(sale.start).to.equal(startTime);
+      expect(sale.end).to.equal(endTime);
+      expect(sale.price).to.equal(price);
+    });
+
+    it("User can't buy more tokens than tier limit during pre-sale", async function () {
+      const { saleManager, saleManagerAddress, alice, ybr, ybrAddress } = this.fixture as FixtureReturnType;
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("5000"));
+
+      await expect(
+        saleManager.connect(alice).buyTokens(200, ybrAddress, propertyAddress),
+      ).to.be.revertedWithCustomError(saleManager, "TierWalletLimitReached");
+    });
+
+    it("User can buy tokens up to tier limit during pre-sale", async function () {
+      const { saleManager, saleManagerAddress, alice, ybr, ybrAddress } = this.fixture as FixtureReturnType;
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("10000"));
+
+      await saleManager.connect(alice).buyTokens(100, ybrAddress, propertyAddress);
+
+      const [propertyAddress_, paymentTokenAddress, propertyAmount, paymentTokenAmount] =
+        await saleManager.unclaimedByUser(alice.address, 0);
+
+      expect(propertyAddress_).to.equal(propertyAddress);
+      expect(paymentTokenAddress).to.equal(ybrAddress);
+      expect(propertyAmount).to.equal(100);
+      expect(paymentTokenAmount).to.equal(parseEther("1000"));
+
+      expect(await saleManager.purchasesPerPropertyPerUser(propertyAddress, alice.address)).to.equal(100);
+      expect(await saleManager.purchasesPerPropertyPerTier(propertyAddress, 5)).to.equal(100);
+    });
+
+    it("Sale fails if user tries to buy more once the limit is reached", async function () {
+      const { saleManager, saleManagerAddress, alice, ybr, ybrAddress } = this.fixture as FixtureReturnType;
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1000"));
+
+      await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
+        saleManager,
+        "TierWalletLimitReached",
+      );
+    });
+
+    it("Once the sale starts, the tier limit is lifted", async function () {
+      const { saleManager, saleManagerAddress, alice, ybr, ybrAddress } = this.fixture as FixtureReturnType;
+
+      await time.increase(DAY);
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1000"));
+
+      await saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress);
+
+      const [propertyAddress_, paymentTokenAddress, propertyAmount, paymentTokenAmount] =
+        await saleManager.unclaimedByUser(alice.address, 1);
+
+      expect(propertyAddress_).to.equal(propertyAddress);
+      expect(paymentTokenAddress).to.equal(ybrAddress);
+      expect(propertyAmount).to.equal(1);
+      expect(paymentTokenAmount).to.equal(parseEther("10"));
+
+      const unclaimedProperties = await saleManager.unclaimedProperties(propertyAddress);
+
+      expect(unclaimedProperties).to.equal(101);
     });
   });
 });

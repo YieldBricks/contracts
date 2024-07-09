@@ -32,6 +32,7 @@ export async function deploySystemFixture() {
     propertyBeaconAddress,
     multisig.address,
     ZERO_ADDRESS,
+    ZERO_ADDRESS,
   ]);
   const saleManager = SaleManager.attach(await saleManagerProxy.getAddress()) as SaleManager;
   const saleManagerAddress = await saleManagerProxy.getAddress();

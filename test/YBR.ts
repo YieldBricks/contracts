@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { parseEther } from "ethers";
 
 import { deployYBRFixture } from "./YBR.fixture";
+import { ZERO_ADDRESS } from "./utils";
 
 type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deployYBRFixture>>>>;
 
@@ -20,7 +21,10 @@ describe("YBR", function () {
       const { ybr, multisig } = this.fixture;
 
       // Call the initialize function the second time and expect it to revert with a custom error
-      await expect(ybr.initialize(multisig)).to.be.revertedWithCustomError(ybr, "InvalidInitialization");
+      await expect(ybr.initialize(multisig, ZERO_ADDRESS, ZERO_ADDRESS)).to.be.revertedWithCustomError(
+        ybr,
+        "InvalidInitialization",
+      );
     });
 
     it("YBR should have correct owner", async function () {

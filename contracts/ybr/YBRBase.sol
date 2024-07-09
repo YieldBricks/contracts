@@ -26,14 +26,13 @@ import {
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
-import { ERC20L1BridgeableUpgradeable } from "./ERC20L1BridgeableUpgradeable.sol";
 import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 /**
  * @title YieldBricks (YBR) Token Contract
  * @notice This contract is for the YieldBricks token, which is an ERC20 token with additional features.
  */
-contract YBR is
+contract YBRBase is
     Initializable,
     ERC20Upgradeable,
     ERC20BurnableUpgradeable,
@@ -41,8 +40,7 @@ contract YBR is
     ERC20PermitUpgradeable,
     ERC20CappedUpgradeable,
     ERC20VotesUpgradeable,
-    Ownable2StepUpgradeable,
-    ERC20L1BridgeableUpgradeable
+    Ownable2StepUpgradeable
 {
     /// @notice Mapping to track frozen wallets
     mapping(address wallet => bool isFrozen) public walletFrozen;
@@ -59,18 +57,15 @@ contract YBR is
      * @dev This function replaces the constructor for upgradeable contracts.
      * @param owner_ The initial owner of the contract.
      */
-    function initialize(address owner_, address _customGatewayAddress, address _routerAddress) external initializer {
+    function __YBR_init(address owner_) public initializer {
         __ERC20_init("YieldBricks", "YBR");
         __ERC20Burnable_init();
         __ERC20Pausable_init();
         __ERC20Capped_init(_CAP);
         __ERC20Permit_init("YieldBricks");
         __ERC20Votes_init();
-        __ERC20L1BridgeableUpgradeable_init(_customGatewayAddress, _routerAddress);
         __Ownable2Step_init();
         __Ownable_init(owner_);
-
-        _mint(owner_, _CAP);
     }
 
     /**

@@ -7,8 +7,8 @@ import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/Upgradea
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { PropertyV2 } from "./PropertyV2.sol";
-import { YBR } from "../YBR.sol";
 import { IOracle } from "../Oracle.sol";
+import { Tiers } from "../Tiers.sol";
 
 /**
  * @title SaleManager
@@ -86,6 +86,16 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
     mapping(address => bool) public whitelistedPaymentTokens;
 
     /**
+     * @dev Mapping of user to number of bought tokens.
+     */
+    mapping(address property => mapping(address user => uint256 purchasedTokens)) public purchasesPerPropertyPerUser;
+
+    /**
+     * @dev Mapping of tier to number of bought tokens.
+     */
+    mapping(address property => mapping(Tiers.Tier tier => uint256 purchasedTokens)) public purchasesPerPropertyPerTier;
+
+    /**
      * @dev Struct representing unclaimed tokens.
      * @param propertyAddress The address of the token.
      * @param paymentTokenAddress The address of the payment token.
@@ -113,6 +123,7 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
      * @dev Oracle for price feeds.
      */
     IOracle public oracle;
+    Tiers public tiers;
 
     /**
      * @dev Initializes the contract.

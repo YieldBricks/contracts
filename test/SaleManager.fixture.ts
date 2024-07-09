@@ -4,15 +4,17 @@ import { ethers, upgrades } from "hardhat";
 import {
   Compliance,
   Compliance__factory,
+  EthYBR,
+  EthYBR__factory,
   MockOracle,
   MockOracle__factory,
   Property__factory,
   SaleManager,
   SaleManager__factory,
-  YBR,
-  YBR__factory,
+  Tiers,
+  Tiers__factory,
 } from "../types";
-import { identityTypedMessage } from "./utils";
+import { ZERO_ADDRESS, identityTypedMessage } from "./utils";
 
 export async function deploySaleManagerFixture() {
   // Contracts are deployed using the first signer/account by default
@@ -36,9 +38,12 @@ export async function deploySaleManagerFixture() {
 
   console.log("TokenBeacon deployed to:", propertyBeaconAddress);
 
-  const YBR = (await ethers.getContractFactory("YBR")) as YBR__factory;
-  const ybrProxy = await upgrades.deployProxy(YBR, [multisig.address], { unsafeAllow: ["internal-function-storage"] });
-  const ybr = YBR.attach(await ybrProxy.getAddress()) as YBR;
+  const YBR = (await ethers.getContractFactory("EthYBR")) as EthYBR__factory;
+  const ybrProxy = await upgrades.deployProxy(YBR, [multisig.address, ZERO_ADDRESS, ZERO_ADDRESS], {
+    unsafeAllow: ["internal-function-storage"],
+    initializer: "initialize",
+  });
+  const ybr = YBR.attach(await ybrProxy.getAddress()) as EthYBR;
   const ybrAddress = await ybrProxy.getAddress();
 
   const MockOracle = (await ethers.getContractFactory("MockOracle")) as MockOracle__factory;
@@ -48,12 +53,22 @@ export async function deploySaleManagerFixture() {
 
   console.log("mockOracleAddress", mockOracleAddress);
 
+  const Tiers = (await ethers.getContractFactory("Tiers")) as Tiers__factory;
+  const TiersProxy = await upgrades.deployProxy(Tiers, [multisig.address, ybrAddress], {
+    unsafeAllow: ["internal-function-storage"],
+  });
+  const tiers = Tiers.attach(await TiersProxy.getAddress()) as Tiers;
+  const tiersAddress = await tiers.getAddress();
+
+  console.log("tiersAddress", tiersAddress);
+
   // Deploy SaleManager contract
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
   const saleManagerProxy = await upgrades.deployProxy(SaleManager, [
     propertyBeaconAddress,
     multisig.address,
     mockOracleAddress,
+    tiersAddress,
   ]);
   const saleManager = SaleManager.attach(await saleManagerProxy.getAddress()) as SaleManager;
   const saleManagerAddress = await saleManagerProxy.getAddress();
@@ -90,6 +105,8 @@ export async function deploySaleManagerFixture() {
     propertyBeaconAddress,
     ybr,
     ybrAddress,
+    tiers,
+    tiersAddress,
     mockOracle,
     mockOracleAddress,
     deployer,
