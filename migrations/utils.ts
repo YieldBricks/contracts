@@ -17,7 +17,7 @@ export type Environment = {
   YBR: string;
   ChainlinkOracle: string;
   SaleManager: string;
-  multisig: string;
+  Multisig: string;
   chainlinkFeeds: {
     feedName: string;
     asset: string;
@@ -26,6 +26,8 @@ export type Environment = {
     priceDecimals: number;
   }[];
   kycSigners: string[];
+  EthYBR?: string;
+  EthMultisig?: string;
 };
 
 export function getEnvironment(): Environment {
@@ -41,6 +43,32 @@ export function getEnvironment(): Environment {
   if (!config.chainId) throw new Error("Chain ID not found in network config");
   env = { ...env, url: config.url, chainId: config.chainId, deployerKey: (config.accounts as string[])[0] };
   return env;
+}
+
+export type ArbitrumBridge = {
+  L1Router: string;
+  L1Gateway: string;
+  L2Gateway: string;
+};
+
+export function getArbitrumBridge(): ArbitrumBridge {
+  let bridge;
+  if (network.name === "sepolia" || network.name === "arbitrum-sepolia") {
+    bridge = {
+      L1Router: "0xcE18836b233C83325Cc8848CA4487e94C6288264",
+      L1Gateway: "0xba2F7B6eAe1F9d174199C5E4867b563E0eaC40F3",
+      L2Gateway: "0x8Ca1e1AC0f260BC4dA7Dd60aCA6CA66208E642C5",
+    };
+  } else if (network.name === "arbitrum-one" || network.name === "mainnet") {
+    bridge = {
+      L1Router: "0x72Ce9c846789fdB6fC1f34aC4AD25Dd9ef7031ef",
+      L1Gateway: "0xcEe284F754E854890e311e3280b767F80797180d",
+      L2Gateway: "0x096760F208390250649E3e8763348E783AEF5562",
+    };
+  } else {
+    throw new Error(`Unknown network ${network.name}`);
+  }
+  return bridge;
 }
 
 export function ethersToSafeTransaction(tx: ContractTransaction): MetaTransactionData {
@@ -63,7 +91,7 @@ export async function submitTransactionsToMultisig({ transactions, environment }
   const protocolKit = await Safe.init({
     provider: environment.url,
     signer: environment.deployerKey,
-    safeAddress: environment.multisig,
+    safeAddress: environment.Multisig,
   });
 
   const safeTransaction = await protocolKit.createTransaction({ transactions });

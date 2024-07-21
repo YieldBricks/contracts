@@ -46,9 +46,9 @@ contract ArbYBR is YBRBase, ERC20L2BridgeableUpgradeable {
      * @dev This function replaces the constructor for upgradeable contracts.
      * @param owner_ The initial owner of the contract.
      */
-    function initialize(address owner_, address _customGatewayAddress, address _routerAddress) external initializer {
+    function initialize(address owner_, address _customGatewayAddress, address _l1TokenAddress) external initializer {
         __YBR_init(owner_);
-        __ERC20L2BridgeableUpgradeable_init(_customGatewayAddress, _routerAddress);
+        __ERC20L2BridgeableUpgradeable_init(_customGatewayAddress, _l1TokenAddress);
     }
 
     /**

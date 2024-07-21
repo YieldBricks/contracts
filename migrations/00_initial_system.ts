@@ -6,7 +6,7 @@ import {
   Compliance__factory,
   Property__factory,
   SaleManager__factory,
-  YBR__factory,
+  Tiers__factory,
 } from "../types";
 import { getEnvironment } from "./utils";
 
@@ -16,16 +16,30 @@ async function main() {
   console.log("Deploying Oracle");
 
   const Oracle = (await ethers.getContractFactory("ChainlinkOracle")) as ChainlinkOracle__factory;
-  const oracle = await upgrades.deployProxy(Oracle, [environment.multisig], {
+  const oracle = await upgrades.deployProxy(Oracle, [environment.Multisig], {
     initializer: "initialize",
     redeployImplementation: "onchange",
     salt: "oracle",
-    initialOwner: environment.multisig,
+    initialOwner: environment.Multisig,
   });
 
   await oracle.waitForDeployment();
 
   console.log("Oracle deployed to:", await oracle.getAddress());
+
+  console.log("Deploying Tiers");
+
+  const Tiers = (await ethers.getContractFactory("Tiers")) as Tiers__factory;
+  const tiers = await upgrades.deployProxy(Tiers, [environment.Multisig, environment.YBR], {
+    initializer: "initialize",
+    redeployImplementation: "onchange",
+    salt: "tiers",
+    initialOwner: environment.Multisig,
+  });
+
+  await tiers.waitForDeployment();
+
+  console.log("Tiers deployed to:", await tiers.getAddress());
 
   console.log("Deploying Compliance");
 
@@ -34,12 +48,12 @@ async function main() {
     Compliance,
     [
       ZERO_ADDRESS, // KYC Address
-      environment.multisig,
+      environment.Multisig,
     ],
     {
       initializer: "initialize",
       redeployImplementation: "onchange",
-      initialOwner: environment.multisig,
+      initialOwner: environment.Multisig,
     },
   );
 
@@ -51,7 +65,7 @@ async function main() {
 
   const Property = (await ethers.getContractFactory("Property")) as Property__factory;
   const property = await upgrades.deployBeacon(Property, {
-    initialOwner: environment.multisig,
+    initialOwner: environment.Multisig,
     redeployImplementation: "onchange",
   });
 
@@ -66,12 +80,13 @@ async function main() {
     SaleManager,
     [
       await property.getAddress(),
-      environment.multisig,
+      environment.Multisig,
       await oracle.getAddress(), // Oracle address
+      await tiers.getAddress(), // Tiers address
     ],
     {
       initializer: "initialize",
-      initialOwner: environment.multisig,
+      initialOwner: environment.Multisig,
       redeployImplementation: "onchange",
     },
   );

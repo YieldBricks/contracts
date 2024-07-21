@@ -18,8 +18,9 @@ require("dotenv").config();
 const mnemonic: string = vars.get("MNEMONIC");
 const infuraApiKey: string = vars.get("INFURA_API_KEY");
 
-const chainIds = {
+export const chainIds = {
   "arbitrum-mainnet": 42161,
+  "arbitrum-sepolia": 421614,
   avalanche: 43114,
   bsc: 56,
   ganache: 1337,
@@ -31,7 +32,7 @@ const chainIds = {
   sepolia: 11155111,
 };
 
-function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
+export function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
   let jsonRpcUrl: string;
   switch (chain) {
     case "avalanche":
@@ -104,7 +105,11 @@ const config: HardhatUserConfig = {
         },
       },
 
-      accounts: [vars.get("DEPLOYER_PRIVATE_KEY", "")],
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+    },
+    arbitrumSepolia: {
+      ...getChainConfig("arbitrum-sepolia"),
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
     },
     avalanche: getChainConfig("avalanche"),
     bsc: getChainConfig("bsc"),
@@ -114,7 +119,7 @@ const config: HardhatUserConfig = {
     "polygon-mumbai": getChainConfig("polygon-mumbai"),
     sepolia: {
       ...getChainConfig("sepolia"),
-      accounts: [""],
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
     },
   },
   paths: {

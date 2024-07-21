@@ -4,7 +4,7 @@ export default {
   YBR: "0x0",
   ChainlinkOracle: "0x1998A9c1EB5C82b27a77971f8807Af17f1adcBf6",
   SaleManager: "0x8d278364Ed3E945d898B47E0F2Bf02D1f1913497",
-  multisig: "0xc268B8edc4EC87C78e264001A57309dE58ee554c",
+  Multisig: "0xc268B8edc4EC87C78e264001A57309dE58ee554c",
   chainlinkFeeds: [
     {
       feedName: "ETH/USD",
@@ -15,4 +15,6 @@ export default {
     },
   ],
   kycSigners: ["0x5Ce7665E06d19d95107E41d93c15FfeEa38AC51d"],
+  EthYBR: "0x0",
+  EthMultisig: "0x0",
 };
