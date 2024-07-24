@@ -7,12 +7,12 @@ const environment = getEnvironment();
 const bridge = getArbitrumBridge();
 
 async function main() {
-  console.log("Deploying YBR Eth");
+  console.log("Deploying YBR Arb");
 
   const ArbYBR = (await ethers.getContractFactory("ArbYBR")) as ArbYBR__factory;
   const arbYBR = await upgrades.deployProxy(ArbYBR, [environment.EthMultisig, bridge.L2Gateway, environment.EthYBR], {
     initializer: "initialize",
-    redeployImplementation: "never",
+    redeployImplementation: "always",
     salt: "ArbYBR",
     initialOwner: environment.EthMultisig,
   });

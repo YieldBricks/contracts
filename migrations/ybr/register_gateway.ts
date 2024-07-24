@@ -18,10 +18,6 @@ const l2Config = getChainConfig(
 const l1Provider = new ethersV5.providers.JsonRpcProvider(l1Config.url);
 const l2Provider = new ethersV5.providers.JsonRpcProvider(l2Config.url);
 
-console.log(network.name);
-
-console.log(process.env.DEPLOYER_PRIVATE_KEY);
-
 if (network.name !== "mainnet" && network.name !== "sepolia") {
   throw new Error(`Must run with L1 network`);
 }
@@ -33,7 +29,11 @@ async function main() {
 
   const l2Network = getArbitrumNetwork(l2Config.chainId!);
 
+  console.log(`Registering token on L2: ${l2Network}`);
+
   const adminTokenBridger = new AdminErc20Bridger(l2Network);
+  console.log(`Initialized adminTokenBridger ${adminTokenBridger}`);
+
   const registerTokenTx = await adminTokenBridger.registerCustomToken(
     environment.EthYBR!,
     environment.YBR,
@@ -41,7 +41,11 @@ async function main() {
     l2Provider,
   );
 
+  console.log(`Register token tx hash: ${registerTokenTx.hash}`);
+
   const registerTokenRec = await registerTokenTx.wait();
+
+  console.log(`Register token receipt: ${registerTokenRec.transactionHash}`);
 
   /**
    * The L1 side is confirmed; now we listen and wait for the L2 side to be executed; we can do this by computing the expected txn hash of the L2 transaction.

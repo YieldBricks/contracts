@@ -32,9 +32,9 @@ export type Environment = {
 
 export function getEnvironment(): Environment {
   let env;
-  if (network.name === "sepolia") {
+  if (network.name === "sepolia" || network.name == "arbitrum-sepolia") {
     env = sepolia;
-  } else if (network.name === "arbitrum-one") {
+  } else if (network.name === "arbitrum-one" || network.name == "mainnet") {
     env = arbitrumOne;
   } else {
     throw new Error(`Unknown network ${network.name}`);
@@ -53,13 +53,13 @@ export type ArbitrumBridge = {
 
 export function getArbitrumBridge(): ArbitrumBridge {
   let bridge;
-  if (network.name === "sepolia" || network.name === "arbitrum-sepolia") {
+  if (network.name == "sepolia" || network.name == "arbitrum-sepolia") {
     bridge = {
       L1Router: "0xcE18836b233C83325Cc8848CA4487e94C6288264",
       L1Gateway: "0xba2F7B6eAe1F9d174199C5E4867b563E0eaC40F3",
       L2Gateway: "0x8Ca1e1AC0f260BC4dA7Dd60aCA6CA66208E642C5",
     };
-  } else if (network.name === "arbitrum-one" || network.name === "mainnet") {
+  } else if (network.name == "arbitrum-one" || network.name == "mainnet") {
     bridge = {
       L1Router: "0x72Ce9c846789fdB6fC1f34aC4AD25Dd9ef7031ef",
       L1Gateway: "0xcEe284F754E854890e311e3280b767F80797180d",

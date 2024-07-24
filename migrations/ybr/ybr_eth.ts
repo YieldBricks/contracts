@@ -12,7 +12,7 @@ async function main() {
   const EthYBR = (await ethers.getContractFactory("EthYBR")) as EthYBR__factory;
   const ethYBR = await upgrades.deployProxy(EthYBR, [environment.EthMultisig, bridge.L1Gateway, bridge.L1Router], {
     initializer: "initialize",
-    redeployImplementation: "never",
+    redeployImplementation: "always",
     salt: "EthYBR",
     initialOwner: environment.EthMultisig,
   });

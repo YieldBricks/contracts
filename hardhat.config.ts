@@ -121,6 +121,10 @@ const config: HardhatUserConfig = {
       ...getChainConfig("sepolia"),
       accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
     },
+    "arbitrum-sepolia": {
+      ...getChainConfig("arbitrum-sepolia"),
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+    },
   },
   paths: {
     artifacts: "./artifacts",
