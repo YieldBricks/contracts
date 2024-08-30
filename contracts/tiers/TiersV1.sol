@@ -24,7 +24,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
 
     ERC20Votes public ybr;
 
-    mapping(address user => TierData tier) public tiers;
+    mapping(address => Tier) public tierOverrides;
 
     enum Tier {
         ROOKIE,
@@ -33,13 +33,6 @@ contract TiersV1 is Ownable2StepUpgradeable {
         BUILDER,
         TYCOON,
         GURU
-    }
-
-    struct TierData {
-        Tier tier;
-        uint256 minBalance;
-        uint256 expiration;
-        bool hardcoded;
     }
 
     struct TierBenefits {
@@ -59,29 +52,16 @@ contract TiersV1 is Ownable2StepUpgradeable {
         ybr = ERC20Votes(_ybr);
     }
 
-    function updateTier(address _account) public {
-        // Check current tier for account, if tier already exists but isnt expired, throw TierAlreadyExists error
-        // Else set tier to _getTierFromBalance for user balance
-
-        TierData memory currentTier = tiers[_account];
-        // TODO: clarify update logic
-        // if (currentTier.tier != Tier.ROOKIE && currentTier.expiration > block.timestamp) {
-        //     revert TierAlreadyExists();
-        // }
-
-        uint256 balance = _calculateLowestHistoricalBalance(_account, 30 days);
-
-        TierData memory newTier = _getTierFromBalance(balance);
-        tiers[_account] = newTier;
+    function getTier(address _account) public view returns (Tier) {
+        return getHistoricalTier(_account, block.timestamp);
     }
 
-    function adminSetTier(address[] calldata _accounts, Tier _tier) public onlyOwner {
-        for (uint256 i = 0; i < _accounts.length; i++) {
-            tiers[_accounts[i]] = TierData(_tier, 0, block.timestamp + 30 days, true);
-        }
+    function getHistoricalTier(address _account, uint256 timestamp) public view returns (Tier) {
+        uint256 balance = _calculateAverageHistoricalBalance(_account, timestamp - 30 days, timestamp);
+        return _getTierFromBalance(balance);
     }
 
-    function _getTierFromBalance(uint256 balance) internal view returns (TierData memory) {
+    function _getTierFromBalance(uint256 balance) internal view returns (Tier) {
         if (balance == 0) {
             return TierData(Tier.ROOKIE, 0, 0, false);
         }
@@ -99,48 +79,60 @@ contract TiersV1 is Ownable2StepUpgradeable {
         return TierData(Tier.ROOKIE, 0, 0, false);
     }
 
-    function _calculateLowestHistoricalBalance(address user, uint256 period) internal view returns (uint256) {
-        uint32 lastIndex = ybr.numCheckpoints(user);
+    function _calculateAverageHistoricalBalance(
+        address user,
+        uint256 start,
+        uint256 end
+    ) internal view returns (uint256) {
+        uint32 numCheckpoints = ybr.numCheckpoints(user);
 
-        if (lastIndex == 0) {
+        if (numCheckpoints == 0 || start >= end) {
             return 0;
         }
-        lastIndex -= 1;
-        Checkpoints.Checkpoint208 memory current = ybr.checkpoints(user, lastIndex);
-        uint256 lowestBalance = current._value;
-        uint48 targetTimestamp = uint48(block.timestamp - period);
 
-        while (lastIndex > 0) {
-            current = ybr.checkpoints(user, lastIndex);
-            if (current._key < targetTimestamp) {
+        uint256 totalBalanceTime = 0;
+        uint256 totalTime = end - start;
+
+        uint32 low = 0;
+        uint32 high = numCheckpoints;
+
+        while (low < high) {
+            uint32 mid = low + (high - low) / 2;
+            Checkpoints.Checkpoint208 memory midCheckpoint = ybr.checkpoints(user, mid);
+
+            if (midCheckpoint._key <= start) {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
+        }
+
+        uint32 index = low > 0 ? low - 1 : 0;
+        Checkpoints.Checkpoint208 memory current = ybr.checkpoints(user, index);
+
+        while (index < numCheckpoints) {
+            Checkpoints.Checkpoint208 memory next = ybr.checkpoints(user, index + 1);
+
+            uint256 periodStart = current._key < start ? start : current._key;
+            uint256 periodEnd = next._key > end ? end : next._key;
+
+            if (periodEnd > periodStart) {
+                uint256 timeHeld = periodEnd - periodStart;
+                totalBalanceTime += current._value * timeHeld;
+            }
+
+            if (next._key > end) {
                 break;
             }
-            if (current._value < lowestBalance) {
-                lowestBalance = current._value;
-            }
-            lastIndex -= 1;
+
+            current = next;
+            index += 1;
         }
 
-        return lowestBalance;
+        return totalBalanceTime / totalTime;
     }
 
-    function getTierBenefits(address user) public view returns (TierBenefits memory) {
-        TierData memory tier = tiers[user];
-        if (tier.tier == Tier.ROOKIE) {
-            return TierBenefits(tier.tier, 0, 500, 100);
-        }
-
-        if (!tier.hardcoded) {
-            uint256 balance = ybr.getVotes(user);
-            if (balance < tier.minBalance) {
-                return TierBenefits(Tier.ROOKIE, 0, 500, 100);
-            }
-        }
-
-        if (tier.expiration < block.timestamp) {
-            revert TierExpired();
-        }
-
+    function getTierBenefits(Tier tier) public view returns (TierBenefits memory) {
         if (tier.tier == Tier.EXPLORER) {
             return TierBenefits(tier.tier, 6 hours, 500, 200);
         } else if (tier.tier == Tier.CAMPER) {
@@ -154,8 +146,4 @@ contract TiersV1 is Ownable2StepUpgradeable {
         }
         return TierBenefits(Tier.ROOKIE, 0, 500, 100);
     }
-
-    error TierAlreadyExists();
-    error TierExpired();
-    error YBRCheckpointsNotActivated();
 }
