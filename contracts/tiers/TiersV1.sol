@@ -62,21 +62,18 @@ contract TiersV1 is Ownable2StepUpgradeable {
     }
 
     function _getTierFromBalance(uint256 balance) internal view returns (Tier) {
-        if (balance == 0) {
-            return TierData(Tier.ROOKIE, 0, 0, false);
-        }
         if (balance >= TIER_GURU_THRESHOLD) {
-            return TierData(Tier.GURU, TIER_GURU_THRESHOLD, block.timestamp + DEFAULT_TIER_EXPIRATION, false);
+            return Tier.GURU;
         } else if (balance >= TIER_TYCOON_THRESHOLD) {
-            return TierData(Tier.TYCOON, TIER_TYCOON_THRESHOLD, block.timestamp + DEFAULT_TIER_EXPIRATION, false);
+            return Tier.TYCOON;
         } else if (balance >= TIER_BUILDER_THRESHOLD) {
-            return TierData(Tier.BUILDER, TIER_BUILDER_THRESHOLD, block.timestamp + DEFAULT_TIER_EXPIRATION, false);
+            return Tier.BUILDER;
         } else if (balance >= TIER_CAMPER_THRESHOLD) {
-            return TierData(Tier.CAMPER, TIER_CAMPER_THRESHOLD, block.timestamp + DEFAULT_TIER_EXPIRATION, false);
+            return Tier.CAMPER;
         } else if (balance >= TIER_EXPLORER_THRESHOLD) {
-            return TierData(Tier.EXPLORER, TIER_EXPLORER_THRESHOLD, block.timestamp + DEFAULT_TIER_EXPIRATION, false);
+            return Tier.EXPLORER;
         }
-        return TierData(Tier.ROOKIE, 0, 0, false);
+        return Tier.ROOKIE;
     }
 
     function _calculateAverageHistoricalBalance(
@@ -133,16 +130,16 @@ contract TiersV1 is Ownable2StepUpgradeable {
     }
 
     function getTierBenefits(Tier tier) public view returns (TierBenefits memory) {
-        if (tier.tier == Tier.EXPLORER) {
-            return TierBenefits(tier.tier, 6 hours, 500, 200);
-        } else if (tier.tier == Tier.CAMPER) {
-            return TierBenefits(tier.tier, 12 hours, 1000, 400);
-        } else if (tier.tier == Tier.BUILDER) {
-            return TierBenefits(tier.tier, 24 hours, 1000, 600);
-        } else if (tier.tier == Tier.TYCOON) {
-            return TierBenefits(tier.tier, 48 hours, 2000, 800);
-        } else if (tier.tier == Tier.GURU) {
-            return TierBenefits(tier.tier, 72 hours, 3000, 1000);
+        if (tier == Tier.EXPLORER) {
+            return TierBenefits(Tier.EXPLORER, 6 hours, 500, 200);
+        } else if (tier == Tier.CAMPER) {
+            return TierBenefits(Tier.CAMPER, 12 hours, 1000, 400);
+        } else if (tier == Tier.BUILDER) {
+            return TierBenefits(Tier.BUILDER, 24 hours, 1000, 600);
+        } else if (tier == Tier.TYCOON) {
+            return TierBenefits(Tier.TYCOON, 48 hours, 2000, 800);
+        } else if (tier == Tier.GURU) {
+            return TierBenefits(Tier.GURU, 72 hours, 3000, 1000);
         }
         return TierBenefits(Tier.ROOKIE, 0, 500, 100);
     }
