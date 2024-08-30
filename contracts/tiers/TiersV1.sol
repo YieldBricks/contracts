@@ -6,7 +6,7 @@ import { Checkpoints } from "@openzeppelin/contracts/utils/structs/Checkpoints.s
 
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-contract Tiers is Ownable2StepUpgradeable {
+contract TiersV1 is Ownable2StepUpgradeable {
     uint256 public constant TIER_ROOKIE_THRESHOLD = 0;
     uint256 public constant TIER_EXPLORER_THRESHOLD = 1 ether;
     uint256 public constant TIER_CAMPER_THRESHOLD = 1000 ether;

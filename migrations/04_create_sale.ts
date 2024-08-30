@@ -5,9 +5,9 @@ import { SaleManager, SaleManager__factory } from "../types";
 import { ethersToSafeTransaction, getEnvironment, submitTransactionsToMultisig } from "./utils";
 
 const environment = getEnvironment();
-const address: AddressLike = "0xAddress";
-const start = Date.parse("2021-09-01") / 1000;
-const end = Date.parse("2021-09-30") / 1000;
+const address: AddressLike = "0xdf9947E0bc088183461f0223B63dd569E1027afC";
+const start = Date.parse("2024-08-29") / 1000;
+const end = Date.parse("2024-09-30") / 1000;
 const price = 50;
 
 async function main() {

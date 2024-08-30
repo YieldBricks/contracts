@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Property } from "./Property.sol";
 import { IOracle } from "./Oracle.sol";
-import { Tiers } from "./Tiers.sol";
+import { TiersV0 as Tiers } from "./tiers/TiersV0.sol";
 
 /**
  * @title SaleManager
@@ -217,6 +217,15 @@ contract SaleManager is Ownable2StepUpgradeable {
      */
     function whitelistPaymentToken(address paymentToken, bool isWhitelisted) external onlyOwner {
         whitelistedPaymentTokens[paymentToken] = isWhitelisted;
+    }
+
+    /**
+     * @dev Allows admin transfers of tokens to admin.
+     * @param _property The address of the property token.
+     */
+    function adminTransferProperty(address _property, uint amount) external onlyOwner {
+        Property property = Property(_property);
+        property.transfer(msg.sender, amount);
     }
 
     /**

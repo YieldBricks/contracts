@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { PropertyV2 } from "./PropertyV2.sol";
 import { IOracle } from "../Oracle.sol";
-import { Tiers } from "../Tiers.sol";
+import { TiersV0 as Tiers } from "../tiers/TiersV0.sol";
 
 /**
  * @title SaleManager

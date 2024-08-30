@@ -1,23 +1,30 @@
+import { MetaTransactionData } from "@safe-global/safe-core-sdk-types";
 import { ethers } from "hardhat";
 
 import { SaleManager, SaleManager__factory } from "../types";
 import { ethersToSafeTransaction, getEnvironment, submitTransactionsToMultisig } from "./utils";
 
 const environment = getEnvironment();
-const name = "YieldBricks Test Property";
-const symbol = "YB-001-TEST";
-const cap = 1_000_000n * 10n ** 18n;
 
 async function main() {
-  console.log(`Creating property token for ${name}, symbol ${symbol} with cap ${cap}`);
+  console.log(`Adding whiteliisted payment tokens to SaleManager`);
 
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
   const saleManager = SaleManager.attach(environment.SaleManager) as SaleManager;
 
-  const createTokenTx = await saleManager.createToken.populateTransaction(name, symbol, cap, environment.Compliance);
+  const transactions: MetaTransactionData[] = [];
+
+  for (const feed of environment.chainlinkFeeds) {
+    console.log(`Adding whitelisted token ${feed.feedName} (${feed.asset})`);
+    const tx = await saleManager.whitelistPaymentToken.populateTransaction(feed.asset, true);
+    console.log("TX", tx);
+    transactions.push(ethersToSafeTransaction(tx));
+  }
+
+  await submitTransactionsToMultisig({ transactions, environment });
 
   await submitTransactionsToMultisig({
-    transactions: [ethersToSafeTransaction(createTokenTx)],
+    transactions,
     environment,
   });
 }

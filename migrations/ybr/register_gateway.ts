@@ -23,7 +23,6 @@ if (network.name !== "mainnet" && network.name !== "sepolia") {
 }
 async function main() {
   const deployer = new ethersV5.Wallet(process.env.DEPLOYER_PRIVATE_KEY!, l1Provider);
-  ethersV5.Signer;
 
   console.log(deployer, l2Provider);
 
@@ -33,6 +32,8 @@ async function main() {
 
   const adminTokenBridger = new AdminErc20Bridger(l2Network);
   console.log(`Initialized adminTokenBridger ${adminTokenBridger}`);
+
+  console.log("Environment", environment);
 
   const registerTokenTx = await adminTokenBridger.registerCustomToken(
     environment.EthYBR!,
@@ -55,6 +56,7 @@ async function main() {
   const l1ToL2Msgs = await registerTokenRec.getParentToChildMessages(l2Provider);
 
   console.log(`Should be 2 messages: ${l1ToL2Msgs.length === 2}`);
+  console.log("L1 to L2 messages", l1ToL2Msgs);
 
   const setTokenTx = await l1ToL2Msgs[0].waitForStatus();
   console.log(`Set token not redeemed: ${setTokenTx.status === ParentToChildMessageStatus.REDEEMED}`);

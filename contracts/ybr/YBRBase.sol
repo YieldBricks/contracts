@@ -57,7 +57,7 @@ contract YBRBase is
      * @dev This function replaces the constructor for upgradeable contracts.
      * @param owner_ The initial owner of the contract.
      */
-    function __YBR_init(address owner_) public initializer {
+    function __YBR_init(address owner_) internal initializer {
         __ERC20_init("YieldBricks", "YBR");
         __ERC20Burnable_init();
         __ERC20Pausable_init();

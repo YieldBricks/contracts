@@ -6,7 +6,7 @@ import {
   Compliance__factory,
   Property__factory,
   SaleManager__factory,
-  Tiers__factory,
+  TiersV0__factory as Tiers__factory,
 } from "../types";
 import { getEnvironment } from "./utils";
 
@@ -29,7 +29,7 @@ async function main() {
 
   console.log("Deploying Tiers");
 
-  const Tiers = (await ethers.getContractFactory("Tiers")) as Tiers__factory;
+  const Tiers = (await ethers.getContractFactory("TiersV0")) as Tiers__factory;
   const tiers = await upgrades.deployProxy(Tiers, [environment.Multisig, environment.YBR], {
     initializer: "initialize",
     redeployImplementation: "onchange",

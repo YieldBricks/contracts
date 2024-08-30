@@ -37,11 +37,11 @@ import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 contract EthYBR is YBRBase, ERC20L1BridgeableUpgradeable {
     uint private constant _CAP = 1_000_000_000 ether;
 
-    /// @notice Contract constructor - disabled due to upgradeability
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
-        _disableInitializers();
-    }
+    // /// @notice Contract constructor - disabled due to upgradeability
+    // /// @custom:oz-upgrades-unsafe-allow constructor
+    // constructor() {
+    //     _disableInitializers();
+    // }
 
     /**
      * @notice Initializes the contract

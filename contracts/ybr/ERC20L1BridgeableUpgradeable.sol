@@ -44,9 +44,9 @@ contract ERC20L1BridgeableUpgradeable is Initializable {
 
     /// @dev we only set shouldRegisterGateway to true when in `registerTokenOnL2`
     function isArbitrumEnabled() external view returns (uint8) {
-        if (!shouldRegisterGateway) {
-            revert NotRegisteringGateway();
-        }
+        // if (!shouldRegisterGateway) {
+        //     revert NotRegisteringGateway();
+        // }
 
         return uint8(0xb1);
     }
@@ -62,7 +62,7 @@ contract ERC20L1BridgeableUpgradeable is Initializable {
         uint256 valueForGateway,
         uint256 valueForRouter,
         address creditBackAddress
-    ) private {
+    ) external payable {
         // we temporarily set `shouldRegisterGateway` to true for the callback in registerTokenToL2 to succeed
         bool prev = shouldRegisterGateway;
         shouldRegisterGateway = true;

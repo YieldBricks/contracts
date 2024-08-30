@@ -1,6 +1,8 @@
 import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-toolbox";
+import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
+import { ethers } from "hardhat";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import type { HardhatUserConfig } from "hardhat/config";
@@ -63,14 +65,17 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      arbitrumOne: vars.get("ARBISCAN_API_KEY", ""),
+      mainnet: process.env.ETHERSCAN_API_KEY!,
+      arbitrumOne: process.env.ETHERSCAN_API_KEY!,
     },
   },
   namedAccounts: {
     deployer: 0,
     multisig: "0xC4116De72f8e038A67656860EEe4322d0289598e",
   },
-
+  sourcify: {
+    enabled: true,
+  },
   gasReporter: {
     currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,
@@ -99,12 +104,6 @@ const config: HardhatUserConfig = {
     },
     arbitrum: {
       ...getChainConfig("arbitrum-mainnet"),
-      verify: {
-        etherscan: {
-          apiKey: vars.get("ARBISCAN_API_KEY", ""),
-        },
-      },
-
       accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
     },
     arbitrumSepolia: {
@@ -113,7 +112,7 @@ const config: HardhatUserConfig = {
     },
     avalanche: getChainConfig("avalanche"),
     bsc: getChainConfig("bsc"),
-    mainnet: getChainConfig("mainnet"),
+    mainnet: { ...getChainConfig("mainnet"), accounts: [process.env.DEPLOYER_PRIVATE_KEY!] },
     optimism: getChainConfig("optimism-mainnet"),
     "polygon-mainnet": getChainConfig("polygon-mainnet"),
     "polygon-mumbai": getChainConfig("polygon-mumbai"),

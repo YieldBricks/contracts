@@ -52,7 +52,7 @@ contract Property is
 
     /// @notice Mapping to track how many claims a user has made
     mapping(address user => uint256 nonce) public claimNonce;
-    /// @notice Array of claims made by the ownerha
+    /// @notice Array of claims distributed by platform
     Yield[] public claims;
 
     /**

@@ -17,7 +17,7 @@ async function main() {
   const Compliance = (await ethers.getContractFactory("Compliance")) as Compliance__factory;
   const compliance = Compliance.attach(environment.Compliance) as Compliance;
 
-  const signer = Wallet.createRandom();
+  const signer = new Wallet("73ffa3d47e8ca31886642a0ecce2d8e4750eff5f185862cdd375fc47ff39ecb0");
 
   console.log("Signer Key:", signer.privateKey);
   console.log("Signer Address:", signer.address);
