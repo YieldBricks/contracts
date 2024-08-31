@@ -6,6 +6,8 @@ import { Checkpoints } from "@openzeppelin/contracts/utils/structs/Checkpoints.s
 
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
+import "hardhat/console.sol";
+
 contract TiersV1 is Ownable2StepUpgradeable {
     uint256 public constant TIER_ROOKIE_THRESHOLD = 0;
     uint256 public constant TIER_EXPLORER_THRESHOLD = 1 ether;
@@ -19,8 +21,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
     uint256 public constant TIER_BUILDER_LOCKUP = 90 days;
     uint256 public constant TIER_TYCOON_LOCKUP = 90 days;
     uint256 public constant TIER_GURU_LOCKUP = 180 days;
-    uint256 public constant DEFAULT_TIER_EXPIRATION = 30 days;
-    uint256 public constant AVERAGE_BLOCK_TIME = 13 seconds;
+    uint256 public constant DEFAULT_TIER_CALCULATION = 30 days;
 
     ERC20Votes public ybr;
 
@@ -57,11 +58,22 @@ contract TiersV1 is Ownable2StepUpgradeable {
     }
 
     function getHistoricalTier(address _account, uint256 timestamp) public view returns (Tier) {
-        uint256 balance = _calculateAverageHistoricalBalance(_account, timestamp - 30 days, timestamp);
+        if (tierOverrides[_account] != Tier.ROOKIE) {
+            return tierOverrides[_account];
+        }
+        uint256 balance = _calculateAverageHistoricalBalance(_account, timestamp, timestamp - DEFAULT_TIER_CALCULATION);
         return _getTierFromBalance(balance);
     }
 
-    function _getTierFromBalance(uint256 balance) internal view returns (Tier) {
+    function setTierOverride(address _account, Tier _tier) public onlyOwner {
+        tierOverrides[_account] = _tier;
+    }
+
+    function getAverageBalance(address _account, uint256 timestamp) public view returns (uint256) {
+        return _calculateAverageHistoricalBalance(_account, timestamp, timestamp - DEFAULT_TIER_CALCULATION);
+    }
+
+    function _getTierFromBalance(uint256 balance) internal pure returns (Tier) {
         if (balance >= TIER_GURU_THRESHOLD) {
             return Tier.GURU;
         } else if (balance >= TIER_TYCOON_THRESHOLD) {
@@ -87,8 +99,10 @@ contract TiersV1 is Ownable2StepUpgradeable {
             return 0;
         }
 
-        uint256 totalBalanceTime = 0;
-        uint256 totalTime = end - start;
+        if (numCheckpoints == 1) {
+            Checkpoints.Checkpoint208 memory checkpoint = ybr.checkpoints(user, 0);
+            return checkpoint._value;
+        }
 
         uint32 low = 0;
         uint32 high = numCheckpoints;
@@ -105,31 +119,56 @@ contract TiersV1 is Ownable2StepUpgradeable {
         }
 
         uint32 index = low > 0 ? low - 1 : 0;
+        uint256 totalBalanceTime = 0;
+
         Checkpoints.Checkpoint208 memory current = ybr.checkpoints(user, index);
 
-        while (index < numCheckpoints) {
-            Checkpoints.Checkpoint208 memory next = ybr.checkpoints(user, index + 1);
+        uint256 realStart = current._key > start ? current._key : start;
 
-            uint256 periodStart = current._key < start ? start : current._key;
-            uint256 periodEnd = next._key > end ? end : next._key;
+        while (true) {
+            // cheeck if there is a next checkpoint
+            if (index + 1 == numCheckpoints) {
+                // if there is no next checkpoint, add the remaining time until the end
+                uint256 periodStart = current._key < start ? start : current._key;
+                uint256 periodEnd = end;
 
-            if (periodEnd > periodStart) {
-                uint256 timeHeld = periodEnd - periodStart;
-                totalBalanceTime += current._value * timeHeld;
-            }
+                if (periodEnd > periodStart) {
+                    uint256 timeHeld = periodEnd - periodStart;
+                    totalBalanceTime += current._value * timeHeld;
+                }
 
-            if (next._key > end) {
                 break;
-            }
+            } else {
+                Checkpoints.Checkpoint208 memory next = ybr.checkpoints(user, index + 1);
 
-            current = next;
-            index += 1;
+                uint256 periodStart = current._key < start ? start : current._key;
+                uint256 periodEnd = next._key > end ? end : next._key;
+
+                if (periodEnd > periodStart) {
+                    uint256 timeHeld = periodEnd - periodStart;
+                    totalBalanceTime += current._value * timeHeld;
+                }
+
+                if (next._key > end) {
+                    break;
+                }
+
+                current = next;
+                index += 1;
+            }
         }
+
+        uint256 totalTime = end - realStart;
+
+        console.log("totalBalanceTime %s", totalBalanceTime);
+        console.log("totalTime %s", totalTime);
+
+        console.log("result %s", totalBalanceTime / totalTime);
 
         return totalBalanceTime / totalTime;
     }
 
-    function getTierBenefits(Tier tier) public view returns (TierBenefits memory) {
+    function getTierBenefits(Tier tier) public pure returns (TierBenefits memory) {
         if (tier == Tier.EXPLORER) {
             return TierBenefits(Tier.EXPLORER, 6 hours, 500, 200);
         } else if (tier == Tier.CAMPER) {

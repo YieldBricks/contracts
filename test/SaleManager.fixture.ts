@@ -11,8 +11,8 @@ import {
   Property__factory,
   SaleManager,
   SaleManager__factory,
-  TiersV0 as Tiers,
-  TiersV0__factory as Tiers__factory,
+  TiersV1 as Tiers,
+  TiersV1__factory as Tiers__factory,
 } from "../types";
 import { ZERO_ADDRESS, identityTypedMessage } from "./utils";
 
@@ -53,7 +53,7 @@ export async function deploySaleManagerFixture() {
 
   console.log("mockOracleAddress", mockOracleAddress);
 
-  const Tiers = (await ethers.getContractFactory("TiersV0")) as Tiers__factory;
+  const Tiers = (await ethers.getContractFactory("TiersV1")) as Tiers__factory;
   const TiersProxy = await upgrades.deployProxy(Tiers, [multisig.address, ybrAddress], {
     unsafeAllow: ["internal-function-storage"],
   });

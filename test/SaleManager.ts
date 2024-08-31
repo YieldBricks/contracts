@@ -308,7 +308,7 @@ describe("SaleManager", function () {
     it("Give Alice the GURU tier", async function () {
       const { tiers, alice, multisig } = this.fixture as FixtureReturnType;
 
-      await tiers.connect(multisig).adminSetTier([alice.address], 5); // 5 is GURU
+      await tiers.connect(multisig).setTierOverride(alice.address, 5); // 5 is GURU
 
       expect(await tiers.getTierBenefits(alice.address)).to.deep.equal([5n, 259200n, 3000n, 1000n]);
     });
