@@ -61,7 +61,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
         if (tierOverrides[_account] != Tier.ROOKIE) {
             return tierOverrides[_account];
         }
-        uint256 balance = _calculateAverageHistoricalBalance(_account, timestamp, timestamp - DEFAULT_TIER_CALCULATION);
+        uint256 balance = getAverageBalance(_account, timestamp);
         return _getTierFromBalance(balance);
     }
 
@@ -70,7 +70,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
     }
 
     function getAverageBalance(address _account, uint256 timestamp) public view returns (uint256) {
-        return _calculateAverageHistoricalBalance(_account, timestamp, timestamp - DEFAULT_TIER_CALCULATION);
+        return _calculateAverageHistoricalBalance(_account, timestamp - DEFAULT_TIER_CALCULATION, timestamp);
     }
 
     function _getTierFromBalance(uint256 balance) internal pure returns (Tier) {
@@ -93,6 +93,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
         uint256 start,
         uint256 end
     ) internal view returns (uint256) {
+        console.log("end %s", end);
         uint32 numCheckpoints = ybr.numCheckpoints(user);
 
         if (numCheckpoints == 0 || start >= end) {
@@ -101,6 +102,9 @@ contract TiersV1 is Ownable2StepUpgradeable {
 
         if (numCheckpoints == 1) {
             Checkpoints.Checkpoint208 memory checkpoint = ybr.checkpoints(user, 0);
+            if (checkpoint._key > end) {
+                return 0;
+            }
             return checkpoint._value;
         }
 
@@ -125,7 +129,12 @@ contract TiersV1 is Ownable2StepUpgradeable {
 
         uint256 realStart = current._key > start ? current._key : start;
 
+        if (realStart > end) {
+            return 0;
+        }
+
         while (true) {
+            console.log("current %s %s", current._key, current._value);
             // cheeck if there is a next checkpoint
             if (index + 1 == numCheckpoints) {
                 // if there is no next checkpoint, add the remaining time until the end
@@ -158,6 +167,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
             }
         }
 
+        console.log("times %s %s %s", start, realStart, end);
         uint256 totalTime = end - realStart;
 
         console.log("totalBalanceTime %s", totalBalanceTime);

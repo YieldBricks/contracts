@@ -3,6 +3,7 @@ import { expect } from "chai";
 import { parseEther } from "ethers";
 
 import { deployYBRFixture } from "./YBR.fixture";
+import { DAY } from "./utils";
 
 type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deployYBRFixture>>>>;
 
@@ -157,18 +158,42 @@ describe("Tiers", function () {
       await expect(ybr.connect(multisig).transfer(alice.address, parseEther("50000"))).to.be.fulfilled;
     });
 
-    it("Check user satisfies GURU when they have 50000 YBR", async function () {
+    it("Check balance when there is only one data point", async function () {
       const { tiers, ybr, alice } = this.fixture as FixtureReturnType;
 
       await ybr.connect(alice).delegate(alice.address);
 
-      // Get current timestamp in seconds
-      const now = Math.floor(Date.now() / 1000);
+      await time.increase(100);
 
-      // Alice should be in GURU tier
-      const averageBalance = await tiers.getAverageBalance(alice.address, now);
+      // Get current timestamp in seconds (will be before block.timestamp)
+      const now = await time.latest();
+      let averageBalance = await tiers.getAverageBalance(alice.address, now - 1000);
+
+      // Before the delegation, balance should be 0
+      expect(averageBalance).to.equal(parseEther("0"));
+      averageBalance = await tiers.getAverageBalance(alice.address, now);
 
       expect(averageBalance).to.equal(parseEther("50000"));
+    });
+
+    it("Check balance when there are two data points", async function () {
+      const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
+
+      await time.increase(DAY * 30);
+
+      await ybr.connect(alice).transfer(multisig.address, parseEther("50000"));
+
+      const lastCheckpoint = await ybr.checkpoints(alice.address, 1);
+
+      // Check average for point 15 days from last checkpoint, so it's half-way between 0 and 50000
+
+      const averageBalance = await tiers.getAverageBalance(alice.address, lastCheckpoint[0] + BigInt(DAY) * 15n);
+
+      expect(averageBalance).to.equal(parseEther("25000"));
+    });
+
+    it("Fuzz various transfers and compare average balance", async function () {
+      const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
     });
   });
 });
