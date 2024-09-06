@@ -104,6 +104,16 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     /**
+     * @dev Sets a new token beacon for the contract.
+     * @param tokenBeacon_ The address of the new token beacon.
+     */
+    function setTokenBeacon(address tokenBeacon_) external onlyOwner {
+        tokenBeacon = UpgradeableBeacon(tokenBeacon_);
+
+        emit TokenBeaconUpdated(tokenBeacon_);
+    }
+
+    /**
      * @dev Creates a new token.
      * @param name_ The name of the new token.
      * @param symbol_ The symbol of the new token.
@@ -422,4 +432,10 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param amount The amount of the transaction.
      */
     event ClaimAdded(uint indexed transactionId, address sender, uint amount);
+
+    /**
+     * @dev Emitted when the token beacon is updated.
+     * @param tokenBeacon The address of the new token beacon.
+     */
+    event TokenBeaconUpdated(address tokenBeacon);
 }
