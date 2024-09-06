@@ -46,7 +46,7 @@
     "hardhat": "^2.19.2",
     "hardhat-deploy": "^0.12.4",
     "hardhat-deploy-ethers": "^0.4.2",
-    "hardhat-gas-reporter": "^1.0.9",
+    "hardhat-gas-reporter": "^2.2.1",
     "lodash": "^4.17.21",
     "mocha": "^10.2.0",
     "prettier": "^3.1.1",

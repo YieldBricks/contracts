@@ -1,5 +1,6 @@
 import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
+import { randomInt } from "crypto";
 import { parseEther } from "ethers";
 
 import { deployYBRFixture } from "./YBR.fixture";
@@ -192,8 +193,89 @@ describe("Tiers", function () {
       expect(averageBalance).to.equal(parseEther("25000"));
     });
 
-    it("Fuzz various transfers and compare average balance", async function () {
+    it("Fuzz various transfers and compare average balance (slow calc)", async function () {
       const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
+
+      await ybr.connect(multisig).transfer(alice.address, parseEther("1000000"));
+
+      for (let i = 0; i < 10; i++) {
+        await ybr.connect(alice).transfer(multisig.address, parseEther(randomInt(1, 100).toString()));
+        await time.increase(DAY);
+      }
+
+      const now = await time.latest();
+      const averageBalance = await tiers.getAverageBalance(alice.address, now);
+
+      // Calculate average balance manually over last 30 days (by splitting the period into 30 parts)
+
+      let totalBalance = 0n;
+
+      for (let i = 0; i < 30; i++) {
+        const pastBalance = await ybr.getPastVotes(alice.address, BigInt(now) - BigInt(DAY) * BigInt(i + 1));
+        totalBalance += pastBalance;
+      }
+
+      const manualAverage = totalBalance / 30n;
+
+      expect(averageBalance).to.approximately(manualAverage, manualAverage / 1000n);
+    });
+
+    it("Fuzz various transfers and compare average balance (slow calc) (edge case)", async function () {
+      const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
+
+      await time.increase(DAY * 30);
+
+      await ybr.connect(multisig).transfer(alice.address, parseEther("1000000"));
+
+      for (let i = 0; i < 5; i++) {
+        await ybr.connect(alice).transfer(multisig.address, parseEther("10000"));
+        await time.increase(10);
+      }
+
+      const now = await time.latest();
+      const averageBalance = await tiers.getAverageBalance(alice.address, now);
+
+      // Calculate average balance manually over last 30 days (by splitting the period into 30 parts)
+
+      let totalBalance = 0n;
+
+      for (let i = 0; i < 30; i++) {
+        const pastBalance = await ybr.getPastVotes(alice.address, BigInt(now) - BigInt(DAY) * BigInt(i + 1));
+        totalBalance += pastBalance;
+      }
+
+      const manualAverage = totalBalance / 30n;
+
+      expect(averageBalance).to.approximately(manualAverage, manualAverage / 1000n);
+    });
+
+    it("Fuzz various transfers and compare average balance (fast calc)", async function () {
+      const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
+
+      await time.increase(DAY * 30);
+
+      await ybr.connect(multisig).transfer(alice.address, parseEther("1000000"));
+
+      for (let i = 0; i < 1000; i++) {
+        await ybr.connect(alice).transfer(multisig.address, parseEther(randomInt(1, 100).toString()));
+        await time.increase(DAY / 10);
+      }
+
+      const now = await time.latest();
+      const averageBalance = await tiers.getAverageBalance(alice.address, now);
+
+      // Calculate average balance manually over last 30 days (by splitting the period into 30 parts)
+
+      let totalBalance = 0n;
+
+      for (let i = 0; i < 30; i++) {
+        const pastBalance = await ybr.getPastVotes(alice.address, BigInt(now) - BigInt(DAY) * BigInt(i + 1));
+        totalBalance += pastBalance;
+      }
+
+      const manualAverage = totalBalance / 30n;
+
+      expect(averageBalance).to.equal(manualAverage);
     });
   });
 });

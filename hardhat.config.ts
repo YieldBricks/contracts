@@ -2,7 +2,6 @@ import "@nomicfoundation/hardhat-ethers";
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
-import { ethers } from "hardhat";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
 import type { HardhatUserConfig } from "hardhat/config";
@@ -80,7 +79,7 @@ const config: HardhatUserConfig = {
     currency: "USD",
     enabled: process.env.REPORT_GAS ? true : false,
     excludeContracts: [],
-    src: "./contracts",
+    reportPureAndViewMethods: true,
   },
   docgen: {
     outputDir: "./docs",

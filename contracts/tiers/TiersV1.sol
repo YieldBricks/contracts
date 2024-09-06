@@ -6,8 +6,6 @@ import { Checkpoints } from "@openzeppelin/contracts/utils/structs/Checkpoints.s
 
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
-import "hardhat/console.sol";
-
 contract TiersV1 is Ownable2StepUpgradeable {
     uint256 public constant TIER_ROOKIE_THRESHOLD = 0;
     uint256 public constant TIER_EXPLORER_THRESHOLD = 1 ether;
@@ -22,6 +20,8 @@ contract TiersV1 is Ownable2StepUpgradeable {
     uint256 public constant TIER_TYCOON_LOCKUP = 90 days;
     uint256 public constant TIER_GURU_LOCKUP = 180 days;
     uint256 public constant DEFAULT_TIER_CALCULATION = 30 days;
+
+    uint256 public constant FAST_AVERAGE_THRESHOLD = 30;
 
     ERC20Votes public ybr;
 
@@ -93,7 +93,6 @@ contract TiersV1 is Ownable2StepUpgradeable {
         uint256 start,
         uint256 end
     ) internal view returns (uint256) {
-        console.log("end %s", end);
         uint32 numCheckpoints = ybr.numCheckpoints(user);
 
         if (numCheckpoints == 0 || start >= end) {
@@ -122,7 +121,48 @@ contract TiersV1 is Ownable2StepUpgradeable {
             }
         }
 
-        uint32 index = low > 0 ? low - 1 : 0;
+        uint32 startIndex = low > 0 ? low - 1 : 0;
+
+        if (numCheckpoints - startIndex > FAST_AVERAGE_THRESHOLD) {
+            return _fastCalcAverageHistoricalBalance(user, start, end);
+        } else {
+            return _slowCalcAverageHistoricalBalance(user, start, end, startIndex, numCheckpoints);
+        }
+    }
+
+    /**
+     * @notice Calculate the balance by looking at daily-ish checkpoints over the last month instead of processing all transactiions.
+     * @dev This function is used to prevent DoSing of users by spamming them with lots of small transactions.
+     */
+    function _fastCalcAverageHistoricalBalance(
+        address user,
+        uint256 start,
+        uint256 end
+    ) internal view returns (uint256) {
+        // Instead of processing all transactions, we use ybr.getPastVotes to get balance at discrete timestamps and calculate the average balance
+
+        uint256 balanceAverage = 0;
+
+        // Split the time between start and end into 30 discrete timestamps
+        uint256 timeStep = (end - start) / 30;
+
+        for (uint256 i = 0; i < FAST_AVERAGE_THRESHOLD; i++) {
+            uint256 time = start + i * timeStep;
+            uint256 balance = ybr.getPastVotes(user, time);
+            balanceAverage += balance;
+        }
+
+        return balanceAverage / FAST_AVERAGE_THRESHOLD;
+    }
+
+    function _slowCalcAverageHistoricalBalance(
+        address user,
+        uint256 start,
+        uint256 end,
+        uint32 startIndex,
+        uint32 numCheckpoints
+    ) internal view returns (uint256) {
+        uint32 index = startIndex;
         uint256 totalBalanceTime = 0;
 
         Checkpoints.Checkpoint208 memory current = ybr.checkpoints(user, index);
@@ -134,7 +174,6 @@ contract TiersV1 is Ownable2StepUpgradeable {
         }
 
         while (true) {
-            console.log("current %s %s", current._key, current._value);
             // cheeck if there is a next checkpoint
             if (index + 1 == numCheckpoints) {
                 // if there is no next checkpoint, add the remaining time until the end
@@ -167,13 +206,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
             }
         }
 
-        console.log("times %s %s %s", start, realStart, end);
         uint256 totalTime = end - realStart;
-
-        console.log("totalBalanceTime %s", totalBalanceTime);
-        console.log("totalTime %s", totalTime);
-
-        console.log("result %s", totalBalanceTime / totalTime);
 
         return totalBalanceTime / totalTime;
     }
