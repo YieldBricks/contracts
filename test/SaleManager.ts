@@ -310,7 +310,9 @@ describe("SaleManager", function () {
 
       await tiers.connect(multisig).setTierOverride(alice.address, 5); // 5 is GURU
 
-      expect(await tiers.getTierBenefits(alice.address)).to.deep.equal([5n, 259200n, 3000n, 1000n]);
+      const tier = await tiers.getTier(alice.address);
+
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 3000n, 1000n]);
     });
 
     it("Whitelist YBR token", async function () {

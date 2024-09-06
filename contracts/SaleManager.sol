@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Property } from "./Property.sol";
 import { IOracle } from "./Oracle.sol";
-import { TiersV0 as Tiers } from "./tiers/TiersV0.sol";
+import { TiersV1 as Tiers } from "./tiers/TiersV1.sol";
 
 /**
  * @title SaleManager
@@ -235,8 +235,8 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param _property The address of the token to buy.
      */
     function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external {
-        Tiers.TierBenefits memory tierBenefits = tiers.getTierBenefits(msg.sender);
-        (Tiers.Tier tier, , , ) = tiers.tiers(msg.sender);
+        Tiers.Tier tier = tiers.getTier(msg.sender);
+        Tiers.TierBenefits memory tierBenefits = tiers.getTierBenefits(tier);
 
         // check that sale is open
         if (block.timestamp < sales[_property].start - tierBenefits.earlyAccess) {
