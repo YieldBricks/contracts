@@ -57,7 +57,8 @@ contract Property is
     /// @notice Array of claims distributed by platform
     Yield[] public claims;
 
-    Tiers public tiers;
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    Tiers public immutable tiers;
 
     /**
      * @notice Struct to represent a yield claim
@@ -70,7 +71,8 @@ contract Property is
 
     /// @notice Contract constructor - disabled due to upgradeability
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
+    constructor(address tiers_) {
+        tiers = Tiers(tiers_);
         _disableInitializers();
     }
 
@@ -154,14 +156,6 @@ contract Property is
     }
 
     /**
-     * @notice Allows the owner to set the Tiers contract
-     * @param tiers_ The address of the Tiers contract
-     */
-    function setTiers(address tiers_) public onlyOwner {
-        tiers = Tiers(tiers_);
-    }
-
-    /**
      * @notice Allows the owner to add a claim to the contract
      * @param rewardToken The address of the reward token
      * @param amount The amount of the reward token
@@ -195,9 +189,10 @@ contract Property is
             Tiers.Tier tier = tiers.getHistoricalTier(msg.sender, claim.timestamp);
             Tiers.TierBenefits memory tierBenefits = tiers.getTierBenefits(tier);
 
-            uint256 claimableHoldings = holdings > tierBenefits.walletLimit ? tierBenefits.walletLimit : holdings;
-
             uint256 totalSupply = getPastTotalSupply(claim.timestamp);
+
+            uint256 maxClaimableHoldings = (tierBenefits.walletLimit * totalSupply) / 10000;
+            uint256 claimableHoldings = holdings > maxClaimableHoldings ? maxClaimableHoldings : holdings;
             uint256 claimAmount = (claim.amount * claimableHoldings) / totalSupply;
 
             // Transfer the claim amount to the user

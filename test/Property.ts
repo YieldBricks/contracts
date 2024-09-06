@@ -259,12 +259,17 @@ describe("Property", function () {
       expect(await property.owner()).to.equal(multisig.address);
     });
 
-    it("Alice distributes 200_000 tokens each to Bob and Charlie", async function () {
-      const { property, alice, bob, charlie } = this.fixture as FixtureReturnType;
-      await property.connect(alice).transfer(bob.address, 200_000);
-      await property.connect(alice).transfer(charlie.address, 200_000);
-      expect(await property.balanceOf(bob.address)).to.equal(200_000);
-      expect(await property.balanceOf(charlie.address)).to.equal(200_000);
+    it("Alice distribute token", async function () {
+      const { property, multisig, alice, bob, charlie } = this.fixture as FixtureReturnType;
+
+      await property.connect(alice).transfer(multisig.address, 1_000_000);
+
+      await property.connect(multisig).transfer(alice.address, 100_000);
+      await property.connect(multisig).transfer(bob.address, 100_000);
+      await property.connect(multisig).transfer(charlie.address, 10_000);
+      expect(await property.balanceOf(alice.address)).to.equal(100_000);
+      expect(await property.balanceOf(bob.address)).to.equal(100_000);
+      expect(await property.balanceOf(charlie.address)).to.equal(10_000);
     });
 
     it("Create a new reward distribution claim with YBR for Property", async function () {
@@ -285,13 +290,13 @@ describe("Property", function () {
       const currentTime = await time.latest();
 
       expect(await property.getPastTotalSupply(claim.timestamp)).to.equal(1_000_000);
-      expect(await property.getPastVotes(alice.address, claim.timestamp)).to.equal(600_000);
+      expect(await property.getPastVotes(alice.address, claim.timestamp)).to.equal(100_000);
       // Use current time - 1, to get current block just getVotes should be used
       expect(await property.getPastTotalSupply(currentTime - 1)).to.equal(1_000_000);
-      expect(await property.getPastVotes(alice.address, currentTime - 1)).to.equal(600_000);
+      expect(await property.getPastVotes(alice.address, currentTime - 1)).to.equal(100_000);
     });
 
-    it("Users can claim their rewards proportionally", async function () {
+    it("Users can claim their rewards proportionally if they have sufficient tier", async function () {
       const { property, alice, bob, charlie, ybr } = this.fixture as FixtureReturnType;
 
       await property.connect(alice).collectYields();
@@ -302,9 +307,10 @@ describe("Property", function () {
       const bobYield = await ybr.balanceOf(bob.address);
       const charlieYield = await ybr.balanceOf(charlie.address);
 
-      expect(aliceYield).to.equal(60_000);
-      expect(bobYield).to.equal(20_000);
-      expect(charlieYield).to.equal(20_000);
+      expect(aliceYield).to.equal(10_000);
+      // Bob can't claim more because he has a lower tier
+      expect(bobYield).to.equal(1_000);
+      expect(charlieYield).to.equal(1_000);
     });
   });
 });

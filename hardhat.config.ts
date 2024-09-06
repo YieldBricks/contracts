@@ -22,6 +22,7 @@ const infuraApiKey: string = vars.get("INFURA_API_KEY");
 export const chainIds = {
   "arbitrum-mainnet": 42161,
   "arbitrum-sepolia": 421614,
+  tenderly: 4216100,
   avalanche: 43114,
   bsc: 56,
   ganache: 1337,
@@ -107,6 +108,11 @@ const config: HardhatUserConfig = {
     },
     arbitrumSepolia: {
       ...getChainConfig("arbitrum-sepolia"),
+      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+    },
+    tenderly: {
+      url: "https://virtual.arbitrum.rpc.tenderly.co/c93dc5b9-4ea4-4f46-8d50-5aa6d311f1bd",
+      chainId: chainIds.tenderly,
       accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
     },
     avalanche: getChainConfig("avalanche"),

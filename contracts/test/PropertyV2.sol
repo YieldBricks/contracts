@@ -31,6 +31,8 @@ import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 import { ComplianceV2 } from "./ComplianceV2.sol";
 
+import { TiersV1 as Tiers } from "../tiers/TiersV1.sol";
+
 /**
  * @title YieldBricks PropertyV2 Contract
  * @notice This contract is for the YieldBricks property, which is a permissioned ERC20 token with additional features.

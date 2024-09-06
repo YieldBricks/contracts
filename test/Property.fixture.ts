@@ -1,7 +1,16 @@
 import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { ethers, upgrades } from "hardhat";
 
-import { Compliance, Compliance__factory, EthYBR, EthYBR__factory, Property, Property__factory } from "../types";
+import {
+  Compliance,
+  Compliance__factory,
+  EthYBR,
+  EthYBR__factory,
+  Property,
+  Property__factory,
+  TiersV1 as Tiers,
+  TiersV1__factory as Tiers__factory,
+} from "../types";
 import { ZERO_ADDRESS, identityTypedMessage } from "./utils";
 
 export async function deployPropertyFixture() {
@@ -69,16 +78,6 @@ export async function deployPropertyFixture() {
 
   console.log("Compliance deployed to:", await compliance.getAddress());
 
-  // Deploy Token contract
-  const Property = (await ethers.getContractFactory("Property")) as Property__factory;
-  const propertyProxy = await upgrades.deployProxy(
-    Property,
-    [complianceAddress, alice.address, "TestToken", "TT", 1000000],
-    { unsafeAllow: ["internal-function-storage"] },
-  );
-  const property = Property.attach(await propertyProxy.getAddress()) as Property;
-  const propertyAddress = await property.getAddress();
-
   // Deploy YBR contract
   const YBR = (await ethers.getContractFactory("EthYBR")) as EthYBR__factory;
   const YBRProxy = await upgrades.deployProxy(YBR, [multisig.address, ZERO_ADDRESS, ZERO_ADDRESS], {
@@ -88,6 +87,27 @@ export async function deployPropertyFixture() {
   const ybr = YBR.attach(await YBRProxy.getAddress()) as EthYBR;
   const ybrAddress = await ybr.getAddress();
 
+  const Tiers = (await ethers.getContractFactory("TiersV1")) as Tiers__factory;
+  const TiersProxy = await upgrades.deployProxy(Tiers, [multisig.address, ybrAddress], {
+    unsafeAllow: ["internal-function-storage"],
+  });
+  const tiers = Tiers.attach(await TiersProxy.getAddress()) as Tiers;
+  const tiersAddress = await tiers.getAddress();
+
+  console.log("Tiers deployed to:", tiersAddress);
+
+  await tiers.connect(multisig).setTierOverride(alice.address, 5);
+
+  // Deploy Token contract
+  const Property = (await ethers.getContractFactory("Property")) as Property__factory;
+  const propertyProxy = await upgrades.deployProxy(
+    Property,
+    [complianceAddress, alice.address, "TestToken", "TT", 1000000],
+    { unsafeAllow: ["internal-function-storage"], constructorArgs: [tiersAddress] },
+  );
+  const property = Property.attach(await propertyProxy.getAddress()) as Property;
+  const propertyAddress = await property.getAddress();
+
   return {
     compliance,
     complianceAddress,
@@ -95,6 +115,8 @@ export async function deployPropertyFixture() {
     propertyAddress,
     ybr,
     ybrAddress,
+    tiers,
+    tiersAddress,
     deployer,
     multisig,
     alice,
