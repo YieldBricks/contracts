@@ -6,6 +6,10 @@ import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cry
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Property } from "./Property.sol";
 
+/**
+ * @title Compliance Contract
+ * @dev This contract is used to manage compliance for the YieldBricks token.
+ */
 contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
 

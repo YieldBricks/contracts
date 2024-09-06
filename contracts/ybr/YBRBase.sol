@@ -141,7 +141,16 @@ contract YBRBase is
      */
     error FrozenWalletError(address wallet);
 
-    // Events
+    /**
+     * @notice Event emitted when a wallet is frozen or unfrozen
+     * @param wallet The address of the wallet that was frozen or unfrozen
+     * @param isFrozen A boolean indicating whether the wallet was frozen or unfrozen
+     */
     event WalletFrozen(address wallet, bool isFrozen);
+
+    /**
+     * @notice Event emitted when the contract is paused or unpaused
+     * @param isPaused A boolean indicating whether the contract was paused or unpaused
+     */
     event PauseTransfers(bool isPaused);
 }

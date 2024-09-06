@@ -49,8 +49,6 @@ contract Property is
 {
     /// @notice Mapping to track frozen wallets
     mapping(address wallet => bool isFrozen) public walletFrozen;
-    /// @notice The Compliance contract responsible for KYC and AML checks
-    Compliance private _compliance;
 
     /// @notice Mapping to track how many claims a user has made
     mapping(address user => uint256 nonce) public claimNonce;
@@ -58,7 +56,11 @@ contract Property is
     Yield[] public claims;
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
-    Tiers public immutable tiers;
+    Tiers private immutable _tiers;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    /// @notice The Compliance contract responsible for KYC and AML checks
+    Compliance immutable _compliance;
 
     /**
      * @notice Struct to represent a yield claim
@@ -71,8 +73,9 @@ contract Property is
 
     /// @notice Contract constructor - disabled due to upgradeability
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(address tiers_) {
-        tiers = Tiers(tiers_);
+    constructor(address compliance_, address tiers_) {
+        _compliance = Compliance(compliance_);
+        _tiers = Tiers(tiers_);
         _disableInitializers();
     }
 
@@ -80,14 +83,12 @@ contract Property is
      * @dev Initializes the contract by setting a `name`, a `symbol`, a `compliance`
      * contract address, a `saleManager` address,
      * and a `cap` on the total supply of tokens.
-     * @param compliance The address of the Compliance contract
      * @param saleManager The address of the SaleManager contract
      * @param name The name of the token
      * @param symbol The symbol of the token
      * @param cap The cap on the total supply of tokens
      */
     function initialize(
-        address compliance,
         address saleManager,
         string memory name,
         string memory symbol,
@@ -98,7 +99,6 @@ contract Property is
         __ERC20Pausable_init();
         __ERC20Capped_init(cap);
         __ERC20Permit_init(name);
-        _compliance = Compliance(compliance);
         _mint(saleManager, cap);
     }
 
@@ -186,8 +186,8 @@ contract Property is
             uint256 holdings = getPastVotes(_msgSender(), claim.timestamp);
 
             // Check tier eligibility
-            Tiers.Tier tier = tiers.getHistoricalTier(msg.sender, claim.timestamp);
-            Tiers.TierBenefits memory tierBenefits = tiers.getTierBenefits(tier);
+            Tiers.Tier tier = _tiers.getHistoricalTier(msg.sender, claim.timestamp);
+            Tiers.TierBenefits memory tierBenefits = _tiers.getTierBenefits(tier);
 
             uint256 totalSupply = getPastTotalSupply(claim.timestamp);
 

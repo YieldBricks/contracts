@@ -25,6 +25,10 @@ contract MockOracle is IOracle {
     }
 }
 
+/**
+ * @title ChainlinkOracle Contract
+ * @dev This contract is used to get the price of tokens using Chainlink feeds.
+ */
 contract ChainlinkOracle is IOracle, Ownable2StepUpgradeable {
     /**
      * @notice Mapping of ChainLink feeds for each token.
@@ -61,9 +65,9 @@ contract ChainlinkOracle is IOracle, Ownable2StepUpgradeable {
         address tokenAddress
     ) external view override onlyOwner returns (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) {
         DataFeed memory dataFeed = dataFeeds[tokenAddress];
-        (, int256 price, , , ) = dataFeeds[tokenAddress].feed.latestRoundData();
+        (, int256 _price, , , ) = dataFeeds[tokenAddress].feed.latestRoundData();
 
-        return (uint256(price), dataFeed.priceDecimals, dataFeed.tokenDecimals);
+        return (uint256(_price), dataFeed.priceDecimals, dataFeed.tokenDecimals);
     }
 
     /**

@@ -108,21 +108,15 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param name_ The name of the new token.
      * @param symbol_ The symbol of the new token.
      * @param cap_ The cap of the new token.
-     * @param compliance_ The compliance address of the new token.
      */
-    function createToken(
-        string memory name_,
-        string memory symbol_,
-        uint256 cap_,
-        address compliance_
-    ) external onlyOwner {
+    function createToken(string memory name_, string memory symbol_, uint256 cap_) external onlyOwner {
         BeaconProxy tokenProxy = new BeaconProxy(
             address(tokenBeacon),
-            abi.encodeWithSelector(Property.initialize.selector, compliance_, address(this), name_, symbol_, cap_)
+            abi.encodeWithSelector(Property.initialize.selector, address(this), name_, symbol_, cap_)
         );
         tokenAddresses.push(address(tokenProxy));
 
-        emit TokenDeployed(address(tokenProxy), name_, symbol_, cap_, compliance_);
+        emit TokenDeployed(address(tokenProxy), name_, symbol_, cap_);
     }
 
     /**
@@ -400,9 +394,8 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param name The name of the new token.
      * @param symbol The symbol of the new token.
      * @param cap The cap of the new token.
-     * @param compliance The compliance address of the new token.
      */
-    event TokenDeployed(address indexed property, string name, string symbol, uint256 cap, address compliance);
+    event TokenDeployed(address indexed property, string name, string symbol, uint256 cap);
 
     /**
      * @dev Emitted when a new sale is created.

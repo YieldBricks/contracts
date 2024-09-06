@@ -100,11 +100,10 @@ export async function deployPropertyFixture() {
 
   // Deploy Token contract
   const Property = (await ethers.getContractFactory("Property")) as Property__factory;
-  const propertyProxy = await upgrades.deployProxy(
-    Property,
-    [complianceAddress, alice.address, "TestToken", "TT", 1000000],
-    { unsafeAllow: ["internal-function-storage"], constructorArgs: [tiersAddress] },
-  );
+  const propertyProxy = await upgrades.deployProxy(Property, [alice.address, "TestToken", "TT", 1000000], {
+    unsafeAllow: ["internal-function-storage"],
+    constructorArgs: [complianceAddress, tiersAddress],
+  });
   const property = Property.attach(await propertyProxy.getAddress()) as Property;
   const propertyAddress = await property.getAddress();
 

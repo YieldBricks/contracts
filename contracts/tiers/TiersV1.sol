@@ -30,7 +30,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
     mapping(address => Tier) public tierOverrides;
 
     // The balance multiplier to use for the tier calculation, default is 100%
-    uint256 public balanceMultiplier = 10_000;
+    uint256 public balanceMultiplier;
 
     enum Tier {
         ROOKIE,
@@ -63,6 +63,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
         __Ownable2Step_init();
         __Ownable_init(owner_);
         ybr = ERC20Votes(_ybr);
+        balanceMultiplier = 10_000;
     }
 
     /**

@@ -16,10 +16,10 @@ describe("Property", function () {
     });
 
     it("The initialize function should only be called once", async function () {
-      const { property, compliance, multisig } = this.fixture;
+      const { property, multisig } = this.fixture;
 
       // Call the initialize function the second time and expect it to revert with a custom error
-      await expect(property.initialize(compliance, multisig, "My Token", "MTK", 1000000)).to.be.revertedWithCustomError(
+      await expect(property.initialize(multisig, "My Token", "MTK", 1000000)).to.be.revertedWithCustomError(
         property,
         "InvalidInitialization",
       );

@@ -55,8 +55,7 @@ describe("SaleManager", function () {
     });
 
     it("Create property and verify that the entire supply is on the SaleManager", async function () {
-      const { saleManager, compliance, saleManagerAddress, complianceAddress, multisig } = this
-        .fixture as FixtureReturnType;
+      const { saleManager, compliance, saleManagerAddress, multisig } = this.fixture as FixtureReturnType;
 
       const name = "TestToken";
       const symbol = "TT";
@@ -64,15 +63,12 @@ describe("SaleManager", function () {
 
       expect(await compliance.canTransfer(saleManagerAddress, saleManagerAddress));
 
-      await expect(saleManager.createToken(name, symbol, cap, complianceAddress)).to.be.revertedWithCustomError(
+      await expect(saleManager.createToken(name, symbol, cap)).to.be.revertedWithCustomError(
         saleManager,
         "OwnableUnauthorizedAccount",
       );
 
-      await expect(saleManager.connect(multisig).createToken(name, symbol, cap, complianceAddress)).to.emit(
-        saleManager,
-        "TokenDeployed",
-      );
+      await expect(saleManager.connect(multisig).createToken(name, symbol, cap)).to.emit(saleManager, "TokenDeployed");
       const propertyAddress = await saleManager.tokenAddresses(0);
 
       const property = await ethers.getContractAt("Property", propertyAddress);
@@ -332,8 +328,7 @@ describe("SaleManager", function () {
     });
 
     it("Create property and verify that the entire supply is on the SaleManager", async function () {
-      const { saleManager, compliance, saleManagerAddress, complianceAddress, multisig } = this
-        .fixture as FixtureReturnType;
+      const { saleManager, compliance, saleManagerAddress, multisig } = this.fixture as FixtureReturnType;
 
       const name = "TestToken";
       const symbol = "TT";
@@ -341,15 +336,12 @@ describe("SaleManager", function () {
 
       expect(await compliance.canTransfer(saleManagerAddress, saleManagerAddress));
 
-      await expect(saleManager.createToken(name, symbol, cap, complianceAddress)).to.be.revertedWithCustomError(
+      await expect(saleManager.createToken(name, symbol, cap)).to.be.revertedWithCustomError(
         saleManager,
         "OwnableUnauthorizedAccount",
       );
 
-      await expect(saleManager.connect(multisig).createToken(name, symbol, cap, complianceAddress)).to.emit(
-        saleManager,
-        "TokenDeployed",
-      );
+      await expect(saleManager.connect(multisig).createToken(name, symbol, cap)).to.emit(saleManager, "TokenDeployed");
       const propertyAddress = await saleManager.tokenAddresses(0);
 
       const property = await ethers.getContractAt("Property", propertyAddress);

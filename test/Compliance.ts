@@ -192,9 +192,9 @@ describe("Compliance", function () {
     it("Signer expiration", async function () {
       const { compliance, kycSigner, eve } = await loadFixture(deploySystemFixture);
 
-      await time.increase(60 * 60 * 24 * 8); // Increase by 8 days
+      await time.increase(200 * DAY); // Increase by 200 days
 
-      // Try to add identity with blacklisted signer
+      // Try to add identity with expired signer
       const eip712Domain = await compliance.eip712Domain();
       const eveIdentity = {
         wallet: eve.address,

@@ -69,6 +69,8 @@ describe("Tiers", function () {
       // Alice should be in GURU tier
       const tier = await tiers.getTier(alice.address);
 
+      console.log("Alice balance", await ybr.balanceOf(alice.address));
+
       expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 3000n, 1000n]);
     });
 
@@ -77,7 +79,9 @@ describe("Tiers", function () {
 
       await ybr.connect(alice).transfer(multisig.address, parseEther("30000"));
 
-      await time.increase(86400 * 30);
+      console.log("Alice balance", await ybr.balanceOf(alice.address));
+
+      await time.increase(DAY * 31);
 
       // Alice should be in TYCOON tier
       const tier = await tiers.getTier(alice.address);
@@ -90,7 +94,7 @@ describe("Tiers", function () {
 
       await ybr.connect(alice).transfer(multisig.address, parseEther("15000"));
 
-      await time.increase(86400 * 30);
+      await time.increase(DAY * 31);
 
       // Alice should be in BUILDER tier
       const tier = await tiers.getTier(alice.address);
@@ -103,7 +107,7 @@ describe("Tiers", function () {
 
       await ybr.connect(alice).transfer(multisig.address, parseEther("4000"));
 
-      await time.increase(86400 * 30);
+      await time.increase(DAY * 31);
 
       // Alice should be in CAMPER tier
       const tier = await tiers.getTier(alice.address);
@@ -116,7 +120,7 @@ describe("Tiers", function () {
 
       await ybr.connect(alice).transfer(multisig.address, parseEther("999"));
 
-      await time.increase(86400 * 30);
+      await time.increase(DAY * 31);
 
       // Alice should be in EXPLORER tier
       const tier = await tiers.getTier(alice.address);
@@ -129,7 +133,7 @@ describe("Tiers", function () {
 
       await ybr.connect(alice).transfer(multisig.address, parseEther("1"));
 
-      await time.increase(86400 * 30);
+      await time.increase(DAY * 31);
 
       // Alice should be in ROOKIE tier
       const tier = await tiers.getTier(alice.address);
