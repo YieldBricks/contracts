@@ -19,6 +19,9 @@ require("dotenv").config();
 const mnemonic: string = vars.get("MNEMONIC");
 const infuraApiKey: string = vars.get("INFURA_API_KEY");
 
+const MOCK_PK = "0xfake1private2key3fake4private5key6fake7private8key";
+const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY || MOCK_PK;
+
 export const chainIds = {
   "arbitrum-mainnet": 42161,
   "arbitrum-sepolia": 421614,
@@ -104,30 +107,30 @@ const config: HardhatUserConfig = {
     },
     arbitrum: {
       ...getChainConfig("arbitrum-mainnet"),
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+      accounts: [DEPLOYER_PRIVATE_KEY],
     },
     arbitrumSepolia: {
       ...getChainConfig("arbitrum-sepolia"),
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+      accounts: [DEPLOYER_PRIVATE_KEY],
     },
     tenderly: {
       url: "https://virtual.arbitrum.rpc.tenderly.co/c93dc5b9-4ea4-4f46-8d50-5aa6d311f1bd",
       chainId: chainIds.tenderly,
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+      accounts: [DEPLOYER_PRIVATE_KEY],
     },
     avalanche: getChainConfig("avalanche"),
     bsc: getChainConfig("bsc"),
-    mainnet: { ...getChainConfig("mainnet"), accounts: [process.env.DEPLOYER_PRIVATE_KEY!] },
+    mainnet: { ...getChainConfig("mainnet"), accounts: [DEPLOYER_PRIVATE_KEY] },
     optimism: getChainConfig("optimism-mainnet"),
     "polygon-mainnet": getChainConfig("polygon-mainnet"),
     "polygon-mumbai": getChainConfig("polygon-mumbai"),
     sepolia: {
       ...getChainConfig("sepolia"),
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+      accounts: [DEPLOYER_PRIVATE_KEY],
     },
     "arbitrum-sepolia": {
       ...getChainConfig("arbitrum-sepolia"),
-      accounts: [process.env.DEPLOYER_PRIVATE_KEY!],
+      accounts: [DEPLOYER_PRIVATE_KEY],
     },
   },
   paths: {
