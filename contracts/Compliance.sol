@@ -40,6 +40,12 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     error SignatureMismatch();
     error ExpiredSignerKey();
 
+    event IdentityAdded(address wallet, address signer, bytes32 emailHash, uint256 expiration, uint16 country);
+    event IdentitySignerUpdated(address signer, uint256 expiration);
+    event SignerBlacklistUpdated(address signer, bool isBlacklisted);
+    event CountryBlacklistUpdated(uint16 country, bool isBlacklisted);
+    event WalletBlacklistUpdated(address wallet, bool isBlacklisted);
+
     bytes32 private constant IDENTITY_TYPEHASH =
         keccak256("Identity(address wallet,address signer,bytes32 emailHash,uint256 expiration,uint16 country)");
 
@@ -122,22 +128,38 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         }
 
         identities[_identity.wallet] = _identity;
+
+        emit IdentityAdded(
+            _identity.wallet,
+            _identity.signer,
+            _identity.emailHash,
+            _identity.expiration,
+            _identity.country
+        );
     }
 
     function setIdentitySigner(address _signer) external onlyOwner {
         _identitySigner = _signer;
         _identitySignerExpiration = block.timestamp + DEFAULT_SIGNER_DURATION;
+
+        emit IdentitySignerUpdated(_signer, _identitySignerExpiration);
     }
 
     function blacklistSigner(address _signer, bool isBlacklisted) external onlyOwner {
         _signerBlacklist[_signer] = isBlacklisted;
+
+        emit SignerBlacklistUpdated(_signer, isBlacklisted);
     }
 
     function blacklistCountry(uint16 _country, bool isBlacklisted) external onlyOwner {
         _countryBlacklist[_country] = isBlacklisted;
+
+        emit CountryBlacklistUpdated(_country, isBlacklisted);
     }
 
     function blacklistWallet(address _wallet, bool isBlacklisted) external onlyOwner {
         _walletBlacklist[_wallet] = isBlacklisted;
+
+        emit WalletBlacklistUpdated(_wallet, isBlacklisted);
     }
 }

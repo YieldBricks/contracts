@@ -192,6 +192,8 @@ contract SaleManager is Ownable2StepUpgradeable {
     function withdrawFunds(address _token) external onlyOwner {
         IERC20 token = IERC20(_token);
         token.safeTransfer(msg.sender, token.balanceOf(address(this)));
+
+        emit FundsWithdrawn(_token);
     }
 
     /**
@@ -200,6 +202,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      */
     function setOracle(address oracle_) external onlyOwner {
         oracle = IOracle(oracle_);
+        emit OracleUpdated(oracle_);
     }
 
     /**
@@ -208,6 +211,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      */
     function setTiers(address tiers_) external onlyOwner {
         tiers = Tiers(tiers_);
+        emit TiersUpdated(tiers_);
     }
 
     /**
@@ -217,6 +221,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      */
     function whitelistPaymentToken(address paymentToken, bool isWhitelisted) external onlyOwner {
         whitelistedPaymentTokens[paymentToken] = isWhitelisted;
+        emit PaymentTokenWhitelisted(paymentToken, isWhitelisted);
     }
 
     /**
@@ -226,6 +231,8 @@ contract SaleManager is Ownable2StepUpgradeable {
     function adminTransferProperty(address _property, uint amount) external onlyOwner {
         Property property = Property(_property);
         property.transfer(msg.sender, amount);
+
+        emit AdminTransferProperty(_property, amount);
     }
 
     /**
@@ -289,7 +296,9 @@ contract SaleManager is Ownable2StepUpgradeable {
         purchasesPerPropertyPerTier[_property][tier] += _amount;
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
-        try property.transfer(msg.sender, _amount) {} catch {
+        try property.transfer(msg.sender, _amount) {
+            emit ClaimsProcessed(msg.sender, _property, _amount);
+        } catch {
             unclaimedByUser[msg.sender].push(Unclaimed(_property, paymentTokenAddress, _amount, totalCost));
             unclaimedProperties[_property] += _amount;
         }
@@ -307,6 +316,7 @@ contract SaleManager is Ownable2StepUpgradeable {
             Property property = Property(unclaimed.propertyAddress);
             property.transfer(msg.sender, unclaimed.propertyAmount);
             unclaimedProperties[unclaimed.propertyAddress] -= unclaimed.propertyAmount;
+            emit ClaimsProcessed(msg.sender, unclaimed.propertyAddress, unclaimed.propertyAmount);
         }
         delete unclaimedByUser[msg.sender];
     }
@@ -323,6 +333,7 @@ contract SaleManager is Ownable2StepUpgradeable {
             IERC20 paymentToken = IERC20(unclaimed.paymentTokenAddress);
             paymentToken.transfer(msg.sender, (unclaimed.paymentTokenAmount * 80) / 100);
             unclaimedProperties[unclaimed.propertyAddress] -= unclaimed.propertyAmount;
+            emit ClaimsCancelled(msg.sender, unclaimed.propertyAddress, unclaimed.propertyAmount);
         }
         delete unclaimedByUser[msg.sender];
     }
@@ -370,4 +381,52 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @dev This error is thrown when a user tries to buy more tokens than the entire tier has allocated.
      */
     error TierTotalLimitReached();
+
+    /**
+     * @dev Emitted when funds are withdrawn from the contract.
+     * @param token The address of the token that was withdrawn.
+     */
+    event FundsWithdrawn(address token);
+
+    /**
+     * @dev Emitted when the oracle is updated.
+     * @param oracle The address of the new oracle.
+     */
+    event OracleUpdated(address oracle);
+
+    /**
+     * @dev Emitted when the tiers are updated.
+     * @param tiers The address of the new tiers.
+     */
+    event TiersUpdated(address tiers);
+
+    /**
+     * @dev Emitted when a payment token is whitelisted.
+     * @param paymentToken The address of the payment token.
+     * @param isWhitelisted The new whitelist status of the payment token.
+     */
+    event PaymentTokenWhitelisted(address paymentToken, bool isWhitelisted);
+
+    /**
+     * @dev Emitted when a property is transferred to an admin.
+     * @param property The address of the property token.
+     * @param amount The amount of the property token.
+     */
+    event AdminTransferProperty(address property, uint amount);
+
+    /**
+     * @dev Emitted when claims are processed.
+     * @param user The address of the user who claimed tokens.
+     * @param property The address of the property token.
+     * @param amount The amount of the property token.
+     */
+    event ClaimsProcessed(address user, address property, uint amount);
+
+    /**
+     * @dev Emitted when claims are cancelled.
+     * @param user The address of the user who cancelled claims.
+     * @param property The address of the property token.
+     * @param amount The amount of the property token.
+     */
+    event ClaimsCancelled(address user, address property, uint amount);
 }

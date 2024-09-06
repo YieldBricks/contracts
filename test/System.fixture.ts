@@ -21,6 +21,7 @@ export async function deploySystemFixture() {
   const propertyBeacon = await upgrades.deployBeacon(Property, {
     initialOwner: multisig.address,
     unsafeAllow: ["internal-function-storage"],
+    constructorArgs: [ZERO_ADDRESS],
   });
   const propertyBeaconAddress = await propertyBeacon.getAddress();
 
