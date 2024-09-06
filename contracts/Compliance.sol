@@ -9,10 +9,9 @@ import { Property } from "./Property.sol";
 contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
 
-    // Define const default signer duration to be 7 days
-    uint256 public constant DEFAULT_SIGNER_DURATION = 7 days;
+    // Define const default signer duration to be 180 days
+    uint256 public constant DEFAULT_SIGNER_DURATION = 180 days;
 
-    // Signers are on a hot wallet, so they are rotated on a weekly basis to optimize the RTO
     address private _identitySigner;
     uint256 private _identitySignerExpiration;
     mapping(address signer => bool isBlacklisted) private _signerBlacklist;
@@ -29,26 +28,15 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         uint16 country; // According to https://en.wikipedia.org/wiki/ISO_3166-1_numeric
     }
 
-    // Define custom errors
-    error IdentityNotFound(address user);
-    error SignerBlacklisted(address user);
-    error KYCExpired(address user);
-    error CountryBlacklisted(address user);
-    error WalletBlacklisted(address user);
-
-    error InvalidSignature();
-    error SignatureMismatch();
-    error ExpiredSignerKey();
-
-    event IdentityAdded(address wallet, address signer, bytes32 emailHash, uint256 expiration, uint16 country);
-    event IdentitySignerUpdated(address signer, uint256 expiration);
-    event SignerBlacklistUpdated(address signer, bool isBlacklisted);
-    event CountryBlacklistUpdated(uint16 country, bool isBlacklisted);
-    event WalletBlacklistUpdated(address wallet, bool isBlacklisted);
-
+    // Define EIP712 types
     bytes32 private constant IDENTITY_TYPEHASH =
         keccak256("Identity(address wallet,address signer,bytes32 emailHash,uint256 expiration,uint16 country)");
 
+    /**
+     * @dev Initialize the contract
+     * @param identitySigner_ The address of the identity signer
+     * @param owner_ The address of the owner
+     */
     function initialize(address identitySigner_, address owner_) public initializer {
         __EIP712_init("Compliance", "1");
         __Ownable2Step_init();
@@ -57,7 +45,11 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         _identitySignerExpiration = block.timestamp + DEFAULT_SIGNER_DURATION;
     }
 
-    // compliance check and state update
+    /**
+     * @dev Check if a transfer can be made
+     * @param _from The address from which the tokens are being transferred
+     * @param _to The address to which the tokens are being transferred
+     */
     function canTransfer(address _from, address _to) external view {
         // get Identity for _from and _to
         Identity memory identityFrom = identities[_from];
@@ -103,6 +95,11 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         // require(_amount < balance / 10, "Transfer amount is too high");
     }
 
+    /**
+     * @dev Add an identity to the compliance contract
+     * @param _identity The identity to add
+     * @param signature The signature of the identity
+     */
     function addIdentity(Identity memory _identity, bytes memory signature) external {
         bytes32 digest = _hashTypedDataV4(
             keccak256(
@@ -138,6 +135,10 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         );
     }
 
+    /**
+     * @dev Set the identity signer
+     * @param _signer The new identity signer
+     */
     function setIdentitySigner(address _signer) external onlyOwner {
         _identitySigner = _signer;
         _identitySignerExpiration = block.timestamp + DEFAULT_SIGNER_DURATION;
@@ -145,21 +146,114 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         emit IdentitySignerUpdated(_signer, _identitySignerExpiration);
     }
 
+    /**
+     * @dev Blacklist or unblacklist a signer
+     * @param _signer The signer to blacklist or unblacklist
+     * @param isBlacklisted True to blacklist, false to unblacklist
+     */
     function blacklistSigner(address _signer, bool isBlacklisted) external onlyOwner {
         _signerBlacklist[_signer] = isBlacklisted;
 
         emit SignerBlacklistUpdated(_signer, isBlacklisted);
     }
 
+    /**
+     * @dev Blacklist or unblacklist a country
+     * @param _country The country to blacklist or unblacklist
+     * @param isBlacklisted True to blacklist, false to unblacklist
+     */
     function blacklistCountry(uint16 _country, bool isBlacklisted) external onlyOwner {
         _countryBlacklist[_country] = isBlacklisted;
 
         emit CountryBlacklistUpdated(_country, isBlacklisted);
     }
 
+    /**
+     * @dev Blacklist or unblacklist a wallet
+     * @param _wallet The wallet to blacklist or unblacklist
+     * @param isBlacklisted True to blacklist, false to unblacklist
+     */
     function blacklistWallet(address _wallet, bool isBlacklisted) external onlyOwner {
         _walletBlacklist[_wallet] = isBlacklisted;
 
         emit WalletBlacklistUpdated(_wallet, isBlacklisted);
     }
+
+    /**
+     * @dev Error when the identity is not found
+     */
+    error IdentityNotFound(address user);
+
+    /**
+     * @dev Error when the signer is blacklisted
+     */
+    error SignerBlacklisted(address user);
+
+    /**
+     * @dev Error when the KYC has expired
+     */
+    error KYCExpired(address user);
+
+    /**
+     * @dev Error when the country is blacklisted
+     */
+    error CountryBlacklisted(address user);
+
+    /**
+     * @dev Error when the wallet is blacklisted
+     */
+    error WalletBlacklisted(address user);
+
+    /**
+     * @dev Error when the signature is invalid
+     */
+    error InvalidSignature();
+
+    /**
+     * @dev Error when the signature does not match the expected signer
+     */
+    error SignatureMismatch();
+
+    /**
+     * @dev Error when the signer key is expired
+     */
+    error ExpiredSignerKey();
+
+    /**
+     * @dev Emitted when an identity is added
+     * @param wallet The wallet that was added
+     * @param signer The signer of the identity
+     * @param emailHash The hash of the email used for KYC purposes
+     * @param expiration The expiration date of the KYC validation
+     * @param country The country of the wallet
+     */
+    event IdentityAdded(address wallet, address signer, bytes32 emailHash, uint256 expiration, uint16 country);
+
+    /**
+     * @dev Emitted when the identity signer is updated
+     * @param signer The new identity signer
+     * @param expiration The expiration date of the new identity signer
+     */
+    event IdentitySignerUpdated(address signer, uint256 expiration);
+
+    /**
+     * @dev Emitted when a signer is blacklisted or unblacklisted
+     * @param signer The signer that was blacklisted or unblacklisted
+     * @param isBlacklisted True if the signer was blacklisted, false if it was unblacklisted
+     */
+    event SignerBlacklistUpdated(address signer, bool isBlacklisted);
+
+    /**
+     * @dev Emitted when a country is blacklisted or unblacklisted
+     * @param country The country that was blacklisted or unblacklisted
+     * @param isBlacklisted True if the country was blacklisted, false if it was unblacklisted
+     */
+    event CountryBlacklistUpdated(uint16 country, bool isBlacklisted);
+
+    /**
+     * @dev Emitted when a wallet is blacklisted or unblacklisted
+     * @param wallet The wallet that was blacklisted or unblacklisted
+     * @param isBlacklisted True if the wallet was blacklisted, false if it was unblacklisted
+     */
+    event WalletBlacklistUpdated(address wallet, bool isBlacklisted);
 }

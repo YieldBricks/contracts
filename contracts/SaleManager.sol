@@ -18,42 +18,6 @@ contract SaleManager is Ownable2StepUpgradeable {
     using SafeERC20 for IERC20;
 
     /**
-     * @dev Emitted when a new token is deployed.
-     * @param property The address of the new token.
-     * @param name The name of the new token.
-     * @param symbol The symbol of the new token.
-     * @param cap The cap of the new token.
-     * @param compliance The compliance address of the new token.
-     */
-    event TokenDeployed(address indexed property, string name, string symbol, uint256 cap, address compliance);
-
-    /**
-     * @dev Emitted when a new sale is created.
-     * @param property The address of the token for which the sale is created.
-     * @param start The start time of the sale.
-     * @param end The end time of the sale.
-     * @param price The price of the token in the sale.
-     */
-    event SaleCreated(address indexed property, uint256 start, uint256 end, uint256 price);
-
-    /**
-     * @dev Emitted when a sale is modified.
-     * @param property The address of the token for which the sale is modified.
-     * @param start The new start time of the sale.
-     * @param end The new end time of the sale.
-     * @param price The new price of the token in the sale.
-     */
-    event SaleModified(address indexed property, uint256 start, uint256 end, uint256 price);
-
-    /**
-     * @dev Emitted when a claim is added.
-     * @param transactionId The ID of the transaction.
-     * @param sender The address of the sender of the transaction.
-     * @param amount The amount of the transaction.
-     */
-    event ClaimAdded(uint indexed transactionId, address sender, uint amount);
-
-    /**
      * @dev Struct representing a sale.
      * @param start The start time of the sale.
      * @param end The end time of the sale.
@@ -429,4 +393,40 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param amount The amount of the property token.
      */
     event ClaimsCancelled(address user, address property, uint amount);
+
+    /**
+     * @dev Emitted when a new token is deployed.
+     * @param property The address of the new token.
+     * @param name The name of the new token.
+     * @param symbol The symbol of the new token.
+     * @param cap The cap of the new token.
+     * @param compliance The compliance address of the new token.
+     */
+    event TokenDeployed(address indexed property, string name, string symbol, uint256 cap, address compliance);
+
+    /**
+     * @dev Emitted when a new sale is created.
+     * @param property The address of the token for which the sale is created.
+     * @param start The start time of the sale.
+     * @param end The end time of the sale.
+     * @param price The price of the token in the sale.
+     */
+    event SaleCreated(address indexed property, uint256 start, uint256 end, uint256 price);
+
+    /**
+     * @dev Emitted when a sale is modified.
+     * @param property The address of the token for which the sale is modified.
+     * @param start The new start time of the sale.
+     * @param end The new end time of the sale.
+     * @param price The new price of the token in the sale.
+     */
+    event SaleModified(address indexed property, uint256 start, uint256 end, uint256 price);
+
+    /**
+     * @dev Emitted when a claim is added.
+     * @param transactionId The ID of the transaction.
+     * @param sender The address of the sender of the transaction.
+     * @param amount The amount of the transaction.
+     */
+    event ClaimAdded(uint indexed transactionId, address sender, uint amount);
 }

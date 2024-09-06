@@ -21,11 +21,16 @@ contract TiersV1 is Ownable2StepUpgradeable {
     uint256 public constant TIER_GURU_LOCKUP = 180 days;
     uint256 public constant DEFAULT_TIER_CALCULATION = 30 days;
 
+    // The number of checkpoints that need to be processed before we switch to the fast calculation
     uint256 public constant FAST_AVERAGE_THRESHOLD = 30;
 
     ERC20Votes public ybr;
 
+    // Tier overrides for specific accounts
     mapping(address => Tier) public tierOverrides;
+
+    // The balance multiplier to use for the tier calculation, default is 100%
+    uint256 public balanceMultiplier = 10_000;
 
     enum Tier {
         ROOKIE,
@@ -36,6 +41,13 @@ contract TiersV1 is Ownable2StepUpgradeable {
         GURU
     }
 
+    /**
+     * @notice Struct to hold the benefits for a given tier.
+     * @param tier The tier for which the benefits are to be retrieved.
+     * @param earlyAccess The time for which the user has early access to the wallet.
+     * @param tierAllocation The allocation of the wallet for the user.
+     * @param walletLimit The limit of the wallet for the user.
+     */
     struct TierBenefits {
         Tier tier;
         uint256 earlyAccess;
@@ -53,10 +65,19 @@ contract TiersV1 is Ownable2StepUpgradeable {
         ybr = ERC20Votes(_ybr);
     }
 
+    /**
+     * @notice Retrieve the tier of a user.
+     * @param _account The account for which the tier is to be retrieved.
+     */
     function getTier(address _account) public view returns (Tier) {
         return getHistoricalTier(_account, block.timestamp);
     }
 
+    /**
+     * @notice Retrieve the tier of a user at a given timestamp.
+     * @param _account The account for which the tier is to be retrieved.
+     * @param timestamp The timestamp at which the tier is to be retrieved.
+     */
     function getHistoricalTier(address _account, uint256 timestamp) public view returns (Tier) {
         if (tierOverrides[_account] != Tier.ROOKIE) {
             return tierOverrides[_account];
@@ -65,29 +86,61 @@ contract TiersV1 is Ownable2StepUpgradeable {
         return _getTierFromBalance(balance);
     }
 
+    /**
+     * @notice Set the tier override for a given account.
+     * @param _account The account for which the tier override is to be set.
+     * @param _tier The tier to which the account is to be set.
+     */
     function setTierOverride(address _account, Tier _tier) public onlyOwner {
         tierOverrides[_account] = _tier;
+
+        emit TierOverrideSet(_account, _tier);
     }
 
+    /**
+     * @notice Calculate the average balance of a user over a given time period.
+     * @param _account The user for which the average balance is to be calculated.
+     * @param timestamp The timestamp at which the average balance is to be calculated.
+     */
     function getAverageBalance(address _account, uint256 timestamp) public view returns (uint256) {
         return _calculateAverageHistoricalBalance(_account, timestamp - DEFAULT_TIER_CALCULATION, timestamp);
     }
 
-    function _getTierFromBalance(uint256 balance) internal pure returns (Tier) {
-        if (balance >= TIER_GURU_THRESHOLD) {
+    /**
+     * @notice Set the balance multiplier.
+     * @param _balanceMultiplier The new balance multiplier.
+     */
+    function setBalanceMultiplier(uint256 _balanceMultiplier) public onlyOwner {
+        balanceMultiplier = _balanceMultiplier;
+    }
+
+    /**
+     * @notice Calculate the tier of a user based on their average balance over a given time period.
+     * @param balance The average balance of the user over the given time period.
+     */
+    function _getTierFromBalance(uint256 balance) internal view returns (Tier) {
+        uint256 balanceScaled = (balance * 10000) / balanceMultiplier;
+
+        if (balanceScaled >= TIER_GURU_THRESHOLD) {
             return Tier.GURU;
-        } else if (balance >= TIER_TYCOON_THRESHOLD) {
+        } else if (balanceScaled >= TIER_TYCOON_THRESHOLD) {
             return Tier.TYCOON;
-        } else if (balance >= TIER_BUILDER_THRESHOLD) {
+        } else if (balanceScaled >= TIER_BUILDER_THRESHOLD) {
             return Tier.BUILDER;
-        } else if (balance >= TIER_CAMPER_THRESHOLD) {
+        } else if (balanceScaled >= TIER_CAMPER_THRESHOLD) {
             return Tier.CAMPER;
-        } else if (balance >= TIER_EXPLORER_THRESHOLD) {
+        } else if (balanceScaled >= TIER_EXPLORER_THRESHOLD) {
             return Tier.EXPLORER;
         }
         return Tier.ROOKIE;
     }
 
+    /**
+     * @notice Calculate the average balance of a user over a given time period.
+     * @param user The user for which the average balance is to be calculated.
+     * @param start The start time for the average balance calculation.
+     * @param end The end time for the average balance calculation.
+     */
     function _calculateAverageHistoricalBalance(
         address user,
         uint256 start,
@@ -133,6 +186,9 @@ contract TiersV1 is Ownable2StepUpgradeable {
     /**
      * @notice Calculate the balance by looking at daily-ish checkpoints over the last month instead of processing all transactiions.
      * @dev This function is used to prevent DoSing of users by spamming them with lots of small transactions.
+     * @param user The user for which the average balance is to be calculated.
+     * @param start The start time for the average balance calculation.
+     * @param end The end time for the average balance calculation.
      */
     function _fastCalcAverageHistoricalBalance(
         address user,
@@ -155,6 +211,15 @@ contract TiersV1 is Ownable2StepUpgradeable {
         return balanceAverage / FAST_AVERAGE_THRESHOLD;
     }
 
+    /**
+     * @notice Calculate the average balance by processing all transactions.
+     * @dev This function is used when the number of transactions is small enough to be processed in a reasonable amount of time.
+     * @param user The user for which the average balance is to be calculated.
+     * @param start The start time for the average balance calculation.
+     * @param end The end time for the average balance calculation.
+     * @param startIndex The index of the checkpoint from which the calculation should start.
+     * @param numCheckpoints The number of checkpoints for the user.
+     */
     function _slowCalcAverageHistoricalBalance(
         address user,
         uint256 start,
@@ -211,6 +276,10 @@ contract TiersV1 is Ownable2StepUpgradeable {
         return totalBalanceTime / totalTime;
     }
 
+    /**
+     * @notice Retrieve the benefits for a given tier.
+     * @param tier The tier for which the benefits are to be retrieved.
+     */
     function getTierBenefits(Tier tier) public pure returns (TierBenefits memory) {
         if (tier == Tier.EXPLORER) {
             return TierBenefits(Tier.EXPLORER, 6 hours, 500, 200);
@@ -225,4 +294,11 @@ contract TiersV1 is Ownable2StepUpgradeable {
         }
         return TierBenefits(Tier.ROOKIE, 0, 500, 100);
     }
+
+    /**
+     * @notice Event emitted when a tier override is set.
+     * @param account The account for which the tier override is set.
+     * @param tier The tier to which the account is set.
+     */
+    event TierOverrideSet(address indexed account, Tier tier);
 }
