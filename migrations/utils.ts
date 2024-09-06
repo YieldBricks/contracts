@@ -15,6 +15,7 @@ export type Environment = {
   Compliance: string;
   PropertyBeacon: string;
   YBR: string;
+  Tiers: string;
   ChainlinkOracle: string;
   SaleManager: string;
   Multisig: string;

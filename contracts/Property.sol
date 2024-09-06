@@ -31,6 +31,8 @@ import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 import { Compliance } from "./Compliance.sol";
 
+import { TiersV1 as Tiers } from "./tiers/TiersV1.sol";
+
 /**
  * @title YieldBricks Property Contract
  * @notice This contract is for the YieldBricks property, which is a permissioned ERC20 token with additional features.
@@ -54,6 +56,8 @@ contract Property is
     mapping(address user => uint256 nonce) public claimNonce;
     /// @notice Array of claims distributed by platform
     Yield[] public claims;
+
+    Tiers public tiers;
 
     /**
      * @notice Struct to represent a yield claim
@@ -150,6 +154,14 @@ contract Property is
     }
 
     /**
+     * @notice Allows the owner to set the Tiers contract
+     * @param tiers_ The address of the Tiers contract
+     */
+    function setTiers(address tiers_) public onlyOwner {
+        tiers = Tiers(tiers_);
+    }
+
+    /**
      * @notice Allows the owner to add a claim to the contract
      * @param rewardToken The address of the reward token
      * @param amount The amount of the reward token
@@ -178,8 +190,15 @@ contract Property is
 
             // Calculate the claim amount
             uint256 holdings = getPastVotes(_msgSender(), claim.timestamp);
+
+            // Check tier eligibility
+            Tiers.Tier tier = tiers.getHistoricalTier(msg.sender, claim.timestamp);
+            Tiers.TierBenefits memory tierBenefits = tiers.getTierBenefits(tier);
+
+            uint256 claimableHoldings = holdings > tierBenefits.walletLimit ? tierBenefits.walletLimit : holdings;
+
             uint256 totalSupply = getPastTotalSupply(claim.timestamp);
-            uint256 claimAmount = (claim.amount * holdings) / totalSupply;
+            uint256 claimAmount = (claim.amount * claimableHoldings) / totalSupply;
 
             // Transfer the claim amount to the user
             IERC20(claim.rewardToken).transfer(_msgSender(), claimAmount);
