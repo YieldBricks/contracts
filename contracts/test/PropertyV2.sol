@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 /**
- * @title YieldBrick Platform PropertyV2 Token
+ * @title YieldBrick Platform Property Token
  * @dev This contract implements an ERC20 token with additional features like burnability,
  * pausability, capping, and permit. It also includes a feature to freeze wallets.
  * @notice This contract is used for YieldBrick tokenized RWA properties.
@@ -29,12 +29,12 @@ import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/I
 import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
 import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
-import { ComplianceV2 } from "./ComplianceV2.sol";
+import { Compliance } from "../Compliance.sol";
 
 import { TiersV1 as Tiers } from "../tiers/TiersV1.sol";
 
 /**
- * @title YieldBricks PropertyV2 Contract
+ * @title YieldBricks Property Contract
  * @notice This contract is for the YieldBricks property, which is a permissioned ERC20 token with additional features.
  * @dev This contract externally depends on the Compliance for the `canTransfer` function.
  */
@@ -49,13 +49,18 @@ contract PropertyV2 is
 {
     /// @notice Mapping to track frozen wallets
     mapping(address wallet => bool isFrozen) public walletFrozen;
-    /// @notice The Compliance contract responsible for KYC and AML checks
-    ComplianceV2 private _compliance;
 
     /// @notice Mapping to track how many claims a user has made
     mapping(address user => uint256 nonce) public claimNonce;
-    /// @notice Array of claims made by the ownerha
+    /// @notice Array of claims distributed by platform
     Yield[] public claims;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    Tiers private immutable _tiers;
+
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    /// @notice The Compliance contract responsible for KYC and AML checks
+    Compliance immutable _compliance;
 
     /**
      * @notice Struct to represent a yield claim
@@ -68,7 +73,9 @@ contract PropertyV2 is
 
     /// @notice Contract constructor - disabled due to upgradeability
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
+    constructor(address compliance_, address tiers_) {
+        _compliance = Compliance(compliance_);
+        _tiers = Tiers(tiers_);
         _disableInitializers();
     }
 
@@ -76,14 +83,12 @@ contract PropertyV2 is
      * @dev Initializes the contract by setting a `name`, a `symbol`, a `compliance`
      * contract address, a `saleManager` address,
      * and a `cap` on the total supply of tokens.
-     * @param compliance The address of the Compliance contract
      * @param saleManager The address of the SaleManager contract
      * @param name The name of the token
      * @param symbol The symbol of the token
      * @param cap The cap on the total supply of tokens
      */
     function initialize(
-        address compliance,
         address saleManager,
         string memory name,
         string memory symbol,
@@ -94,7 +99,6 @@ contract PropertyV2 is
         __ERC20Pausable_init();
         __ERC20Capped_init(cap);
         __ERC20Permit_init(name);
-        _compliance = ComplianceV2(compliance);
         _mint(saleManager, cap);
     }
 
@@ -165,7 +169,7 @@ contract PropertyV2 is
     }
 
     /**
-     * @notice Allows PropertyV2 token holders to collect their property yield
+     * @notice Allows Property token holders to collect their property yield
      * @dev This function is gas-optimized to allow for a large number of claims to be processed
      * in a single transaction. The owner can add claims to the contract, and then users can collect
      * their claims in batches of X at a time. The claim amount is proportional to the user's holdings
@@ -180,8 +184,16 @@ contract PropertyV2 is
 
             // Calculate the claim amount
             uint256 holdings = getPastVotes(_msgSender(), claim.timestamp);
+
+            // Check tier eligibility
+            Tiers.Tier tier = _tiers.getHistoricalTier(msg.sender, claim.timestamp);
+            Tiers.TierBenefits memory tierBenefits = _tiers.getTierBenefits(tier);
+
             uint256 totalSupply = getPastTotalSupply(claim.timestamp);
-            uint256 claimAmount = (claim.amount * holdings) / totalSupply;
+
+            uint256 maxClaimableHoldings = (tierBenefits.walletLimit * totalSupply) / 10000;
+            uint256 claimableHoldings = holdings > maxClaimableHoldings ? maxClaimableHoldings : holdings;
+            uint256 claimAmount = (claim.amount * claimableHoldings) / totalSupply;
 
             // Transfer the claim amount to the user
             IERC20(claim.rewardToken).transfer(_msgSender(), claimAmount);
