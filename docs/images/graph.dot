@@ -1,0 +1,26 @@
+digraph G {
+  
+  // Global settings for edge colors (arrows)
+  edge [color="#001524"]
+
+  // Setting colors for the nodes: fill, border, and text
+  YBR [style=filled, fillcolor="#15616d", color="#001524", fontcolor="#001524"]         // Teal fill, dark border, dark text
+  Property [style=filled, fillcolor="#15616d", color="#001524", fontcolor="#001524"]    // Teal fill, dark border, dark text
+  
+  Tiers [style=filled, fillcolor="#ffecd1", color="#001524", fontcolor="#001524"]       // Light peach fill, dark border, dark text
+  Compliance [style=filled, fillcolor="#ffecd1", color="#001524", fontcolor="#001524"]  // Light peach fill, dark border, dark text
+  SaleManager [style=filled, fillcolor="#ffecd1", color="#001524", fontcolor="#001524"] // Light peach fill, dark border, dark text
+  Oracle [style=filled, fillcolor="#ffecd1", color="#001524", fontcolor="#001524"]      // Light peach fill, dark border, dark text
+  
+  kycSigner [style=filled, fillcolor="#ff7d00", color="#001524", fontcolor="#001524"]   // Orange fill, dark border, dark text
+
+
+  // Defining the edges
+  Compliance -> kycSigner
+  SaleManager -> Property
+  SaleManager -> Oracle
+  SaleManager -> Tiers
+  Property -> Compliance
+  Property -> Tiers
+  Tiers -> YBR
+}

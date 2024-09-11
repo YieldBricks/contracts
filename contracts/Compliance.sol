@@ -4,7 +4,6 @@ pragma solidity ^0.8.20;
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { Property } from "./Property.sol";
 
 /**
  * @title Compliance Contract
@@ -92,11 +91,6 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
         if (_walletBlacklist[_to]) {
             revert WalletBlacklisted(_to);
         }
-
-        // Check if the amount transfered is a significant part of the users supply
-        // Token token = Token(msg.sender);
-        // uint256 balance = token.balanceOf(_from);
-        // require(_amount < balance / 10, "Transfer amount is too high");
     }
 
     /**

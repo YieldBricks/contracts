@@ -51,6 +51,10 @@ There is also a special gas report test for the YBR snapshot feature, that can b
 yarn gas:ybr
 ```
 
+### Dependency Graph
+
+<img src="./docs/images/graph.svg">
+
 ## License
 
 The license can be found in the [LICENSE](./LICENSE) file.
