@@ -27,6 +27,7 @@ async function main() {
   const property = await upgrades.deployBeacon(Property, {
     initialOwner: environment.Multisig,
     redeployImplementation: "onchange",
+    constructorArgs: [environment.Compliance, await tiers.getAddress()],
   });
 
   await property.waitForDeployment();
