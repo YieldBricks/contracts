@@ -4,6 +4,7 @@ import { Contract } from "ethers";
 import { ethers, upgrades } from "hardhat";
 
 import { deploySystemFixture } from "./System.fixture";
+import { ZERO_ADDRESS } from "./utils";
 
 describe("System", function () {
   describe("Deployment And Upgrades", function () {
@@ -36,6 +37,7 @@ describe("System", function () {
       const PropertyV2 = await ethers.getContractFactory("PropertyV2");
       const propertyV2 = await upgrades.prepareUpgrade(tokenBeacon, PropertyV2, {
         unsafeAllow: ["internal-function-storage"],
+        constructorArgs: [ZERO_ADDRESS, ZERO_ADDRESS],
       });
 
       const tokenBeaconWithMultisig = tokenBeacon.connect(multisig) as Contract;
