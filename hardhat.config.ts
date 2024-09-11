@@ -19,7 +19,7 @@ require("dotenv").config();
 const mnemonic: string = vars.get("MNEMONIC");
 const infuraApiKey: string = vars.get("INFURA_API_KEY");
 
-const MOCK_PK = "0xfake1private2key3fake4private5key6fake7private8key";
+const MOCK_PK = "0xfake312fc974905f7a07ab29a867d4f32ced3e8fc296abfdf4ef430ac4ae91d2";
 const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY || MOCK_PK;
 
 export const chainIds = {
