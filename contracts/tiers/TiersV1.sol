@@ -55,6 +55,12 @@ contract TiersV1 is Ownable2StepUpgradeable {
         uint256 walletLimit;
     }
 
+    /// @notice Contract constructor - disabled due to upgradeability
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @notice Initializer function for the upgradeable contract.
      * @param owner_ The address of the owner of the contract.

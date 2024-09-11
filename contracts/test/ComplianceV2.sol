@@ -6,8 +6,6 @@ import { EIP712Upgradeable } from "@openzeppelin/contracts-upgradeable/utils/cry
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { PropertyV2 } from "./PropertyV2.sol";
 
-import "hardhat/console.sol";
-
 contract ComplianceV2 is Ownable2StepUpgradeable, EIP712Upgradeable {
     using ECDSA for bytes32;
 

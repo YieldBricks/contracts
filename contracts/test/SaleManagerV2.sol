@@ -51,7 +51,7 @@ contract SaleManagerV2 is Ownable2StepUpgradeable {
      * @param sender The address of the sender of the transaction.
      * @param amount The amount of the transaction.
      */
-    event ClaimAdded(uint indexed transactionId, address sender, uint amount);
+    event ClaimAdded(uint256 indexed transactionId, address sender, uint256 amount);
 
     /**
      * @dev Struct representing a sale.

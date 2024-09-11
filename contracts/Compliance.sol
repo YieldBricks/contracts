@@ -35,6 +35,12 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     bytes32 private constant IDENTITY_TYPEHASH =
         keccak256("Identity(address wallet,address signer,bytes32 emailHash,uint256 expiration,uint16 country)");
 
+    /// @notice Contract constructor - disabled due to upgradeability
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @dev Initialize the contract
      * @param identitySigner_ The address of the identity signer

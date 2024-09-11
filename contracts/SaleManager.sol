@@ -89,6 +89,12 @@ contract SaleManager is Ownable2StepUpgradeable {
     IOracle public oracle;
     Tiers public tiers;
 
+    /// @notice Contract constructor - disabled due to upgradeability
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /**
      * @dev Initializes the contract.
      * @param tokenBeacon_ The address of the token beacon.
@@ -196,7 +202,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @dev Allows admin transfers of tokens to admin.
      * @param _property The address of the property token.
      */
-    function adminTransferProperty(address _property, uint amount) external onlyOwner {
+    function adminTransferProperty(address _property, uint256 amount) external onlyOwner {
         Property property = Property(_property);
         property.transfer(msg.sender, amount);
 
@@ -380,7 +386,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param property The address of the property token.
      * @param amount The amount of the property token.
      */
-    event AdminTransferProperty(address property, uint amount);
+    event AdminTransferProperty(address property, uint256 amount);
 
     /**
      * @dev Emitted when claims are processed.
@@ -388,7 +394,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param property The address of the property token.
      * @param amount The amount of the property token.
      */
-    event ClaimsProcessed(address user, address property, uint amount);
+    event ClaimsProcessed(address user, address property, uint256 amount);
 
     /**
      * @dev Emitted when claims are cancelled.
@@ -396,7 +402,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param property The address of the property token.
      * @param amount The amount of the property token.
      */
-    event ClaimsCancelled(address user, address property, uint amount);
+    event ClaimsCancelled(address user, address property, uint256 amount);
 
     /**
      * @dev Emitted when a new token is deployed.
@@ -431,7 +437,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param sender The address of the sender of the transaction.
      * @param amount The amount of the transaction.
      */
-    event ClaimAdded(uint indexed transactionId, address sender, uint amount);
+    event ClaimAdded(uint256 indexed transactionId, address sender, uint256 amount);
 
     /**
      * @dev Emitted when the token beacon is updated.

@@ -44,7 +44,7 @@ contract YBRBase is
 {
     /// @notice Mapping to track frozen wallets
     mapping(address wallet => bool isFrozen) public walletFrozen;
-    uint private constant _CAP = 1_000_000_000 ether;
+    uint256 private constant _CAP = 1_000_000_000 ether;
 
     /// @notice Contract constructor - disabled due to upgradeability
     /// @custom:oz-upgrades-unsafe-allow constructor
