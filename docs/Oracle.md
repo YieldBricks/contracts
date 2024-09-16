@@ -5,6 +5,7 @@ nav_order: 2
 ---
 
 # Solidity API
+
 {: .no_toc }
 
 <details open markdown="block">
@@ -44,7 +45,7 @@ function setPrice(uint256 _price) external
 function getTokensPerUSD(address tokenAddress) external view returns (uint256)
 ```
 
-## ChainlinkOracle
+## YieldbricksOracle
 
 ### dataFeeds
 
@@ -75,4 +76,3 @@ function setFeed(address tokenAddress, address feedAddress) external
 ```solidity
 event FeedSet(address token, address feed)
 ```
-

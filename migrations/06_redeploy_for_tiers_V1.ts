@@ -1,7 +1,12 @@
 import { ethers, upgrades } from "hardhat";
 
 import { ZERO_ADDRESS } from "../test/utils";
-import { Property__factory, SaleManager__factory, TiersV1__factory as Tiers__factory } from "../types";
+import {
+  Property__factory,
+  SaleManager__factory,
+  TiersV1__factory as Tiers__factory,
+  YieldbricksOracle__factory,
+} from "../types";
 import { getEnvironment } from "./utils";
 
 const environment = getEnvironment();
@@ -34,6 +39,20 @@ async function main() {
 
   console.log("Property deployed to:", await property.getAddress());
 
+  console.log("Deploying YieldbricksOracle");
+
+  const YieldbricksOracle = (await ethers.getContractFactory("YieldbricksOracle")) as YieldbricksOracle__factory;
+
+  const yieldbricksOracle = await upgrades.deployProxy(YieldbricksOracle, [environment.Multisig], {
+    initializer: "initialize",
+    redeployImplementation: "onchange",
+    initialOwner: environment.Multisig,
+  });
+
+  await yieldbricksOracle.waitForDeployment();
+
+  console.log("YieldbricksOracle deployed to:", await yieldbricksOracle.getAddress());
+
   console.log("Deploying SaleManager");
 
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
@@ -42,7 +61,7 @@ async function main() {
     [
       await property.getAddress(),
       environment.Multisig,
-      environment.ChainlinkOracle, // Oracle address
+      await yieldbricksOracle.getAddress(), // Oracle address
       await tiers.getAddress(), // Tiers address
     ],
     {

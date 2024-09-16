@@ -255,6 +255,127 @@ describe("SaleManager", function () {
       expect(unclaimedProperties).to.equal(0);
     });
 
+    it("Single price calculation with price set to ETH range on mockOracle", async function () {
+      const { saleManager, mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
+
+      // Scenario: 1 property costs 200 USD, 1 YBR = 2500 USD. YBR has 18 decimlals,
+      // the priceFeed has 1 decimal - meaning to mean 2500 USD it needs to return 25_000
+
+      await mockOracle.setPrice(25_000n);
+
+      // Based on that, the total cost for 1 property should be 0.08 YBR
+
+      const expectedTotalTokenCost = parseEther("0.08");
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      const totalTokenCost = await saleManager.calculatePurchasePrice(1n, ybrAddress, propertyAddress);
+
+      expect(totalTokenCost).to.equal(expectedTotalTokenCost);
+    });
+
+    it("Single price calculation with price set to BTC range on mockOracle", async function () {
+      const { saleManager, mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
+
+      // Scenario: 1 property costs 200 USD, 1 YBR = 60000 USD. YBR has 18 decimals,
+      // the priceFeed has 1 decimal - meaning to mean 60000 USD it needs to return 600_000
+
+      await mockOracle.setPrice(600_000n);
+
+      // Based on that, the total cost for 30 property should be 0.1 YBR
+
+      const expectedTotalTokenCost = parseEther("0.1");
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      const totalTokenCost = await saleManager.calculatePurchasePrice(30n, ybrAddress, propertyAddress);
+
+      expect(totalTokenCost).to.equal(expectedTotalTokenCost);
+    });
+
+    it("Single price calculation with price set to USDC range on mockOracle", async function () {
+      const { saleManager, mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
+
+      // Scenario: 1 property costs 200 USD, 1 YBR = 1 USD. YBR has 18 decimals,
+      // the priceFeed has 1 decimal - meaning to mean 1 USD it needs to return 10
+
+      await mockOracle.setPrice(10n);
+
+      // Based on that, the total cost for 1 property should be 200 YBR
+
+      const expectedTotalTokenCost = parseEther("200");
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      const totalTokenCost = await saleManager.calculatePurchasePrice(1n, ybrAddress, propertyAddress);
+
+      expect(totalTokenCost).to.equal(expectedTotalTokenCost);
+    });
+
+    it("Single price calculation with price set to YBR range on mockOracle", async function () {
+      const { saleManager, mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
+
+      // Scenario: 1 property costs 200 USD, 1 YBR = 0.1 USD. YBR has 18 decimals,
+      // the priceFeed has 1 decimal - meaning to mean 0.1 USD it needs to return 1
+
+      await mockOracle.setPrice(1n);
+
+      // Based on that, the total cost for 1 property should be 2000 YBR
+
+      const expectedTotalTokenCost = parseEther("2000");
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      const totalTokenCost = await saleManager.calculatePurchasePrice(1n, ybrAddress, propertyAddress);
+
+      expect(totalTokenCost).to.equal(expectedTotalTokenCost);
+    });
+
+    it("Fuzz price calculation with various prices set on mockOracle", async function () {
+      const { saleManager, mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+      const paymentTokenAddress = ybrAddress; // Assuming ybrAddress is the payment token address
+      const amount = 1n; // Example amount, adjust as needed
+
+      const tokenPrices = [
+        1n,
+        10n,
+        100n,
+        1_000n,
+        10_000n,
+        20_0000n,
+        50_000n,
+        100_000n,
+        2n,
+        3n,
+        4n,
+        5n,
+        6n,
+        7n,
+        8n,
+        9n,
+        10n,
+        11n,
+        12n,
+      ];
+
+      const propertyUsdPrice = (await saleManager.sales(propertyAddress)).price;
+
+      for (const tokenPrice of tokenPrices) {
+        // Sets price of the paymentToken in USD (1 decimal)
+        await mockOracle.setPrice(tokenPrice);
+
+        const totalTokenCost = await saleManager.calculatePurchasePrice(amount, paymentTokenAddress, propertyAddress);
+
+        // Calculate the expected price based on the mockOracle price and the property cost
+        // 10 ** 19 is 10 ** (priceDecimals + tokenDecimals) for the token price feed
+        const expectedTotalTokenCost = (propertyUsdPrice * amount * 10n ** 19n) / tokenPrice;
+
+        expect(totalTokenCost).to.equal(expectedTotalTokenCost);
+      }
+    });
+
     it("Owner should be able to withdraw funds", async function () {
       const { saleManager, saleManagerAddress, ybr, ybrAddress, multisig } = this.fixture as FixtureReturnType;
 

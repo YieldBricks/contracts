@@ -26,14 +26,16 @@ contract MockOracle is IOracle {
 }
 
 /**
- * @title ChainlinkOracle Contract
+ * @title YieldbricksOracle Contract
  * @dev This contract is used to get the price of tokens using Chainlink feeds.
  */
-contract ChainlinkOracle is IOracle, Ownable2StepUpgradeable {
+contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
     /**
      * @notice Mapping of ChainLink feeds for each token.
      */
     mapping(address token => DataFeed dataFeed) public dataFeeds;
+
+    uint256 ybrPrice = 10_000;
 
     /**
      * @notice Struct to hold the ChainLink feed info and some metadata.
@@ -64,10 +66,22 @@ contract ChainlinkOracle is IOracle, Ownable2StepUpgradeable {
     function getTokenUSDPrice(
         address tokenAddress
     ) external view override onlyOwner returns (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) {
+        if (tokenAddress == address(0)) {
+            return (ybrPrice, 18, 18);
+        }
+
         DataFeed memory dataFeed = dataFeeds[tokenAddress];
         (, int256 _price, , , ) = dataFeeds[tokenAddress].feed.latestRoundData();
 
         return (uint256(_price), dataFeed.priceDecimals, dataFeed.tokenDecimals);
+    }
+
+    /**
+     *
+     * @param _price The price of 1 YBR in USD with 8 decimals.
+     */
+    function setYBRPrice(uint256 _price) external onlyOwner {
+        ybrPrice = _price;
     }
 
     /**

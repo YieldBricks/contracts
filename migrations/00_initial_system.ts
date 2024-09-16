@@ -15,7 +15,7 @@ const environment = getEnvironment();
 async function main() {
   console.log("Deploying Oracle");
 
-  const Oracle = (await ethers.getContractFactory("ChainlinkOracle")) as ChainlinkOracle__factory;
+  const Oracle = (await ethers.getContractFactory("YieldbricksOracle")) as ChainlinkOracle__factory;
   const oracle = await upgrades.deployProxy(Oracle, [environment.Multisig], {
     initializer: "initialize",
     redeployImplementation: "onchange",

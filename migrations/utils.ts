@@ -16,7 +16,7 @@ export type Environment = {
   PropertyBeacon: string;
   YBR: string;
   Tiers: string;
-  ChainlinkOracle: string;
+  YieldbricksOracle: string;
   SaleManager: string;
   Multisig: string;
   chainlinkFeeds: {

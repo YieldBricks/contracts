@@ -10,6 +10,8 @@ import { Property } from "./Property.sol";
 import { IOracle } from "./Oracle.sol";
 import { TiersV1 as Tiers } from "./tiers/TiersV1.sol";
 
+import "hardhat/console.sol";
+
 /**
  * @title SaleManager
  * @dev This contract manages the sales of tokens. It allows the owner to create tokens, create sales for those tokens, and edit sales. It also allows users to buy tokens and claim or cancel their purchases.
@@ -254,10 +256,8 @@ contract SaleManager is Ownable2StepUpgradeable {
 
         IERC20 paymentToken = IERC20(paymentTokenAddress);
 
-        (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) = oracle.getTokenUSDPrice(paymentTokenAddress);
-
         // Calculate the amount of payment token needed for the transaction
-        uint256 totalCost = (_amount * sales[_property].price * (10 ** priceDecimals) * (10 ** tokenDecimals)) / price;
+        uint256 totalCost = calculatePurchasePrice(_amount, paymentTokenAddress, _property);
 
         // Check that the sender has enough payment token and transfer
         if (paymentToken.allowance(msg.sender, address(this)) < totalCost) {
@@ -276,6 +276,36 @@ contract SaleManager is Ownable2StepUpgradeable {
             unclaimedByUser[msg.sender].push(Unclaimed(_property, paymentTokenAddress, _amount, totalCost));
             unclaimedProperties[_property] += _amount;
         }
+    }
+
+    /**
+     * @dev Calculates the purchase price of tokens.
+     * @param _amount The amount of tokens to buy.
+     * @param paymentTokenAddress The address of the payment token.
+     * @param _property The address of the token to buy.
+     * @return totalCost The total cost in payment tokens.
+     */
+    function calculatePurchasePrice(
+        uint256 _amount,
+        address paymentTokenAddress,
+        address _property
+    ) public view returns (uint256) {
+        (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) = oracle.getTokenUSDPrice(paymentTokenAddress);
+
+        console.log("price: %s", price);
+        console.log("priceDecimals: %s", priceDecimals);
+        console.log("tokenDecimals: %s", tokenDecimals);
+
+        console.log("sales[_property].price: %s", sales[_property].price);
+
+        console.log("First product", _amount * sales[_property].price);
+
+        console.log("Second product", (10 ** priceDecimals) * (10 ** tokenDecimals));
+
+        // Calculate the amount of payment token needed for the transaction
+        uint256 totalCost = (_amount * sales[_property].price * (10 ** (priceDecimals + tokenDecimals))) / price;
+
+        return totalCost;
     }
 
     /**
