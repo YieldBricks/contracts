@@ -313,6 +313,32 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     /**
+     * @dev Allows for instant swaps of purchased tokens back for equivalent USDC if liquidity is available
+     */
+    function instantSwap(address property, address paymentTokenAddress, uint256 amount) external {
+        // Transfer property from user to contract
+        IERC20(property).transferFrom(msg.sender, address(this), amount);
+
+        // Check property price in paymentToken
+        (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) = oracle.getTokenUSDPrice(paymentTokenAddress);
+
+        // Calculate the amount of payment token needed for the transaction
+        uint256 propertyPrice = (amount * sales[property].price * (10 ** priceDecimals) * (10 ** tokenDecimals)) /
+            price;
+
+        // Ensure the contract has enough paymentToken to fulfill the swap
+        IERC20 paymentTokenContract = IERC20(paymentTokenAddress);
+        uint256 contractBalance = paymentTokenContract.balanceOf(address(this));
+        require(contractBalance >= propertyPrice, "Insufficient liquidity for swap");
+
+        // Transfer paymentToken from contract to user
+        paymentTokenContract.transfer(msg.sender, propertyPrice);
+
+        // Emit an event for the swap
+        emit InstantSwap(msg.sender, property, paymentTokenAddress, amount, propertyPrice);
+    }
+
+    /**
      * @dev This error is thrown when a user tries to claim tokens but there are no unclaimed tokens associated with their address.
      * @param user The address of the user who is trying to claim tokens.
      */
@@ -444,4 +470,18 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param tokenBeacon The address of the new token beacon.
      */
     event TokenBeaconUpdated(address tokenBeacon);
+
+    /**
+     * @dev Emitted when a swap is processed.
+     * @param user The address of the user who swapped tokens.
+     * @param property The address of the property token.
+     * @param amount The amount of the property token.
+     */
+    event InstantSwap(
+        address indexed user,
+        address indexed property,
+        address indexed paymentToken,
+        uint256 amount,
+        uint256 propertyPrice
+    );
 }
