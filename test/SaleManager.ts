@@ -255,6 +255,21 @@ describe("SaleManager", function () {
       expect(unclaimedProperties).to.equal(0);
     });
 
+    it("User can't buy property when contract is paused", async function () {
+      const { saleManager, multisig, alice, ybrAddress } = this.fixture as FixtureReturnType;
+
+      await saleManager.connect(multisig).setPaused(true);
+
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
+        saleManager,
+        "EnforcedPause",
+      );
+
+      await saleManager.connect(multisig).setPaused(false);
+    });
+
     it("Single price calculation with price set to ETH range on mockOracle", async function () {
       const { saleManager, mockOracle, ybrAddress } = this.fixture as FixtureReturnType;
 
@@ -557,6 +572,23 @@ describe("SaleManager", function () {
       const unclaimedProperties = await saleManager.unclaimedProperties(propertyAddress);
 
       expect(unclaimedProperties).to.equal(101);
+    });
+  });
+
+  describe("Pausability tests", function () {
+    before(async function () {
+      this.fixture = (await this.loadFixture(deploySaleManagerFixture)) as FixtureReturnType;
+    });
+
+    it("Only owner can pause contract", async function () {
+      const { saleManager, multisig, alice } = this.fixture as FixtureReturnType;
+
+      await expect(saleManager.connect(alice).setPaused(true)).to.be.revertedWithCustomError(
+        saleManager,
+        "OwnableUnauthorizedAccount",
+      );
+
+      await saleManager.connect(multisig).setPaused(true);
     });
   });
 });

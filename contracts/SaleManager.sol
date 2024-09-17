@@ -2,6 +2,7 @@
 pragma solidity ^0.8.20;
 
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol";
 import { BeaconProxy } from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import { UpgradeableBeacon } from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,7 +17,7 @@ import "hardhat/console.sol";
  * @title SaleManager
  * @dev This contract manages the sales of tokens. It allows the owner to create tokens, create sales for those tokens, and edit sales. It also allows users to buy tokens and claim or cancel their purchases.
  */
-contract SaleManager is Ownable2StepUpgradeable {
+contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
     using SafeERC20 for IERC20;
 
     /**
@@ -106,6 +107,7 @@ contract SaleManager is Ownable2StepUpgradeable {
     function initialize(address tokenBeacon_, address owner_, address oracle_, address tiers_) public initializer {
         __Ownable2Step_init();
         __Ownable_init(owner_);
+        __Pausable_init();
         tokenBeacon = UpgradeableBeacon(tokenBeacon_);
         oracle = IOracle(oracle_);
         tiers = Tiers(tiers_);
@@ -191,6 +193,18 @@ contract SaleManager is Ownable2StepUpgradeable {
     }
 
     /**
+     * @dev Pauses or unpauses the contract.
+     * @param _paused The new paused status of the contract.
+     */
+    function setPaused(bool _paused) external onlyOwner {
+        if (_paused) {
+            _pause();
+        } else {
+            _unpause();
+        }
+    }
+
+    /**
      * @dev Whitelists a payment token.
      * @param paymentToken The address of the payment token.
      * @param isWhitelisted The new whitelist status of the payment token.
@@ -217,7 +231,7 @@ contract SaleManager is Ownable2StepUpgradeable {
      * @param paymentTokenAddress The address of the payment token.
      * @param _property The address of the token to buy.
      */
-    function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external {
+    function buyTokens(uint256 _amount, address paymentTokenAddress, address _property) external whenNotPaused {
         Tiers.Tier tier = tiers.getTier(msg.sender);
         Tiers.TierBenefits memory tierBenefits = tiers.getTierBenefits(tier);
 
@@ -311,7 +325,7 @@ contract SaleManager is Ownable2StepUpgradeable {
     /**
      * @dev Allows user to claim unclaimed tokens.
      */
-    function claimTokens() external {
+    function claimTokens() external whenNotPaused {
         if (unclaimedByUser[msg.sender].length == 0) {
             revert NoUnclaimedTokens(msg.sender);
         }
@@ -328,7 +342,7 @@ contract SaleManager is Ownable2StepUpgradeable {
     /**
      * @dev Cancels purchases and refunds 80% of the payment token.
      */
-    function cancelPurchases() external {
+    function cancelPurchases() external whenNotPaused {
         if (unclaimedByUser[msg.sender].length == 0) {
             revert NoUnclaimedTokens(msg.sender);
         }
