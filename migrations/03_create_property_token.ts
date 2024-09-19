@@ -5,7 +5,7 @@ import { ethersToSafeTransaction, getEnvironment, submitTransactionsToMultisig }
 
 const environment = getEnvironment();
 const name = "YieldBricks Test Property";
-const symbol = "YB-001-TEST";
+const symbol = "YB-002-TEST";
 const cap = 1_000_000n * 10n ** 18n;
 
 async function main() {
@@ -14,7 +14,9 @@ async function main() {
   const SaleManager = (await ethers.getContractFactory("SaleManager")) as SaleManager__factory;
   const saleManager = SaleManager.attach(environment.SaleManager) as SaleManager;
 
-  const createTokenTx = await saleManager.createToken.populateTransaction(name, symbol, cap, environment.Compliance);
+  const createTokenTx = await saleManager.createToken.populateTransaction(name, symbol, cap);
+
+  console.log(ethersToSafeTransaction(createTokenTx));
 
   await submitTransactionsToMultisig({
     transactions: [ethersToSafeTransaction(createTokenTx)],

@@ -20,6 +20,8 @@ async function main() {
 
   const createSaleTx = await saleManager.createSale.populateTransaction(address, start, end, price);
 
+  console.log(ethersToSafeTransaction(createSaleTx));
+
   await submitTransactionsToMultisig({
     transactions: [ethersToSafeTransaction(createSaleTx)],
     environment,

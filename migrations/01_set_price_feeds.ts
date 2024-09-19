@@ -21,6 +21,8 @@ async function main() {
     transactions.push(ethersToSafeTransaction(tx));
   }
 
+  console.log("transactions", transactions);
+
   await submitTransactionsToMultisig({ transactions, environment });
 }
 

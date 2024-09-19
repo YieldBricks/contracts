@@ -42,6 +42,8 @@ async function main() {
 
   const addIdentityTx = await compliance.addIdentity.populateTransaction(complianceIdentity, complianceSignature);
 
+  console.log("");
+
   await submitTransactionsToMultisig({
     transactions: [ethersToSafeTransaction(setIdentitySignerTx), ethersToSafeTransaction(addIdentityTx)],
     environment,
