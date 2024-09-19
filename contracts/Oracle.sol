@@ -69,6 +69,7 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
     function getTokenUSDPrice(
         address tokenAddress
     ) external view override onlyOwner returns (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) {
+        // Temporary override while waiting for adequate liqudity. YieldBricks takes over the risk of receiving tokens at an incorrect price.
         if (tokenAddress == YBR) {
             return (ybrPrice, 8, 18);
         }
