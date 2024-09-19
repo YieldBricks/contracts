@@ -38,6 +38,7 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
     uint256 ybrPrice = 10_000;
 
     address constant YBR = 0xFcdF3DcF108910225B61cd044A3e46822A81897B;
+    uint256 constant MAX_PRICE_AGE = 10 minutes;
 
     /**
      * @notice Struct to hold the ChainLink feed info and some metadata.
@@ -73,7 +74,11 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
         }
 
         DataFeed memory dataFeed = dataFeeds[tokenAddress];
-        (, int256 _price, , , ) = dataFeeds[tokenAddress].feed.latestRoundData();
+        (, int256 _price, , uint256 _updatedAt, ) = dataFeeds[tokenAddress].feed.latestRoundData();
+
+        if (block.timestamp > _updatedAt + MAX_PRICE_AGE) {
+            revert PriceDataTooOld(_updatedAt);
+        }
 
         return (uint256(_price), dataFeed.priceDecimals, dataFeed.tokenDecimals);
     }
@@ -115,4 +120,9 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
      * @param feed The address of the data feed contract.
      */
     event FeedSet(address indexed token, address indexed feed);
+
+    /**
+     * @dev This error is thrown when a price feed is too old.
+     */
+    error PriceDataTooOld(uint256 priceTimestamp);
 }

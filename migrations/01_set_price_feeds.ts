@@ -1,7 +1,7 @@
 import { MetaTransactionData } from "@safe-global/safe-core-sdk-types";
 import { ethers } from "hardhat";
 
-import { ChainlinkOracle__factory, YieldbricksOracle } from "../types";
+import { YieldbricksOracle, YieldbricksOracle__factory } from "../types";
 import { ethersToSafeTransaction, getEnvironment, submitTransactionsToMultisig } from "./utils";
 
 const environment = getEnvironment();
@@ -9,7 +9,7 @@ const environment = getEnvironment();
 async function main() {
   console.log("Setting price feeds");
 
-  const Oracle = (await ethers.getContractFactory("YieldbricksOracle")) as ChainlinkOracle__factory;
+  const Oracle = (await ethers.getContractFactory("YieldbricksOracle")) as YieldbricksOracle__factory;
   const oracle = Oracle.attach(environment.YieldbricksOracle) as YieldbricksOracle;
 
   const transactions: MetaTransactionData[] = [];
