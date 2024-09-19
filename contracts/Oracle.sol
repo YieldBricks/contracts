@@ -35,7 +35,7 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
      */
     mapping(address token => DataFeed dataFeed) public dataFeeds;
 
-    uint256 ybrPrice = 10_000;
+    uint256 ybrPrice;
 
     address constant YBR = 0xFcdF3DcF108910225B61cd044A3e46822A81897B;
     uint256 constant MAX_PRICE_AGE = 10 minutes;
