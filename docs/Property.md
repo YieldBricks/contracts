@@ -44,7 +44,15 @@ Mapping to track how many claims a user has made
 struct Property.Yield[] claims
 ```
 
-Array of claims made by the ownerha
+Array of claims distributed by platform
+
+### _compliance
+
+```solidity
+contract Compliance _compliance
+```
+
+The Compliance contract responsible for KYC and AML checks
 
 ### Yield
 
@@ -61,7 +69,7 @@ struct Yield {
 ### constructor
 
 ```solidity
-constructor() public
+constructor(address compliance_, address tiers_) public
 ```
 
 Contract constructor - disabled due to upgradeability
@@ -69,7 +77,7 @@ Contract constructor - disabled due to upgradeability
 ### initialize
 
 ```solidity
-function initialize(address compliance, address saleManager, string name, string symbol, uint256 cap) external
+function initialize(address saleManager, string name, string symbol, uint256 cap) external
 ```
 
 _Initializes the contract by setting a `name`, a `symbol`, a `compliance`
@@ -80,7 +88,6 @@ and a `cap` on the total supply of tokens._
 
 | Name | Type | Description |
 | ---- | ---- | ----------- |
-| compliance | address | The address of the Compliance contract |
 | saleManager | address | The address of the SaleManager contract |
 | name | string | The name of the token |
 | symbol | string | The symbol of the token |
