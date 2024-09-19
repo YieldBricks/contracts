@@ -1,15 +1,18 @@
 import { Wallet } from "ethers";
 import { ethers } from "hardhat";
 
-import { identityTypedMessage } from "../test/utils";
+import { DAY, identityTypedMessage } from "../test/utils";
 import { Compliance, Compliance__factory } from "../types";
-import { ethersToSafeTransaction, getEnvironment, submitTransactionsToMultisig } from "./utils";
+import { ethersToSafeTransaction, getEnvironment } from "./utils";
 
 const environment = getEnvironment();
 
-const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+const CUSTOM_ADDRESS = environment.Multisig;
+const CUSTOM_MAIL = "multisig@yieldbricks.com";
+const CUSTOM_EXPIRATION = 10 * 365 * DAY; // 10 years
+
 const now = Math.floor(Date.now() / 1000); // Date.now() returns milliseconds, so we convert to seconds
-const expiration = now + ONE_YEAR_IN_SECONDS;
+const expiration = now + CUSTOM_EXPIRATION;
 
 async function main() {
   console.log("Adding SaleManager to Compliance");
@@ -19,16 +22,13 @@ async function main() {
 
   const signer = new Wallet(process.env.KYC_SIGNER_PRIVATE_KEY!);
 
-  console.log("Signer Key:", signer.privateKey);
   console.log("Signer Address:", signer.address);
-
-  const setIdentitySignerTx = await compliance.setIdentitySigner.populateTransaction(signer.address);
 
   const eip712Domain = await compliance.eip712Domain();
   const complianceIdentity = {
-    wallet: environment.SaleManager,
+    wallet: CUSTOM_ADDRESS,
     signer: signer.address,
-    emailHash: ethers.keccak256(ethers.toUtf8Bytes("compliance@yieldbricks.com")),
+    emailHash: ethers.keccak256(ethers.toUtf8Bytes(CUSTOM_MAIL)),
     expiration, // 1 year
     country: 0,
   };
@@ -42,12 +42,8 @@ async function main() {
 
   const addIdentityTx = await compliance.addIdentity.populateTransaction(complianceIdentity, complianceSignature);
 
-  console.log("transactions", [ethersToSafeTransaction(setIdentitySignerTx), ethersToSafeTransaction(addIdentityTx)]);
+  console.log("transaction", ethersToSafeTransaction(addIdentityTx));
 
-  await submitTransactionsToMultisig({
-    transactions: [ethersToSafeTransaction(setIdentitySignerTx), ethersToSafeTransaction(addIdentityTx)],
-    environment,
-  });
   console.log("Adding KYC Signer: ", signer.address);
 }
 

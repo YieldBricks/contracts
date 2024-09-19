@@ -21,12 +21,9 @@ async function main() {
     transactions.push(ethersToSafeTransaction(tx));
   }
 
-  await submitTransactionsToMultisig({ transactions, environment });
+  console.log("transactions", transactions);
 
-  await submitTransactionsToMultisig({
-    transactions,
-    environment,
-  });
+  await submitTransactionsToMultisig({ transactions, environment });
 }
 
 // We recommend this pattern to be able to use async/await everywhere
