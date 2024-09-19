@@ -35,6 +35,13 @@ export default {
       tokenDecimals: 6,
       priceDecimals: 8,
     },
+    {
+      feedName: "ARB/USD",
+      asset: "0x912CE59144191C1204E64559FE8253a0e49E6548",
+      feed: "0xb2A824043730FE05F3DA2efaFa1CBbe83fa548D6",
+      tokenDecimals: 18,
+      priceDecimals: 8,
+    },
   ],
   kycSigners: [""],
   EthYBR: "0xD8A8E578c501300Ce0a92fD7A39Ac1fF61a00981",
