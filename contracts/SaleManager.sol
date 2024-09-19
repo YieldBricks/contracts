@@ -11,8 +11,6 @@ import { Property } from "./Property.sol";
 import { IOracle } from "./Oracle.sol";
 import { TiersV1 as Tiers } from "./tiers/TiersV1.sol";
 
-import "hardhat/console.sol";
-
 /**
  * @title SaleManager
  * @dev This contract manages the sales of tokens. It allows the owner to create tokens, create sales for those tokens, and edit sales. It also allows users to buy tokens and claim or cancel their purchases.
@@ -305,16 +303,6 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
         address _property
     ) public view returns (uint256) {
         (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) = oracle.getTokenUSDPrice(paymentTokenAddress);
-
-        console.log("price: %s", price);
-        console.log("priceDecimals: %s", priceDecimals);
-        console.log("tokenDecimals: %s", tokenDecimals);
-
-        console.log("sales[_property].price: %s", sales[_property].price);
-
-        console.log("First product", _amount * sales[_property].price);
-
-        console.log("Second product", (10 ** priceDecimals) * (10 ** tokenDecimals));
 
         // Calculate the amount of payment token needed for the transaction
         uint256 totalCost = (_amount * sales[_property].price * (10 ** (priceDecimals + tokenDecimals))) / price;
