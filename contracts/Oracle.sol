@@ -37,6 +37,8 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
 
     uint256 ybrPrice = 10_000;
 
+    address constant YBR = 0xFcdF3DcF108910225B61cd044A3e46822A81897B;
+
     /**
      * @notice Struct to hold the ChainLink feed info and some metadata.
      */
@@ -66,8 +68,8 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
     function getTokenUSDPrice(
         address tokenAddress
     ) external view override onlyOwner returns (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) {
-        if (tokenAddress == address(0)) {
-            return (ybrPrice, 18, 18);
+        if (tokenAddress == YBR) {
+            return (ybrPrice, 8, 18);
         }
 
         DataFeed memory dataFeed = dataFeeds[tokenAddress];
