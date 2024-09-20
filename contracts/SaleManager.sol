@@ -242,20 +242,25 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
         }
 
         Property property = Property(_property);
+
         // Check there is enough supply left
-        if (_amount + unclaimedProperties[_property] > property.balanceOf(address(this))) {
+        if (
+            _amount + unclaimedProperties[_property] > (property.balanceOf(address(this)) / (10 ** property.decimals()))
+        ) {
             revert NotEnoughTokensLeft();
         }
 
+        uint256 totalSupply = property.totalSupply() / (10 ** property.decimals());
+
         if (block.timestamp < sales[_property].start) {
             if (
-                (10000 * (_amount + purchasesPerPropertyPerUser[_property][msg.sender])) / property.totalSupply() >
+                (10000 * (_amount + purchasesPerPropertyPerUser[_property][msg.sender])) / totalSupply >
                 tierBenefits.walletLimit
             ) {
                 revert TierWalletLimitReached();
             }
             if (
-                (10000 * (_amount + purchasesPerPropertyPerTier[_property][tier])) / property.totalSupply() >
+                (10000 * (_amount + purchasesPerPropertyPerTier[_property][tier])) / totalSupply >
                 tierBenefits.tierAllocation
             ) {
                 revert TierTotalLimitReached();
@@ -282,7 +287,7 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
         purchasesPerPropertyPerTier[_property][tier] += _amount;
 
         // Try to send tokens to user, if it fails, add the amount to unclaimed tokens
-        try property.transfer(msg.sender, _amount) {
+        try property.transfer(msg.sender, _amount * (10 ** property.decimals())) {
             emit ClaimsProcessed(msg.sender, _property, _amount);
         } catch {
             unclaimedByUser[msg.sender].push(Unclaimed(_property, paymentTokenAddress, _amount, totalCost));
@@ -320,7 +325,7 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
         for (uint256 i = 0; i < unclaimedByUser[msg.sender].length; i++) {
             Unclaimed memory unclaimed = unclaimedByUser[msg.sender][i];
             Property property = Property(unclaimed.propertyAddress);
-            property.transfer(msg.sender, unclaimed.propertyAmount);
+            property.transfer(msg.sender, unclaimed.propertyAmount * (10 ** property.decimals()));
             unclaimedProperties[unclaimed.propertyAddress] -= unclaimed.propertyAmount;
             emit ClaimsProcessed(msg.sender, unclaimed.propertyAddress, unclaimed.propertyAmount);
         }

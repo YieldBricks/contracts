@@ -2,6 +2,7 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { parseEther } from "ethers";
 import { ethers } from "hardhat";
+import { parse } from "path";
 
 import { deploySaleManagerFixture } from "./SaleManager.fixture";
 import { DAY, identityTypedMessage } from "./utils";
@@ -59,7 +60,7 @@ describe("SaleManager", function () {
 
       const name = "TestToken";
       const symbol = "TT";
-      const cap = 1000;
+      const cap = parseEther("1000");
 
       expect(await compliance.canTransfer(saleManagerAddress, saleManagerAddress));
 
@@ -177,7 +178,16 @@ describe("SaleManager", function () {
     it("User can claim property after KYC", async function () {
       const { saleManager, alice } = this.fixture as FixtureReturnType;
 
+      const propertyAddress = await saleManager.tokenAddresses(0);
+
+      // Check property balance
+      const property = await ethers.getContractAt("Property", propertyAddress);
+      expect(await property.balanceOf(alice.address)).to.equal(parseEther("0"));
+
       await saleManager.connect(alice).claimTokens();
+
+      // Check property balance
+      expect(await property.balanceOf(alice.address)).to.equal(parseEther("1"));
 
       const unclaimedProperties = await saleManager.unclaimedProperties(alice.address);
 
@@ -197,7 +207,14 @@ describe("SaleManager", function () {
       // Give approval for price * ybrPerUSD
       await ybr.connect(bob).approve(saleManagerAddress, parseEther("100"));
 
+      // Check property balance
+      const property = await ethers.getContractAt("Property", propertyAddress);
+      expect(await property.balanceOf(bob.address)).to.equal(parseEther("0"));
+
       await saleManager.connect(bob).buyTokens(1, ybrAddress, propertyAddress);
+
+      // Check property balance
+      expect(await property.balanceOf(bob.address)).to.equal(parseEther("0"));
 
       await expect(saleManager.connect(bob).claimTokens()).to.be.revertedWithCustomError(
         compliance,
@@ -247,12 +264,20 @@ describe("SaleManager", function () {
 
       await ybr.connect(alice).approve(saleManagerAddress, parseEther("100"));
 
+      // Check property balance
+      const property = await ethers.getContractAt("Property", propertyAddress);
+      expect(await property.balanceOf(alice.address)).to.equal(parseEther("1"));
+
       await saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress);
 
       // Check unclaimed properties is 0
       const unclaimedProperties = await saleManager.unclaimedProperties(alice.address);
 
       expect(unclaimedProperties).to.equal(0);
+
+      // Check property balance
+
+      expect(await property.balanceOf(alice.address)).to.equal(parseEther("2"));
     });
 
     it("User can't buy property when contract is paused", async function () {
@@ -468,7 +493,7 @@ describe("SaleManager", function () {
 
       const name = "TestToken";
       const symbol = "TT";
-      const cap = 1000;
+      const cap = parseEther("1000");
 
       expect(await compliance.canTransfer(saleManagerAddress, saleManagerAddress));
 
