@@ -20,4 +20,6 @@ yarn hardhat run --network arbitrum migrations/06_redeploy_for_tiers_V1.ts
 yarn hardhat run --network arbitrum migrations/01_set_price_feeds.ts
 yarn hardhat run --network arbitrum migrations/05_whitelist_payment_tokens.ts
 
+# Upgrades
 yarn hardhat run --network arbitrum migrations/07_upgrade_compliance.ts
+yarn hardhat run --network arbitrum migrations/09_upgrade_sale_manager.ts

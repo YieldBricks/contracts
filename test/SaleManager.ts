@@ -2,7 +2,6 @@ import { loadFixture, time } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 import { parseEther } from "ethers";
 import { ethers } from "hardhat";
-import { parse } from "path";
 
 import { deploySaleManagerFixture } from "./SaleManager.fixture";
 import { DAY, identityTypedMessage } from "./utils";
