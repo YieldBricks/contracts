@@ -23,3 +23,4 @@ yarn hardhat run --network arbitrum migrations/05_whitelist_payment_tokens.ts
 # Upgrades
 yarn hardhat run --network arbitrum migrations/07_upgrade_compliance.ts
 yarn hardhat run --network arbitrum migrations/09_upgrade_sale_manager.ts
+yarn hardhat run --network arbitrum migrations/10_upgrade_oracle.ts
