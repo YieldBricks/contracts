@@ -5,7 +5,7 @@ export default {
   YieldbricksOracle: "0x74AAf3C362e9A1d9cFA25ce7b6E1cC61f1F4cB82",
   SaleManager: "0x404b97b679bBc72e378bf613F7295A95fa94FE8e",
   Tiers: "0x8d278364Ed3E945d898B47E0F2Bf02D1f1913497",
-  Multisig: "0xC4116De72f8e038A67656860EEe4322d0289598e",
+  Multisig: "0xc7Dc9Eb80d1Cc41ce57360DB8e9954b3c396CD56",
   chainlinkFeeds: [
     {
       feedName: "ETH/USD",
@@ -45,5 +45,5 @@ export default {
   ],
   kycSigners: [""],
   EthYBR: "0xD8A8E578c501300Ce0a92fD7A39Ac1fF61a00981",
-  EthMultisig: "0xE596a385D8Ac177c698160C9A8E201891dF8F360",
+  EthMultisig: "0xc7Dc9Eb80d1Cc41ce57360DB8e9954b3c396CD56",
 };

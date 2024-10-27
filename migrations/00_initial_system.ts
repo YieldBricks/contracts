@@ -2,11 +2,11 @@ import { ethers, upgrades } from "hardhat";
 
 import { ZERO_ADDRESS } from "../test/utils";
 import {
-  ChainlinkOracle__factory,
   Compliance__factory,
   Property__factory,
   SaleManager__factory,
   TiersV0__factory as Tiers__factory,
+  YieldbricksOracle__factory,
 } from "../types";
 import { getEnvironment } from "./utils";
 
@@ -15,7 +15,7 @@ const environment = getEnvironment();
 async function main() {
   console.log("Deploying Oracle");
 
-  const Oracle = (await ethers.getContractFactory("YieldbricksOracle")) as ChainlinkOracle__factory;
+  const Oracle = (await ethers.getContractFactory("YieldbricksOracle")) as YieldbricksOracle__factory;
   const oracle = await upgrades.deployProxy(Oracle, [environment.Multisig], {
     initializer: "initialize",
     redeployImplementation: "onchange",

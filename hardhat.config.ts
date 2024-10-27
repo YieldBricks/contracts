@@ -4,6 +4,7 @@ import "@nomicfoundation/hardhat-verify";
 import "@openzeppelin/hardhat-upgrades";
 import "hardhat-deploy";
 import "hardhat-deploy-ethers";
+import "hardhat-tracer";
 import type { HardhatUserConfig } from "hardhat/config";
 import { vars } from "hardhat/config";
 import { NetworkUserConfig } from "hardhat/types";

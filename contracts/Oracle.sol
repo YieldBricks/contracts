@@ -4,6 +4,10 @@ pragma solidity ^0.8.20;
 import { Denominations } from "@chainlink/contracts/src/v0.8/Denominations.sol";
 import { AggregatorV3Interface } from "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import { OracleLibrary } from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
+import { IUniswapV3Pool } from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+
+import "hardhat/console.sol";
 
 interface IOracle {
     function getTokenUSDPrice(
@@ -35,10 +39,10 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
      */
     mapping(address token => DataFeed dataFeed) public dataFeeds;
 
-    uint256 ybrPrice;
-
-    address constant YBR = 0xFcdF3DcF108910225B61cd044A3e46822A81897B;
-    uint256 constant MAX_PRICE_AGE = 10 minutes;
+    address constant YBR = 0x912CE59144191C1204E64559FE8253a0e49E6548; // TODO
+    address constant USDC = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
+    address constant YBR_USDC = 0xcDa53B1F66614552F834cEeF361A8D12a0B8DaD8; //TODO
+    uint256 constant MAX_PRICE_AGE = 5 days;
 
     /**
      * @notice Struct to hold the ChainLink feed info and some metadata.
@@ -69,27 +73,21 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
     function getTokenUSDPrice(
         address tokenAddress
     ) external view override returns (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) {
-        // Temporary override while waiting for adequate liqudity. YieldBricks takes over the risk of receiving tokens at an incorrect price.
+        // Temporarily fetch YBR price from Uniswap using 1 hour TWAP
         if (tokenAddress == YBR) {
+            (int24 arithmeticMeanTick, ) = OracleLibrary.consult(YBR_USDC, 1 hours);
+            uint256 ybrPrice = OracleLibrary.getQuoteAtTick(arithmeticMeanTick, 1e8 * 1e6, USDC, YBR);
             return (ybrPrice, 8, 18);
         }
 
         DataFeed memory dataFeed = dataFeeds[tokenAddress];
-        (, int256 _price, , uint256 _updatedAt, ) = dataFeeds[tokenAddress].feed.latestRoundData();
+        (, int256 _price, , uint256 _updatedAt, ) = dataFeed.feed.latestRoundData();
 
         if (block.timestamp > _updatedAt + MAX_PRICE_AGE) {
             revert PriceDataTooOld(_updatedAt);
         }
 
         return (uint256(_price), dataFeed.priceDecimals, dataFeed.tokenDecimals);
-    }
-
-    /**
-     *
-     * @param _price The price of 1 YBR in USD with 8 decimals.
-     */
-    function setYBRPrice(uint256 _price) external onlyOwner {
-        ybrPrice = _price;
     }
 
     /**
