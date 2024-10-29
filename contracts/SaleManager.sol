@@ -252,13 +252,14 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
 
         uint256 totalSupply = property.totalSupply() / (10 ** property.decimals());
 
+        if (
+            (10000 * (_amount + purchasesPerPropertyPerUser[_property][msg.sender])) / totalSupply >
+            tierBenefits.walletLimit
+        ) {
+            revert TierWalletLimitReached();
+        }
+
         if (block.timestamp < sales[_property].start) {
-            if (
-                (10000 * (_amount + purchasesPerPropertyPerUser[_property][msg.sender])) / totalSupply >
-                tierBenefits.walletLimit
-            ) {
-                revert TierWalletLimitReached();
-            }
             if (
                 (10000 * (_amount + purchasesPerPropertyPerTier[_property][tier])) / totalSupply >
                 tierBenefits.tierAllocation

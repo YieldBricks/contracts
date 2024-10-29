@@ -31,15 +31,15 @@ import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import { YBRBase } from "./YBRBase.sol";
 
 /**
- * @title YieldBricks (YBR) Token Contract
+ * @title YieldBricks (YBR) Token Contract on Arbitrum
  * @notice This contract is for the YieldBricks token, which is an ERC20 token with additional features.
  */
 contract ArbYBR is YBRBase, ERC20L2BridgeableUpgradeable {
-    // /// @notice Contract constructor - disabled due to upgradeability
-    // /// @custom:oz-upgrades-unsafe-allow constructor
-    // constructor() {
-    //     _disableInitializers();
-    // }
+    /// @notice Contract constructor - disabled due to upgradeability
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @notice Initializes the contract

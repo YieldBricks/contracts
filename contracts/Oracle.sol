@@ -39,9 +39,9 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
      */
     mapping(address token => DataFeed dataFeed) public dataFeeds;
 
-    address constant YBR = 0x912CE59144191C1204E64559FE8253a0e49E6548; // TODO
-    address constant USDC = 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8;
-    address constant YBR_USDC = 0xcDa53B1F66614552F834cEeF361A8D12a0B8DaD8; //TODO
+    address constant YBR = 0x11920f139a3121c2836E01551D43F95B3c31159c;
+    address constant USDC = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
+    address constant YBR_USDC = 0xcDa53B1F66614552F834cEeF361A8D12a0B8DaD8; //TODO, will upgrade once Uniswap pool is deployed
     uint256 constant MAX_PRICE_AGE = 5 days;
 
     /**
@@ -77,7 +77,7 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
         if (tokenAddress == YBR) {
             (int24 arithmeticMeanTick, ) = OracleLibrary.consult(YBR_USDC, 1 hours);
             uint256 ybrPrice = OracleLibrary.getQuoteAtTick(arithmeticMeanTick, 1e8 * 1e6, USDC, YBR);
-            return (ybrPrice, 8, 18);
+            return (ybrPrice / 1e18, 8, 18);
         }
 
         DataFeed memory dataFeed = dataFeeds[tokenAddress];

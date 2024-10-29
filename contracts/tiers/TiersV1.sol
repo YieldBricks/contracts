@@ -7,18 +7,13 @@ import { Checkpoints } from "@openzeppelin/contracts/utils/structs/Checkpoints.s
 import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
 
 contract TiersV1 is Ownable2StepUpgradeable {
-    uint256 public constant TIER_ROOKIE_THRESHOLD = 0;
-    uint256 public constant TIER_EXPLORER_THRESHOLD = 1 ether;
-    uint256 public constant TIER_CAMPER_THRESHOLD = 1000 ether;
-    uint256 public constant TIER_BUILDER_THRESHOLD = 5000 ether;
-    uint256 public constant TIER_TYCOON_THRESHOLD = 20000 ether;
-    uint256 public constant TIER_GURU_THRESHOLD = 50000 ether;
-    uint256 public constant TIER_ROOKIE_LOCKUP = 0;
-    uint256 public constant TIER_EXPLORER_LOCKUP = 30 days;
-    uint256 public constant TIER_CAMPER_LOCKUP = 30 days;
-    uint256 public constant TIER_BUILDER_LOCKUP = 90 days;
-    uint256 public constant TIER_TYCOON_LOCKUP = 90 days;
-    uint256 public constant TIER_GURU_LOCKUP = 180 days;
+    uint256 public constant TIER_VISITOR_THRESHOLD = 0;
+    uint256 public constant TIER_ROOKIE_THRESHOLD = 3750;
+    uint256 public constant TIER_EXPLORER_THRESHOLD = 37500 ether;
+    uint256 public constant TIER_CAMPER_THRESHOLD = 180000 ether;
+    uint256 public constant TIER_BUILDER_THRESHOLD = 750000 ether;
+    uint256 public constant TIER_TYCOON_THRESHOLD = 1800000 ether;
+
     uint256 public constant DEFAULT_TIER_CALCULATION = 30 days;
 
     // The number of checkpoints that need to be processed before we switch to the fast calculation
@@ -33,12 +28,12 @@ contract TiersV1 is Ownable2StepUpgradeable {
     uint256 public balanceMultiplier;
 
     enum Tier {
+        VISITOR,
         ROOKIE,
         EXPLORER,
         CAMPER,
         BUILDER,
-        TYCOON,
-        GURU
+        TYCOON
     }
 
     /**
@@ -126,11 +121,9 @@ contract TiersV1 is Ownable2StepUpgradeable {
      * @param balance The average balance of the user over the given time period.
      */
     function _getTierFromBalance(uint256 balance) internal view returns (Tier) {
-        uint256 balanceScaled = (balance * 10000) / balanceMultiplier;
+        uint256 balanceScaled = (balance * balanceMultiplier) / 10_000;
 
-        if (balanceScaled >= TIER_GURU_THRESHOLD) {
-            return Tier.GURU;
-        } else if (balanceScaled >= TIER_TYCOON_THRESHOLD) {
+        if (balanceScaled >= TIER_TYCOON_THRESHOLD) {
             return Tier.TYCOON;
         } else if (balanceScaled >= TIER_BUILDER_THRESHOLD) {
             return Tier.BUILDER;
@@ -138,8 +131,11 @@ contract TiersV1 is Ownable2StepUpgradeable {
             return Tier.CAMPER;
         } else if (balanceScaled >= TIER_EXPLORER_THRESHOLD) {
             return Tier.EXPLORER;
+        } else if (balanceScaled >= TIER_ROOKIE_THRESHOLD) {
+            return Tier.ROOKIE;
         }
-        return Tier.ROOKIE;
+
+        return Tier.VISITOR;
     }
 
     /**
@@ -288,18 +284,18 @@ contract TiersV1 is Ownable2StepUpgradeable {
      * @param tier The tier for which the benefits are to be retrieved.
      */
     function getTierBenefits(Tier tier) public pure returns (TierBenefits memory) {
-        if (tier == Tier.EXPLORER) {
-            return TierBenefits(Tier.EXPLORER, 6 hours, 500, 200);
+        if (tier == Tier.ROOKIE) {
+            return TierBenefits(Tier.ROOKIE, 3 hours, 500, 100);
+        } else if (tier == Tier.EXPLORER) {
+            return TierBenefits(Tier.EXPLORER, 12 hours, 500, 200);
         } else if (tier == Tier.CAMPER) {
-            return TierBenefits(Tier.CAMPER, 12 hours, 1000, 400);
+            return TierBenefits(Tier.CAMPER, 24 hours, 1500, 400);
         } else if (tier == Tier.BUILDER) {
-            return TierBenefits(Tier.BUILDER, 24 hours, 1000, 600);
+            return TierBenefits(Tier.BUILDER, 48 hours, 2500, 600);
         } else if (tier == Tier.TYCOON) {
-            return TierBenefits(Tier.TYCOON, 48 hours, 2000, 800);
-        } else if (tier == Tier.GURU) {
-            return TierBenefits(Tier.GURU, 72 hours, 3000, 1000);
+            return TierBenefits(Tier.TYCOON, 72 hours, 4000, 800);
         }
-        return TierBenefits(Tier.ROOKIE, 0, 500, 100);
+        return TierBenefits(Tier.VISITOR, 0, 0, 100);
     }
 
     /**

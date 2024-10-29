@@ -31,17 +31,17 @@ import { YBRBase } from "./YBRBase.sol";
 import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 
 /**
- * @title YieldBricks (YBR) Token Contract
+ * @title YieldBricks (YBR) Token Contract on Ethereum
  * @notice This contract is for the YieldBricks token, which is an ERC20 token with additional features.
  */
 contract EthYBR is YBRBase, ERC20L1BridgeableUpgradeable {
     uint256 private constant _CAP = 1_000_000_000 ether;
 
-    // /// @notice Contract constructor - disabled due to upgradeability
-    // /// @custom:oz-upgrades-unsafe-allow constructor
-    // constructor() {
-    //     _disableInitializers();
-    // }
+    /// @notice Contract constructor - disabled due to upgradeability
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
 
     /**
      * @notice Initializes the contract

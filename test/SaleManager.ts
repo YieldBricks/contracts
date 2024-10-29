@@ -574,7 +574,7 @@ describe("SaleManager", function () {
       );
     });
 
-    it("Once the sale starts, the tier limit is lifted", async function () {
+    it("Tier wallet limit remains even when sale begins", async function () {
       const { saleManager, saleManagerAddress, alice, ybr, ybrAddress } = this.fixture as FixtureReturnType;
 
       await time.increase(DAY);
@@ -583,19 +583,22 @@ describe("SaleManager", function () {
 
       await ybr.connect(alice).approve(saleManagerAddress, parseEther("1000"));
 
-      await saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress);
+      await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
+        saleManager,
+        "TierWalletLimitReached",
+      );
 
-      const [propertyAddress_, paymentTokenAddress, propertyAmount, paymentTokenAmount] =
-        await saleManager.unclaimedByUser(alice.address, 1);
+      // const [propertyAddress_, paymentTokenAddress, propertyAmount, paymentTokenAmount] =
+      //   await saleManager.unclaimedByUser(alice.address, 1);
 
-      expect(propertyAddress_).to.equal(propertyAddress);
-      expect(paymentTokenAddress).to.equal(ybrAddress);
-      expect(propertyAmount).to.equal(1);
-      expect(paymentTokenAmount).to.equal(parseEther("10"));
+      // expect(propertyAddress_).to.equal(propertyAddress);
+      // expect(paymentTokenAddress).to.equal(ybrAddress);
+      // expect(propertyAmount).to.equal(1);
+      // expect(paymentTokenAmount).to.equal(parseEther("10"));
 
-      const unclaimedProperties = await saleManager.unclaimedProperties(propertyAddress);
+      // const unclaimedProperties = await saleManager.unclaimedProperties(propertyAddress);
 
-      expect(unclaimedProperties).to.equal(101);
+      // expect(unclaimedProperties).to.equal(101);
     });
   });
 
