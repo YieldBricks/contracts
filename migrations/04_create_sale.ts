@@ -6,8 +6,8 @@ import { ethersToSafeTransaction, getEnvironment, submitTransactionsToMultisig }
 
 const environment = getEnvironment();
 const address: AddressLike = "0xe34b665873ad1f5ccbfb2ff21487ac51bc878922";
-const start = Date.parse("2024-08-29") / 1000;
-const end = Date.parse("2028-09-30") / 1000;
+const start = Date.parse("2024-10-30") / 1000;
+const end = Date.parse("2028-10-30") / 1000;
 const price = 50;
 
 async function main() {

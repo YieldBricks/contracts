@@ -5,7 +5,7 @@ import { ethersToSafeTransaction, getEnvironment, submitTransactionsToMultisig }
 
 const environment = getEnvironment();
 const name = "YieldBricks Test Property";
-const symbol = "YB-002-TEST";
+const symbol = "YB-003-TEST";
 const cap = 1_000_000n * 10n ** 18n;
 
 async function main() {
