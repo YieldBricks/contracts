@@ -9,7 +9,7 @@ const environment = getEnvironment();
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 const now = Math.floor(Date.now() / 1000); // Date.now() returns milliseconds, so we convert to seconds
-const expiration = now + ONE_YEAR_IN_SECONDS;
+const expiration = now + ONE_YEAR_IN_SECONDS * 10;
 
 async function main() {
   console.log("Adding SaleManager to Compliance");
@@ -29,7 +29,7 @@ async function main() {
     wallet: environment.SaleManager,
     signer: signer.address,
     emailHash: ethers.keccak256(ethers.toUtf8Bytes("compliance@yieldbricks.com")),
-    expiration, // 1 year
+    expiration, // 10 years
     country: 0,
   };
 
@@ -40,12 +40,36 @@ async function main() {
     complianceData.identity,
   );
 
-  const addIdentityTx = await compliance.addIdentity.populateTransaction(complianceIdentity, complianceSignature);
+  const multisigIdentity = {
+    wallet: environment.Multisig,
+    signer: signer.address,
+    emailHash: ethers.keccak256(ethers.toUtf8Bytes("multisig@yieldbricks.com")),
+    expiration, // 10 years
+    country: 0,
+  };
 
-  console.log("transactions", [ethersToSafeTransaction(setIdentitySignerTx), ethersToSafeTransaction(addIdentityTx)]);
+  const multisigData = identityTypedMessage(eip712Domain, multisigIdentity);
+  const multisigSignature = await signer.signTypedData(multisigData.domain, multisigData.types, multisigData.identity);
+
+  const addComplianceIdentityTx = await compliance.addIdentity.populateTransaction(
+    complianceIdentity,
+    complianceSignature,
+  );
+
+  const addMultisigIdentityTx = await compliance.addIdentity.populateTransaction(multisigIdentity, multisigSignature);
+
+  console.log("transactions", [
+    ethersToSafeTransaction(setIdentitySignerTx),
+    ethersToSafeTransaction(addComplianceIdentityTx),
+    ethersToSafeTransaction(addMultisigIdentityTx),
+  ]);
 
   await submitTransactionsToMultisig({
-    transactions: [ethersToSafeTransaction(setIdentitySignerTx), ethersToSafeTransaction(addIdentityTx)],
+    transactions: [
+      ethersToSafeTransaction(setIdentitySignerTx),
+      ethersToSafeTransaction(addComplianceIdentityTx),
+      ethersToSafeTransaction(addMultisigIdentityTx),
+    ],
     environment,
   });
   console.log("Adding KYC Signer: ", signer.address);
