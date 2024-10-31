@@ -28,7 +28,7 @@ async function main() {
   const complianceIdentity = {
     wallet: environment.SaleManager,
     signer: signer.address,
-    emailHash: ethers.keccak256(ethers.toUtf8Bytes("compliance@yieldbricks.com")),
+    emailHash: ethers.keccak256(ethers.toUtf8Bytes("salemanager@yieldbricks.com")),
     expiration, // 10 years
     country: 0,
   };
