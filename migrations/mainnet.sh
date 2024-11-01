@@ -24,3 +24,8 @@ yarn hardhat run --network arbitrum migrations/05_whitelist_payment_tokens.ts
 yarn hardhat run --network arbitrum migrations/07_upgrade_compliance.ts
 yarn hardhat run --network arbitrum migrations/09_upgrade_sale_manager.ts
 yarn hardhat run --network arbitrum migrations/10_upgrade_oracle.ts
+
+
+# Verify
+
+yarn verify --network arbitrum --contract contracts/Property.sol:Property 0xa66dd9aad8c78b7977c0686ab07160c6ae50d0a5 0xf29906A75255c04B6f9D522047979D289893bFf3 0x003eeD405A1EaFcf40e2bdEbbB086e80f7B28A1E 

@@ -461,14 +461,14 @@ describe("SaleManager", function () {
       expect(await ybr.balanceOf(bob.address)).to.equal(parseEther("10000"));
     });
 
-    it("Give Alice the GURU tier", async function () {
+    it("Give Alice the TYCOON tier", async function () {
       const { tiers, alice, multisig } = this.fixture as FixtureReturnType;
 
       await tiers.connect(multisig).setTierOverride(alice.address, 5); // 5 is GURU
 
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 3000n, 1000n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 4000n, 800]);
     });
 
     it("Whitelist YBR token", async function () {
@@ -547,18 +547,18 @@ describe("SaleManager", function () {
 
       await ybr.connect(alice).approve(saleManagerAddress, parseEther("10000"));
 
-      await saleManager.connect(alice).buyTokens(100, ybrAddress, propertyAddress);
+      await saleManager.connect(alice).buyTokens(80, ybrAddress, propertyAddress);
 
       const [propertyAddress_, paymentTokenAddress, propertyAmount, paymentTokenAmount] =
         await saleManager.unclaimedByUser(alice.address, 0);
 
       expect(propertyAddress_).to.equal(propertyAddress);
       expect(paymentTokenAddress).to.equal(ybrAddress);
-      expect(propertyAmount).to.equal(100);
-      expect(paymentTokenAmount).to.equal(parseEther("1000"));
+      expect(propertyAmount).to.equal(80);
+      expect(paymentTokenAmount).to.equal(parseEther("800"));
 
-      expect(await saleManager.purchasesPerPropertyPerUser(propertyAddress, alice.address)).to.equal(100);
-      expect(await saleManager.purchasesPerPropertyPerTier(propertyAddress, 5)).to.equal(100);
+      expect(await saleManager.purchasesPerPropertyPerUser(propertyAddress, alice.address)).to.equal(80);
+      expect(await saleManager.purchasesPerPropertyPerTier(propertyAddress, 5)).to.equal(80);
     });
 
     it("Sale fails if user tries to buy more once the limit is reached", async function () {

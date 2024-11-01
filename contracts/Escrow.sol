@@ -63,6 +63,8 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
     /**
      * @dev Initializes the contract.
      * @param owner_ The address of the owner.
+     * @param ybr_ The address of the YBR token.
+     * @param usdt_ The address of the USDT token.
      */
     function initialize(address owner_, address ybr_, address usdt_) public initializer {
         __Ownable2Step_init();
@@ -73,15 +75,21 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
     }
 
     /**
-     * @dev Creates a new escrow pool.
+     * @dev Creates a new escrow pool. Requires a transfer of sufficient YBR tokens as collateral.
+     * @param contributionStart Pool contribution opening time.
+     * @param contributionEnd Pool closing time.
+     * @param timeToMaturity Pool time to maturity (when yield is distributed).
+     * @param liquidityLimit Maximum USDT amount in the pool.
+     * @param collateral The YBR collateral amount.
+     * @param expectedYield Expected percentage yield after timeToMaturity with 2 decimal places.
      */
     function createEscrowPool(
         uint256 contributionStart,
         uint256 contributionEnd,
         uint256 timeToMaturity,
         uint256 liquidityLimit,
-        uint256 expectedYield,
-        uint256 collateral
+        uint256 collateral,
+        uint256 expectedYield
     ) external onlyOwner {
         EscrowPool memory escrowPool = EscrowPool({
             contributionStart: contributionStart,
@@ -92,6 +100,9 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
             expectedYield: expectedYield,
             cancelled: false
         });
+
+        ybr.safeTransferFrom(msg.sender, address(this), collateral);
+
         escrowPools.push(escrowPool);
     }
 
@@ -122,7 +133,42 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
     function cancelPool(uint256 poolIndex) external onlyOwner {
         require(poolIndex < escrowPools.length, "Invalid pool index");
         require(!escrowPools[poolIndex].cancelled, "Pool already cancelled");
+        require(
+            block.timestamp < escrowPools[poolIndex].contributionEnd + escrowPools[poolIndex].timeToMaturity,
+            "Time to maturity reached"
+        );
         escrowPools[poolIndex].cancelled = true;
+    }
+
+    /**
+     * @dev Withdraws the pool liquidity
+     * @param poolIndex The index of the pool.
+     */
+    function withdrawPool(uint256 poolIndex) external onlyOwner {
+        require(poolIndex < escrowPools.length, "Invalid pool index");
+        require(block.timestamp > escrowPools[poolIndex].contributionEnd, "Pool not closed");
+        require(
+            block.timestamp < escrowPools[poolIndex].contributionEnd + escrowPools[poolIndex].timeToMaturity,
+            "Time to maturity reached"
+        );
+        require(poolContributions[poolIndex] == escrowPools[poolIndex].liquidityLimit, "Pool not full");
+
+        uint256 contribution = escrowPools[poolIndex].liquidityLimit;
+        usdt.safeTransfer(msg.sender, contribution);
+    }
+
+    /**
+     * @dev Repays the liquidity + yield
+     * @param poolIndex The index of the pool.
+     */
+    function repayPool(uint256 poolIndex) external onlyOwner {
+        require(poolIndex < escrowPools.length, "Invalid pool index");
+        require(block.timestamp > escrowPools[poolIndex].contributionEnd, "Pool not closed");
+
+        uint256 contribution = escrowPools[poolIndex].liquidityLimit;
+        uint256 yield = (contribution * escrowPools[poolIndex].expectedYield) / 10_000;
+
+        usdt.safeTransfer(msg.sender, yield);
     }
 
     /**
