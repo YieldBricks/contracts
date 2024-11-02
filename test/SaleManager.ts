@@ -547,18 +547,18 @@ describe("SaleManager", function () {
 
       await ybr.connect(alice).approve(saleManagerAddress, parseEther("10000"));
 
-      await saleManager.connect(alice).buyTokens(80, ybrAddress, propertyAddress);
+      await saleManager.connect(alice).buyTokens(100, ybrAddress, propertyAddress);
 
       const [propertyAddress_, paymentTokenAddress, propertyAmount, paymentTokenAmount] =
         await saleManager.unclaimedByUser(alice.address, 0);
 
       expect(propertyAddress_).to.equal(propertyAddress);
       expect(paymentTokenAddress).to.equal(ybrAddress);
-      expect(propertyAmount).to.equal(80);
-      expect(paymentTokenAmount).to.equal(parseEther("800"));
+      expect(propertyAmount).to.equal(100);
+      expect(paymentTokenAmount).to.equal(parseEther("1000"));
 
-      expect(await saleManager.purchasesPerPropertyPerUser(propertyAddress, alice.address)).to.equal(80);
-      expect(await saleManager.purchasesPerPropertyPerTier(propertyAddress, 5)).to.equal(80);
+      expect(await saleManager.purchasesPerPropertyPerUser(propertyAddress, alice.address)).to.equal(100);
+      expect(await saleManager.purchasesPerPropertyPerTier(propertyAddress, 5)).to.equal(100);
     });
 
     it("Sale fails if user tries to buy more once the limit is reached", async function () {
@@ -566,7 +566,7 @@ describe("SaleManager", function () {
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1100"));
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1000"));
 
       await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
         saleManager,
@@ -581,7 +581,7 @@ describe("SaleManager", function () {
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1100"));
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1000"));
 
       await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
         saleManager,
