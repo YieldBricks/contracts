@@ -104,6 +104,8 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
         ybr.safeTransferFrom(msg.sender, address(this), collateral);
 
         escrowPools.push(escrowPool);
+
+        emit PoolCreation(escrowPools.length - 1);
     }
 
     /**
@@ -124,6 +126,8 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
         userContributions[poolIndex][msg.sender] += amount;
 
         usdt.safeTransferFrom(msg.sender, address(this), amount);
+
+        emit Contribution(poolIndex, msg.sender, amount);
     }
 
     /**
@@ -142,6 +146,8 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
         ) revert TimeToMaturityReached();
 
         escrowPools[poolIndex].cancelled = true;
+
+        emit PoolCancelation(poolIndex);
     }
 
     /**
@@ -159,6 +165,8 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
         uint256 contribution = poolContributions[poolIndex];
         poolContributions[poolIndex] = 0;
         usdt.safeTransfer(msg.sender, contribution);
+
+        emit PoolWithdrawal(poolIndex);
     }
 
     /**
@@ -174,6 +182,8 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
 
         usdt.safeTransfer(msg.sender, (escrowPool.liquidityLimit * escrowPool.expectedYield) / 10_000);
         ybr.safeTransfer(msg.sender, escrowPool.collateral);
+
+        emit PoolRepayment(poolIndex);
     }
 
     /**
@@ -200,6 +210,7 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
         if (escrowPool.cancelled) {
             // 1. The pool is cancelled
             usdt.safeTransfer(msg.sender, contribution);
+            emit Claim(poolIndex, msg.sender, contribution, 0, 0);
         } else if (
             usdt.balanceOf(address(this)) < contribution + yield &&
             block.timestamp >= escrowPool.contributionEnd + escrowPool.timeToMaturity
@@ -207,25 +218,110 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
             // 2. The pool is defaulted
             uint256 collateral = (escrowPool.collateral * contribution) / escrowPool.liquidityLimit;
             ybr.safeTransfer(msg.sender, collateral);
+            emit Claim(poolIndex, msg.sender, 0, 0, collateral);
         } else if (block.timestamp >= escrowPool.contributionEnd + escrowPool.timeToMaturity) {
             // 3. The pool is healthy and has reached maturity
-
             usdt.safeTransfer(msg.sender, contribution + yield);
+            emit Claim(poolIndex, msg.sender, contribution, yield, 0);
         } else {
             revert NoClaim();
         }
     }
 
-    // Custom errors
+    /**
+     * @dev Emitted when creating a new escrow pool.
+     * @param poolIndex The index of the pool.
+     */
+    event PoolCreation(uint256 poolIndex);
+
+    /**
+     * @dev Emitted when a contribution is made to an escrow pool.
+     * @param poolIndex The index of the pool.
+     * @param wallet The address of the contributor.
+     * @param amount The amount contributed.
+     */
+    event Contribution(uint256 poolIndex, address wallet, uint256 amount);
+
+    /**
+     * @dev Emitted when an escrow pool is cancelled.
+     * @param poolIndex The index of the pool.
+     */
+    event PoolCancelation(uint256 poolIndex);
+
+    /**
+     * @dev Emitted when liquidity is withdrawn from an escrow pool.
+     * @param poolIndex The index of the pool.
+     */
+    event PoolWithdrawal(uint256 poolIndex);
+
+    /**
+     * @dev Emitted when liquidity and yield are repaid to an escrow pool.
+     * @param poolIndex The index of the pool.
+     */
+    event PoolRepayment(uint256 poolIndex);
+
+    /**
+     * @dev Emitted when a claim is made from an escrow pool.
+     * @param poolIndex The index of the pool.
+     * @param wallet The address of the claimant.
+     * @param contribution The amount of the contribution claimed.
+     * @param yield The amount of yield claimed.
+     * @param collateral The amount of collateral claimed.
+     */
+    event Claim(uint256 poolIndex, address wallet, uint256 contribution, uint256 yield, uint256 collateral);
+
+    /**
+     * @dev Thrown when the provided pool index is invalid.
+     */
     error InvalidPoolIndex();
+
+    /**
+     * @dev Thrown when a contribution is attempted before the pool's contribution start time.
+     */
     error ContributionNotOpen();
+
+    /**
+     * @dev Thrown when a contribution is attempted after the pool's contribution end time.
+     */
     error ContributionClosed();
+
+    /**
+     * @dev Thrown when a contribution exceeds the pool's liquidity limit.
+     */
     error ExceedsLiquidityLimit();
+
+    /**
+     * @dev Thrown when an action is attempted on a cancelled pool.
+     */
     error PoolCancelled();
+
+    /**
+     * @dev Thrown when an action is attempted after the pool has reached its time to maturity.
+     */
     error TimeToMaturityReached();
+
+    /**
+     * @dev Thrown when an action is attempted on a pool that is not yet closed.
+     */
     error PoolNotClosed();
+
+    /**
+     * @dev Thrown when an action is attempted on a pool that is not yet full.
+     */
     error PoolNotFull();
+
+    /**
+     * @dev Thrown when a user attempts to claim from a pool without any contribution.
+     */
     error NoContribution();
+
+    /**
+     * @dev Thrown when an action is attempted on a pool that has already been claimed.
+     */
     error PoolClaimed();
+
+    /**
+     * @dev Thrown when a user attempts to claim from a pool but there is nothing to claim.
+     */
     error NoClaim();
 }

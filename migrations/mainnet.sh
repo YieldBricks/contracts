@@ -24,6 +24,12 @@ yarn hardhat run --network arbitrum migrations/05_whitelist_payment_tokens.ts
 yarn hardhat run --network arbitrum migrations/07_upgrade_compliance.ts
 yarn hardhat run --network arbitrum migrations/09_upgrade_sale_manager.ts
 yarn hardhat run --network arbitrum migrations/10_upgrade_oracle.ts
+yarn hardhat run --network arbitrum migrations/11_upgrade_tiers.ts
+
+# Escrow
+yarn hardhat run --network arbitrum migrations/escrow/deploy_escrow.ts
+
+0x4f65527DBD020aAEbe04bcf2Fb756323Aefbd7D0
 
 
 # Verify

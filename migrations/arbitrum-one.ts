@@ -6,6 +6,7 @@ export default {
   SaleManager: "0x7BD2Bdb3F43f3F2830A1ea98C403a92d0176E7Ac",
   Tiers: "0x003eeD405A1EaFcf40e2bdEbbB086e80f7B28A1E",
   Multisig: "0xc7Dc9Eb80d1Cc41ce57360DB8e9954b3c396CD56",
+  Escrow: "0x",
   chainlinkFeeds: [
     {
       feedName: "ETH/USD",

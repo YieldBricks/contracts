@@ -19,6 +19,7 @@ export type Environment = {
   YieldbricksOracle: string;
   SaleManager: string;
   Multisig: string;
+  Escrow: string;
   chainlinkFeeds: {
     feedName: string;
     asset: string;
