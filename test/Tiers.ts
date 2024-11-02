@@ -40,116 +40,105 @@ describe("Tiers", function () {
 
     it("Multisig should be able to distribute tokens to Alice and Bob", async function () {
       const { ybr, alice, multisig } = this.fixture as FixtureReturnType;
-      await expect(ybr.connect(multisig).transfer(alice.address, parseEther("50000"))).to.be.fulfilled;
+      await expect(ybr.connect(multisig).transfer(alice.address, parseEther("1800000"))).to.be.fulfilled;
     });
 
-    /*
-    ROOKIE,
-        EXPLORER,
-        CAMPER,
-        BUILDER,
-        TYCOON,
-        GURU
-        */
-
-    it("Check user satisfies ROOKIE tier by default", async function () {
+    it("Check user satisfies VISITOR tier by default", async function () {
       const { tiers, alice } = this.fixture as FixtureReturnType;
 
-      // Alice should be in ROOKIE tier
+      // Alice should be in VISITOR tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 0n, 500n, 100n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 0n, 0n, 100n]);
     });
 
-    it("Check user satisfies GURU when they have 50000 YBR", async function () {
+    it("Check user satisfies TYCOON when they have 1800000 YBR", async function () {
       const { tiers, ybr, alice } = this.fixture as FixtureReturnType;
 
       await ybr.connect(alice).delegate(alice.address);
 
-      // Alice should be in GURU tier
-      const tier = await tiers.getTier(alice.address);
-
-      console.log("Alice balance", await ybr.balanceOf(alice.address));
-
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 3000n, 1000n]);
-    });
-
-    it("Check user satisfies TYCOON when they have 20000 YBR", async function () {
-      const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
-
-      await ybr.connect(alice).transfer(multisig.address, parseEther("30000"));
-
-      console.log("Alice balance", await ybr.balanceOf(alice.address));
-
-      await time.increase(DAY * 31);
-
       // Alice should be in TYCOON tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([4n, 172800n, 2000n, 800n]);
+      console.log("Alice balance", await ybr.balanceOf(alice.address));
+
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 4000n, 1000n]);
     });
 
-    it("Check user satisfies BUILDER when they have 5000 YBR", async function () {
+    it("Check user satisfies BUILDER when they have 750000 YBR", async function () {
       const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
 
-      await ybr.connect(alice).transfer(multisig.address, parseEther("15000"));
+      await ybr.connect(alice).transfer(multisig.address, parseEther("1050000"));
 
       await time.increase(DAY * 31);
 
       // Alice should be in BUILDER tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([3n, 86400n, 1000n, 600n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([4n, 172800, 2500n, 600n]);
     });
 
-    it("Check user satisfies CAMPER when they have 1000 YBR", async function () {
+    it("Check user satisfies CAMPER when they have 180000 YBR", async function () {
       const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
 
-      await ybr.connect(alice).transfer(multisig.address, parseEther("4000"));
+      await ybr.connect(alice).transfer(multisig.address, parseEther("570000"));
 
       await time.increase(DAY * 31);
 
       // Alice should be in CAMPER tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([2n, 43200n, 1000n, 400n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([3n, 86400n, 1500n, 400n]);
     });
 
-    it("Check user satisfies EXPLORER when they have 1 YBR", async function () {
+    it("Check user satisfies EXPLORER when they have 37500 YBR", async function () {
       const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
 
-      await ybr.connect(alice).transfer(multisig.address, parseEther("999"));
+      await ybr.connect(alice).transfer(multisig.address, parseEther("142500"));
 
       await time.increase(DAY * 31);
 
       // Alice should be in EXPLORER tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([1n, 21600n, 500n, 200n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([2n, 43200n, 500n, 200n]);
     });
 
-    it("Check user satisfies ROOKIE when they have 0 YBR", async function () {
+    it("Check user satisfies ROOKIE when they have 3750 YBR", async function () {
       const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
 
-      await ybr.connect(alice).transfer(multisig.address, parseEther("1"));
+      await ybr.connect(alice).transfer(multisig.address, parseEther("33750"));
+
+      await time.increase(DAY * 31);
+
+      // Alice should be in EXPLORER tier
+      const tier = await tiers.getTier(alice.address);
+
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([1n, 10800n, 500n, 100n]);
+    });
+
+    it("Check user satisfies VISITOR when they have 0 YBR", async function () {
+      const { tiers, ybr, alice, multisig } = this.fixture as FixtureReturnType;
+
+      await ybr.connect(alice).transfer(multisig.address, parseEther("3750"));
 
       await time.increase(DAY * 31);
 
       // Alice should be in ROOKIE tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 0n, 500n, 100n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 0n, 0n, 100n]);
     });
 
     it("Check admin can set temporary tiers", async function () {
       const { tiers, alice, multisig } = this.fixture as FixtureReturnType;
 
-      await tiers.connect(multisig).setTierOverride(alice.address, 3); // 3 is BUILDER
+      await tiers.connect(multisig).setTierOverride(alice.address, 3); // 3 is CAMPER
 
-      // Alice should be in BUILDER tier
+      // Alice should be in CAMPER tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([3n, 86400n, 1000n, 600n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([3n, 86400n, 1500n, 400n]);
     });
   });
 

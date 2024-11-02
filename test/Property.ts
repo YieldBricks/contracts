@@ -307,7 +307,7 @@ describe("Property", function () {
       const bobYield = await ybr.balanceOf(bob.address);
       const charlieYield = await ybr.balanceOf(charlie.address);
 
-      expect(aliceYield).to.equal(8_000);
+      expect(aliceYield).to.equal(10_000);
       // Bob can't claim more because he has a lower tier
       expect(bobYield).to.equal(1_000);
       expect(charlieYield).to.equal(1_000);

@@ -81,7 +81,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
      * @param timestamp The timestamp at which the tier is to be retrieved.
      */
     function getHistoricalTier(address _account, uint256 timestamp) public view returns (Tier) {
-        if (tierOverrides[_account] != Tier.ROOKIE) {
+        if (tierOverrides[_account] != Tier.VISITOR) {
             return tierOverrides[_account];
         }
         uint256 balance = getAverageBalance(_account, timestamp);
@@ -293,7 +293,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
         } else if (tier == Tier.BUILDER) {
             return TierBenefits(Tier.BUILDER, 48 hours, 2500, 600);
         } else if (tier == Tier.TYCOON) {
-            return TierBenefits(Tier.TYCOON, 72 hours, 4000, 800);
+            return TierBenefits(Tier.TYCOON, 72 hours, 4000, 1000);
         }
         return TierBenefits(Tier.VISITOR, 0, 0, 100);
     }

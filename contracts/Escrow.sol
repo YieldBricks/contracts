@@ -112,13 +112,13 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param amount The amount to contribute.
      */
     function contribute(uint256 poolIndex, uint256 amount) external whenNotPaused {
-        require(poolIndex < escrowPools.length, "Invalid pool index");
-        require(block.timestamp >= escrowPools[poolIndex].contributionStart, "Contribution not open");
-        require(block.timestamp <= escrowPools[poolIndex].contributionEnd, "Contribution closed");
-        require(
-            poolContributions[poolIndex] + amount <= escrowPools[poolIndex].liquidityLimit,
-            "Exceeds liquidity limit"
-        );
+        if (poolIndex >= escrowPools.length) revert InvalidPoolIndex();
+        EscrowPool memory escrowPool = escrowPools[poolIndex];
+
+        if (block.timestamp < escrowPool.contributionStart) revert ContributionNotOpen();
+        if (block.timestamp > escrowPool.contributionEnd) revert ContributionClosed();
+        if (escrowPool.cancelled) revert PoolCancelled();
+        if (poolContributions[poolIndex] + amount > escrowPool.liquidityLimit) revert ExceedsLiquidityLimit();
 
         poolContributions[poolIndex] += amount;
         userContributions[poolIndex][msg.sender] += amount;
@@ -131,12 +131,16 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param poolIndex The index of the pool.
      */
     function cancelPool(uint256 poolIndex) external onlyOwner {
-        require(poolIndex < escrowPools.length, "Invalid pool index");
-        require(!escrowPools[poolIndex].cancelled, "Pool already cancelled");
-        require(
-            block.timestamp < escrowPools[poolIndex].contributionEnd + escrowPools[poolIndex].timeToMaturity,
-            "Time to maturity reached"
-        );
+        if (poolIndex >= escrowPools.length) revert InvalidPoolIndex();
+        EscrowPool memory escrowPool = escrowPools[poolIndex];
+
+        if (poolContributions[poolIndex] == 0) revert PoolClaimed();
+
+        if (
+            poolContributions[poolIndex] == escrowPool.liquidityLimit &&
+            block.timestamp >= escrowPool.contributionEnd + escrowPool.timeToMaturity
+        ) revert TimeToMaturityReached();
+
         escrowPools[poolIndex].cancelled = true;
     }
 
@@ -145,15 +149,15 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param poolIndex The index of the pool.
      */
     function withdrawPool(uint256 poolIndex) external onlyOwner {
-        require(poolIndex < escrowPools.length, "Invalid pool index");
-        require(block.timestamp > escrowPools[poolIndex].contributionEnd, "Pool not closed");
-        require(
-            block.timestamp < escrowPools[poolIndex].contributionEnd + escrowPools[poolIndex].timeToMaturity,
-            "Time to maturity reached"
-        );
-        require(poolContributions[poolIndex] == escrowPools[poolIndex].liquidityLimit, "Pool not full");
+        if (poolIndex >= escrowPools.length) revert InvalidPoolIndex();
+        EscrowPool memory escrowPool = escrowPools[poolIndex];
 
-        uint256 contribution = escrowPools[poolIndex].liquidityLimit;
+        if (escrowPool.cancelled) revert PoolCancelled();
+        if (block.timestamp <= escrowPool.contributionEnd) revert PoolNotClosed();
+        if (poolContributions[poolIndex] < escrowPool.liquidityLimit) revert PoolNotFull();
+
+        uint256 contribution = poolContributions[poolIndex];
+        poolContributions[poolIndex] = 0;
         usdt.safeTransfer(msg.sender, contribution);
     }
 
@@ -162,13 +166,14 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param poolIndex The index of the pool.
      */
     function repayPool(uint256 poolIndex) external onlyOwner {
-        require(poolIndex < escrowPools.length, "Invalid pool index");
-        require(block.timestamp > escrowPools[poolIndex].contributionEnd, "Pool not closed");
+        if (poolIndex >= escrowPools.length) revert InvalidPoolIndex();
+        EscrowPool memory escrowPool = escrowPools[poolIndex];
 
-        uint256 contribution = escrowPools[poolIndex].liquidityLimit;
-        uint256 yield = (contribution * escrowPools[poolIndex].expectedYield) / 10_000;
+        if (escrowPool.cancelled) revert PoolCancelled();
+        if (block.timestamp <= escrowPool.contributionEnd) revert PoolNotClosed();
 
-        usdt.safeTransfer(msg.sender, yield);
+        usdt.safeTransfer(msg.sender, (escrowPool.liquidityLimit * escrowPool.expectedYield) / 10_000);
+        ybr.safeTransfer(msg.sender, escrowPool.collateral);
     }
 
     /**
@@ -182,14 +187,13 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
         // user can claim the underlying YBR collateral instead of USDT.
         // 3. The pool is healthy and has reached maturity - the user can claim their USDT back with yield.
 
-        require(poolIndex < escrowPools.length, "Invalid pool index");
+        if (poolIndex >= escrowPools.length) revert InvalidPoolIndex();
 
         EscrowPool memory escrowPool = escrowPools[poolIndex];
 
         uint256 contribution = userContributions[poolIndex][msg.sender];
-        require(contribution > 0, "No contribution");
+        if (contribution == 0) revert NoContribution();
         userContributions[poolIndex][msg.sender] = 0;
-        poolContributions[poolIndex] -= contribution;
 
         uint256 yield = (contribution * escrowPool.expectedYield) / 10_000;
 
@@ -197,14 +201,31 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
             // 1. The pool is cancelled
             usdt.safeTransfer(msg.sender, contribution);
         } else if (
-            usdt.balanceOf(address(this)) < poolContributions[poolIndex] &&
+            usdt.balanceOf(address(this)) < contribution + yield &&
             block.timestamp >= escrowPool.contributionEnd + escrowPool.timeToMaturity
         ) {
             // 2. The pool is defaulted
-            ybr.safeTransfer(msg.sender, contribution);
+            uint256 collateral = (escrowPool.collateral * contribution) / escrowPool.liquidityLimit;
+            ybr.safeTransfer(msg.sender, collateral);
         } else if (block.timestamp >= escrowPool.contributionEnd + escrowPool.timeToMaturity) {
             // 3. The pool is healthy and has reached maturity
+
             usdt.safeTransfer(msg.sender, contribution + yield);
+        } else {
+            revert NoClaim();
         }
     }
+
+    // Custom errors
+    error InvalidPoolIndex();
+    error ContributionNotOpen();
+    error ContributionClosed();
+    error ExceedsLiquidityLimit();
+    error PoolCancelled();
+    error TimeToMaturityReached();
+    error PoolNotClosed();
+    error PoolNotFull();
+    error NoContribution();
+    error PoolClaimed();
+    error NoClaim();
 }

@@ -468,7 +468,7 @@ describe("SaleManager", function () {
 
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 4000n, 800]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([5n, 259200n, 4000n, 1000]);
     });
 
     it("Whitelist YBR token", async function () {
@@ -566,7 +566,7 @@ describe("SaleManager", function () {
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1000"));
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1100"));
 
       await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
         saleManager,
@@ -581,7 +581,7 @@ describe("SaleManager", function () {
 
       const propertyAddress = await saleManager.tokenAddresses(0);
 
-      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1000"));
+      await ybr.connect(alice).approve(saleManagerAddress, parseEther("1100"));
 
       await expect(saleManager.connect(alice).buyTokens(1, ybrAddress, propertyAddress)).to.be.revertedWithCustomError(
         saleManager,
