@@ -184,6 +184,14 @@ contract Compliance is Ownable2StepUpgradeable, EIP712Upgradeable {
     }
 
     /**
+     * @dev Get the identity signer
+     * @return The identity signer
+     */
+    function getIdentitySigner() external view returns (address) {
+        return _identitySigner;
+    }
+
+    /**
      * @dev Error when the identity is not found
      */
     error IdentityNotFound(address user);

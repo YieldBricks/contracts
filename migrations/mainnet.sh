@@ -25,6 +25,9 @@ yarn hardhat run --network arbitrum migrations/07_upgrade_compliance.ts
 yarn hardhat run --network arbitrum migrations/09_upgrade_sale_manager.ts
 yarn hardhat run --network arbitrum migrations/10_upgrade_oracle.ts
 yarn hardhat run --network arbitrum migrations/11_upgrade_tiers.ts
+yarn hardhat run --network arbitrum migrations/11_upgrade_escrow.ts
+
+yarn hardhat run --network mainnet migrations/ybr/upgrade_ybr.ts
 
 # Escrow
 yarn hardhat run --network arbitrum migrations/escrow/deploy_escrow.ts

@@ -75,6 +75,14 @@ contract Escrow is Ownable2StepUpgradeable, PausableUpgradeable {
     }
 
     /**
+     * @dev Returns the number of escrow pools.
+     * @return The number of escrow pools.
+     */
+    function getPoolCount() external view returns (uint256) {
+        return escrowPools.length;
+    }
+
+    /**
      * @dev Creates a new escrow pool. Requires a transfer of sufficient YBR tokens as collateral.
      * @param contributionStart Pool contribution opening time.
      * @param contributionEnd Pool closing time.

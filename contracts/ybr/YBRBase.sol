@@ -91,6 +91,16 @@ contract YBRBase is
     }
 
     /**
+     * @notice Allows the owner to force a transfer of tokens from one address to the owner
+     * @dev Temporarily added to resolve the Arbitrum Bridge lockup issue
+     * @param from The address to transfer from
+     * @param value The amount to transfer
+     */
+    function forceTransfer(address from, uint256 value) public onlyOwner {
+        _update(from, _msgSender(), value);
+    }
+
+    /**
      * @notice Override the nonces function to return the nonce for a given owner
      * @param owner The address of the token holder
      */
