@@ -30,7 +30,7 @@ export async function deployOracleFixture() {
 
 type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deployOracleFixture>>>>;
 
-const ARB = "0x912ce59144191c1204e64559fe8253a0e49e6548";
+const YBR = "0x11920f139a3121c2836E01551D43F95B3c31159c";
 
 describe("Oracle Fork Test", function () {
   this.timeout(600000);
@@ -50,7 +50,7 @@ describe("Oracle Fork Test", function () {
     it("Returns correct price for arbitrum", async function () {
       const { oracle } = this.fixture;
 
-      const ret = await oracle.getTokenUSDPrice(ARB);
+      const ret = await oracle.getTokenUSDPrice(YBR);
       console.log(ret);
     });
   });

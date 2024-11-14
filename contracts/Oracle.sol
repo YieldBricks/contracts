@@ -7,8 +7,6 @@ import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/acc
 import { OracleLibrary } from "@uniswap/v3-periphery/contracts/libraries/OracleLibrary.sol";
 import { IUniswapV3Pool } from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
-import "hardhat/console.sol";
-
 interface IOracle {
     function getTokenUSDPrice(
         address
@@ -40,8 +38,8 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
     mapping(address token => DataFeed dataFeed) public dataFeeds;
 
     address constant YBR = 0x11920f139a3121c2836E01551D43F95B3c31159c;
-    address constant USDC = 0xaf88d065e77c8cC2239327C5EDb3A432268e5831;
-    address constant YBR_USDC = 0xcDa53B1F66614552F834cEeF361A8D12a0B8DaD8; //TODO, will upgrade once Uniswap pool is deployed
+    address constant USDT = 0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9;
+    address constant YBR_USDT = 0xb18e2e8B2f6C4f3f2e5afc1229d9d7654B0DdAA3; //TODO, will upgrade once Uniswap pool is deployed
     uint256 constant MAX_PRICE_AGE = 5 days;
 
     /**
@@ -73,11 +71,12 @@ contract YieldbricksOracle is IOracle, Ownable2StepUpgradeable {
     function getTokenUSDPrice(
         address tokenAddress
     ) external view override returns (uint256 price, uint256 priceDecimals, uint256 tokenDecimals) {
-        // Temporarily fetch YBR price from Uniswap using 1 hour TWAP
+        // Temporarily fetch YBR price from Uniswap using best available TWAP
         if (tokenAddress == YBR) {
-            (int24 arithmeticMeanTick, ) = OracleLibrary.consult(YBR_USDC, 1 hours);
-            uint256 ybrPrice = OracleLibrary.getQuoteAtTick(arithmeticMeanTick, 1e8 * 1e6, USDC, YBR);
-            return (ybrPrice / 1e18, 8, 18);
+            uint32 secondsAgo = OracleLibrary.getOldestObservationSecondsAgo(YBR_USDT);
+            (int24 arithmeticMeanTick, ) = OracleLibrary.consult(YBR_USDT, secondsAgo);
+            uint256 ybrPrice = OracleLibrary.getQuoteAtTick(arithmeticMeanTick, 1e2 * 1e18, YBR, USDT);
+            return (ybrPrice, 8, 18);
         }
 
         DataFeed memory dataFeed = dataFeeds[tokenAddress];

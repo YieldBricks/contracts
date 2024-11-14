@@ -285,7 +285,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
      */
     function getTierBenefits(Tier tier) public pure returns (TierBenefits memory) {
         if (tier == Tier.ROOKIE) {
-            return TierBenefits(Tier.ROOKIE, 3 hours, 500, 100);
+            return TierBenefits(Tier.ROOKIE, 6 hours, 500, 100);
         } else if (tier == Tier.EXPLORER) {
             return TierBenefits(Tier.EXPLORER, 12 hours, 500, 200);
         } else if (tier == Tier.CAMPER) {
@@ -295,7 +295,7 @@ contract TiersV1 is Ownable2StepUpgradeable {
         } else if (tier == Tier.TYCOON) {
             return TierBenefits(Tier.TYCOON, 72 hours, 4000, 1000);
         }
-        return TierBenefits(Tier.VISITOR, 0, 0, 100);
+        return TierBenefits(Tier.VISITOR, 3 hours, 500, 100);
     }
 
     /**

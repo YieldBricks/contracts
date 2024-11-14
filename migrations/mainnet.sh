@@ -35,3 +35,7 @@ yarn hardhat run --network arbitrum migrations/escrow/deploy_escrow.ts
 # Verify
 
 yarn verify --network arbitrum --contract contracts/Property.sol:Property 0xa66dd9aad8c78b7977c0686ab07160c6ae50d0a5 0xf29906A75255c04B6f9D522047979D289893bFf3 0x003eeD405A1EaFcf40e2bdEbbB086e80f7B28A1E 
+
+# Fjord sale
+
+yarn hardhat run --network arbitrum migrations/ybr/fjord_ybr.ts
