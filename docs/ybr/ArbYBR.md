@@ -20,6 +20,14 @@ nav_order: 2
 
 This contract is for the YieldBricks token, which is an ERC20 token with additional features.
 
+### constructor
+
+```solidity
+constructor() public
+```
+
+Contract constructor - disabled due to upgradeability
+
 ### initialize
 
 ```solidity

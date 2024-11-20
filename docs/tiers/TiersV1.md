@@ -18,6 +18,12 @@ nav_order: 2
 
 ## TiersV1
 
+### TIER_VISITOR_THRESHOLD
+
+```solidity
+uint256 TIER_VISITOR_THRESHOLD
+```
+
 ### TIER_ROOKIE_THRESHOLD
 
 ```solidity
@@ -46,48 +52,6 @@ uint256 TIER_BUILDER_THRESHOLD
 
 ```solidity
 uint256 TIER_TYCOON_THRESHOLD
-```
-
-### TIER_GURU_THRESHOLD
-
-```solidity
-uint256 TIER_GURU_THRESHOLD
-```
-
-### TIER_ROOKIE_LOCKUP
-
-```solidity
-uint256 TIER_ROOKIE_LOCKUP
-```
-
-### TIER_EXPLORER_LOCKUP
-
-```solidity
-uint256 TIER_EXPLORER_LOCKUP
-```
-
-### TIER_CAMPER_LOCKUP
-
-```solidity
-uint256 TIER_CAMPER_LOCKUP
-```
-
-### TIER_BUILDER_LOCKUP
-
-```solidity
-uint256 TIER_BUILDER_LOCKUP
-```
-
-### TIER_TYCOON_LOCKUP
-
-```solidity
-uint256 TIER_TYCOON_LOCKUP
-```
-
-### TIER_GURU_LOCKUP
-
-```solidity
-uint256 TIER_GURU_LOCKUP
 ```
 
 ### DEFAULT_TIER_CALCULATION
@@ -124,12 +88,12 @@ uint256 balanceMultiplier
 
 ```solidity
 enum Tier {
+  VISITOR,
   ROOKIE,
   EXPLORER,
   CAMPER,
   BUILDER,
-  TYCOON,
-  GURU
+  TYCOON
 }
 ```
 

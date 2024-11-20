@@ -156,6 +156,20 @@ _Blacklist or unblacklist a wallet_
 | _wallet | address | The wallet to blacklist or unblacklist |
 | isBlacklisted | bool | True to blacklist, false to unblacklist |
 
+### getIdentitySigner
+
+```solidity
+function getIdentitySigner() external view returns (address)
+```
+
+_Get the identity signer_
+
+#### Return Values
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| [0] | address | The identity signer |
+
 ### IdentityNotFound
 
 ```solidity

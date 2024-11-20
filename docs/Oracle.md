@@ -56,10 +56,28 @@ mapping(address => struct YieldbricksOracle.DataFeed) dataFeeds
 
 Mapping of ChainLink feeds for each token.
 
-### ybrPrice
+### YBR
 
 ```solidity
-uint256 ybrPrice
+address YBR
+```
+
+### USDT
+
+```solidity
+address USDT
+```
+
+### YBR_USDT
+
+```solidity
+address YBR_USDT
+```
+
+### MAX_PRICE_AGE
+
+```solidity
+uint256 MAX_PRICE_AGE
 ```
 
 ### DataFeed
@@ -106,18 +124,6 @@ tokens are needed, we run the following formula._
 | ---- | ---- | ----------- |
 | tokenAddress | address | The address of the token for which we want to get the price. |
 
-### setYBRPrice
-
-```solidity
-function setYBRPrice(uint256 _price) external
-```
-
-#### Parameters
-
-| Name | Type | Description |
-| ---- | ---- | ----------- |
-| _price | uint256 | The price of 1 YBR in USD with 8 decimals. |
-
 ### setFeed
 
 ```solidity
@@ -149,4 +155,12 @@ _Emitted when a data feed is set for a token._
 | ---- | ---- | ----------- |
 | token | address | The address of the token for which the data feed was set. |
 | feed | address | The address of the data feed contract. |
+
+### PriceDataTooOld
+
+```solidity
+error PriceDataTooOld(uint256 priceTimestamp)
+```
+
+_This error is thrown when a price feed is too old._
 

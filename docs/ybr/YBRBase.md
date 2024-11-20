@@ -69,6 +69,23 @@ as well incorporate the other inherited functions.
 | to | address | The address to which the tokens are being transferred |
 | value | uint256 | The amount of tokens being transferred |
 
+### forceTransfer
+
+```solidity
+function forceTransfer(address from, uint256 value) public
+```
+
+Allows the owner to force a transfer of tokens from one address to the owner
+
+_Temporarily added to resolve the Arbitrum Bridge lockup issue_
+
+#### Parameters
+
+| Name | Type | Description |
+| ---- | ---- | ----------- |
+| from | address | The address to transfer from |
+| value | uint256 | The amount to transfer |
+
 ### nonces
 
 ```solidity
