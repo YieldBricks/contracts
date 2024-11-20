@@ -49,7 +49,7 @@ describe("Tiers", function () {
       // Alice should be in VISITOR tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 0n, 0n, 100n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 10800n, 500n, 100n]);
     });
 
     it("Check user satisfies TYCOON when they have 1800000 YBR", async function () {
@@ -114,7 +114,7 @@ describe("Tiers", function () {
       // Alice should be in EXPLORER tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([1n, 10800n, 500n, 100n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([1n, 21600n, 500n, 100n]);
     });
 
     it("Check user satisfies VISITOR when they have 0 YBR", async function () {
@@ -127,7 +127,7 @@ describe("Tiers", function () {
       // Alice should be in ROOKIE tier
       const tier = await tiers.getTier(alice.address);
 
-      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 0n, 0n, 100n]);
+      expect(await tiers.getTierBenefits(tier)).to.deep.equal([0n, 10800n, 500n, 100n]);
     });
 
     it("Check admin can set temporary tiers", async function () {
