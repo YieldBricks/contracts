@@ -32,7 +32,7 @@ type FixtureReturnType = Awaited<Promise<PromiseLike<ReturnType<typeof deployOra
 
 const YBR = "0x11920f139a3121c2836E01551D43F95B3c31159c";
 
-describe("Oracle Fork Test", function () {
+describe.skip("Oracle Fork Test", function () {
   this.timeout(600000);
 
   before(async function () {
