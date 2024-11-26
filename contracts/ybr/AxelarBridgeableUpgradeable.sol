@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 contract AxelarBridgeableUpgradeable {
-    address public axelarMinter;
+    address public constant AXELAR_ROLE = 0xe05f286D397a8D1fB89f421944E36E55F7B8e968;
 
     modifier onlyAxelar() {
-        if (msg.sender != axelarMinter) {
+        if (msg.sender != AXELAR_ROLE) {
             revert NotAxelar(msg.sender);
         }
         _;
@@ -14,12 +14,12 @@ contract AxelarBridgeableUpgradeable {
     /**
      * @notice should increase token supply by amount, and should only be callable by Axelar.
      */
-    function axelarMint(address account, uint256 amount) external virtual onlyAxelar {}
+    function mint(address account, uint256 amount) external virtual onlyAxelar {}
 
     /**
      * @notice should decrease token supply by amount, and should only be callable by Axelar.
      */
-    function axelarBurn(address account, uint256 amount) external virtual onlyAxelar {}
+    function burn(address account, uint256 amount) external virtual onlyAxelar {}
 
     error NotAxelar(address sender);
 }

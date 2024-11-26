@@ -28,6 +28,7 @@ yarn hardhat run --network arbitrum migrations/11_upgrade_tiers.ts
 yarn hardhat run --network arbitrum migrations/11_upgrade_escrow.ts
 
 yarn hardhat run --network mainnet migrations/ybr/upgrade_ybr.ts
+yarn hardhat run --network arbitrum migrations/ybr/upgrade_arb_ybr.ts
 
 # Escrow
 yarn hardhat run --network arbitrum migrations/escrow/deploy_escrow.ts
