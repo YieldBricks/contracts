@@ -27,6 +27,7 @@ import { Ownable2StepUpgradeable } from "@openzeppelin/contracts-upgradeable/acc
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { NoncesUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/NoncesUpgradeable.sol";
 import { ERC20L2BridgeableUpgradeable } from "./ERC20L2BridgeableUpgradeable.sol";
+import { AxelarBridgeableUpgradeable } from "./AxelarBridgeableUpgradeable.sol";
 import { Time } from "@openzeppelin/contracts/utils/types/Time.sol";
 import { YBRBase } from "./YBRBase.sol";
 
@@ -34,7 +35,7 @@ import { YBRBase } from "./YBRBase.sol";
  * @title YieldBricks (YBR) Token Contract on Arbitrum
  * @notice This contract is for the YieldBricks token, which is an ERC20 token with additional features.
  */
-contract ArbYBR is YBRBase, ERC20L2BridgeableUpgradeable {
+contract ArbYBR is YBRBase, ERC20L2BridgeableUpgradeable, AxelarBridgeableUpgradeable {
     /// @notice Contract constructor - disabled due to upgradeability
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -62,6 +63,20 @@ contract ArbYBR is YBRBase, ERC20L2BridgeableUpgradeable {
      * @notice should decrease token supply by amount, and should only be callable by the L2Gateway.
      */
     function bridgeBurn(address account, uint256 amount) external override onlyL2Gateway {
+        _burn(account, amount);
+    }
+
+    /**
+     * @notice should increase token supply by amount, and should only be callable by Axelar token manager.
+     */
+    function mint(address account, uint256 amount) external override onlyAxelar {
+        _mint(account, amount);
+    }
+
+    /**
+     * @notice should decrease token supply by amount, and should only be callable by Axelar token manager.
+     */
+    function burn(address account, uint256 amount) external override onlyAxelar {
         _burn(account, amount);
     }
 }
