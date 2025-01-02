@@ -552,6 +552,8 @@ describe("SaleManager", function () {
       const [propertyAddress_, paymentTokenAddress, propertyAmount, paymentTokenAmount] =
         await saleManager.unclaimedByUser(alice.address, 0);
 
+      expect(await saleManager.getUnclaimedByUserLength(alice.address)).to.equal(1);
+
       expect(propertyAddress_).to.equal(propertyAddress);
       expect(paymentTokenAddress).to.equal(ybrAddress);
       expect(propertyAmount).to.equal(100);
