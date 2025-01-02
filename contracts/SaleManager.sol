@@ -293,6 +293,7 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
         } catch {
             unclaimedByUser[msg.sender].push(Unclaimed(_property, paymentTokenAddress, _amount, totalCost));
             unclaimedProperties[_property] += _amount;
+            emit ClaimsAdded(msg.sender, _property, _amount);
         }
     }
 
@@ -348,6 +349,14 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
             emit ClaimsCancelled(msg.sender, unclaimed.propertyAddress, unclaimed.propertyAmount);
         }
         delete unclaimedByUser[msg.sender];
+    }
+
+    /**
+     * @dev Returns Unclaimed[] array length
+     * @param user The address of the user.
+     */
+    function getUnclaimedByUserLength(address user) external view returns (uint256) {
+        return unclaimedByUser[user].length;
     }
 
     /**
@@ -427,6 +436,14 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
     event AdminTransferProperty(address property, uint256 amount);
 
     /**
+     * @dev Emitted when claims are created.
+     * @param user The address of the user who claimed tokens.
+     * @param property The address of the property token.
+     * @param amount The amount of the property token.
+     */
+    event ClaimsAdded(address user, address property, uint256 amount);
+
+    /**
      * @dev Emitted when claims are processed.
      * @param user The address of the user who claimed tokens.
      * @param property The address of the property token.
@@ -468,14 +485,6 @@ contract SaleManager is Ownable2StepUpgradeable, PausableUpgradeable {
      * @param price The new price of the token in the sale.
      */
     event SaleModified(address indexed property, uint256 start, uint256 end, uint256 price);
-
-    /**
-     * @dev Emitted when a claim is added.
-     * @param transactionId The ID of the transaction.
-     * @param sender The address of the sender of the transaction.
-     * @param amount The amount of the transaction.
-     */
-    event ClaimAdded(uint256 indexed transactionId, address sender, uint256 amount);
 
     /**
      * @dev Emitted when the token beacon is updated.

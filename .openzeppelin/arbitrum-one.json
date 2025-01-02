@@ -5602,7 +5602,7 @@
             "label": "sales",
             "offset": 0,
             "slot": "0",
-            "type": "t_mapping(t_address,t_struct(Sale)15304_storage)",
+            "type": "t_mapping(t_address,t_struct(Sale)16029_storage)",
             "contract": "SaleManager",
             "src": "contracts/SaleManager.sol:36"
           },
@@ -5610,7 +5610,7 @@
             "label": "unclaimedByUser",
             "offset": 0,
             "slot": "1",
-            "type": "t_mapping(t_address,t_array(t_struct(Unclaimed)15352_storage)dyn_storage)",
+            "type": "t_mapping(t_address,t_array(t_struct(Unclaimed)16077_storage)dyn_storage)",
             "contract": "SaleManager",
             "src": "contracts/SaleManager.sol:41"
           },
@@ -5642,7 +5642,7 @@
             "label": "purchasesPerPropertyPerTier",
             "offset": 0,
             "slot": "5",
-            "type": "t_mapping(t_address,t_mapping(t_enum(Tier)18430,t_uint256))",
+            "type": "t_mapping(t_address,t_mapping(t_enum(Tier)19448,t_uint256))",
             "contract": "SaleManager",
             "src": "contracts/SaleManager.sol:61"
           },
@@ -5666,7 +5666,7 @@
             "label": "oracle",
             "offset": 0,
             "slot": "8",
-            "type": "t_contract(IOracle)14483",
+            "type": "t_contract(IOracle)15203",
             "contract": "SaleManager",
             "src": "contracts/SaleManager.sol:90"
           },
@@ -5674,7 +5674,7 @@
             "label": "tiers",
             "offset": 0,
             "slot": "9",
-            "type": "t_contract(TiersV1)19125",
+            "type": "t_contract(TiersV1)20143",
             "contract": "SaleManager",
             "src": "contracts/SaleManager.sol:91"
           }
@@ -5750,15 +5750,15 @@
             "label": "address[]",
             "numberOfBytes": "32"
           },
-          "t_array(t_struct(Unclaimed)15352_storage)dyn_storage": {
+          "t_array(t_struct(Unclaimed)16077_storage)dyn_storage": {
             "label": "struct SaleManager.Unclaimed[]",
             "numberOfBytes": "32"
           },
-          "t_contract(IOracle)14483": {
+          "t_contract(IOracle)15203": {
             "label": "contract IOracle",
             "numberOfBytes": "20"
           },
-          "t_contract(TiersV1)19125": {
+          "t_contract(TiersV1)20143": {
             "label": "contract TiersV1",
             "numberOfBytes": "20"
           },
@@ -5766,7 +5766,7 @@
             "label": "contract UpgradeableBeacon",
             "numberOfBytes": "20"
           },
-          "t_enum(Tier)18430": {
+          "t_enum(Tier)19448": {
             "label": "enum TiersV1.Tier",
             "members": [
               "VISITOR",
@@ -5778,7 +5778,7 @@
             ],
             "numberOfBytes": "1"
           },
-          "t_mapping(t_address,t_array(t_struct(Unclaimed)15352_storage)dyn_storage)": {
+          "t_mapping(t_address,t_array(t_struct(Unclaimed)16077_storage)dyn_storage)": {
             "label": "mapping(address => struct SaleManager.Unclaimed[])",
             "numberOfBytes": "32"
           },
@@ -5790,11 +5790,11 @@
             "label": "mapping(address => mapping(address => uint256))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_mapping(t_enum(Tier)18430,t_uint256))": {
+          "t_mapping(t_address,t_mapping(t_enum(Tier)19448,t_uint256))": {
             "label": "mapping(address => mapping(enum TiersV1.Tier => uint256))",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_address,t_struct(Sale)15304_storage)": {
+          "t_mapping(t_address,t_struct(Sale)16029_storage)": {
             "label": "mapping(address => struct SaleManager.Sale)",
             "numberOfBytes": "32"
           },
@@ -5802,11 +5802,11 @@
             "label": "mapping(address => uint256)",
             "numberOfBytes": "32"
           },
-          "t_mapping(t_enum(Tier)18430,t_uint256)": {
+          "t_mapping(t_enum(Tier)19448,t_uint256)": {
             "label": "mapping(enum TiersV1.Tier => uint256)",
             "numberOfBytes": "32"
           },
-          "t_struct(Sale)15304_storage": {
+          "t_struct(Sale)16029_storage": {
             "label": "struct SaleManager.Sale",
             "members": [
               {
@@ -5830,7 +5830,7 @@
             ],
             "numberOfBytes": "96"
           },
-          "t_struct(Unclaimed)15352_storage": {
+          "t_struct(Unclaimed)16077_storage": {
             "label": "struct SaleManager.Unclaimed",
             "members": [
               {
@@ -8014,6 +8014,331 @@
               "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:45",
               "offset": 0,
               "slot": "4"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:69",
+              "offset": 0,
+              "slot": "0"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:73",
+              "offset": 8,
+              "slot": "0"
+            }
+          ]
+        }
+      }
+    },
+    "03fdd6fcd527abc13b7684c90f82f5711bfa68ddd44905fc39216d9e728f41a2": {
+      "address": "0x5f3E663F2e62D15Ad72b29Bfad9A7b0F150833D3",
+      "txHash": "0x3c65faf54e87ac201724e5fb2e548158e2bf3d41a39096298d74b8da3acf812f",
+      "layout": {
+        "solcVersion": "0.8.20",
+        "storage": [
+          {
+            "label": "sales",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_address,t_struct(Sale)15317_storage)",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:36"
+          },
+          {
+            "label": "unclaimedByUser",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_address,t_array(t_struct(Unclaimed)15365_storage)dyn_storage)",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:41"
+          },
+          {
+            "label": "unclaimedProperties",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:46"
+          },
+          {
+            "label": "whitelistedPaymentTokens",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:51"
+          },
+          {
+            "label": "purchasesPerPropertyPerUser",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:56"
+          },
+          {
+            "label": "purchasesPerPropertyPerTier",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_mapping(t_address,t_mapping(t_enum(Tier)16421,t_uint256))",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:61"
+          },
+          {
+            "label": "tokenAddresses",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_array(t_address)dyn_storage",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:80"
+          },
+          {
+            "label": "tokenBeacon",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_contract(UpgradeableBeacon)4729",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:85"
+          },
+          {
+            "label": "oracle",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_contract(IOracle)14491",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:90"
+          },
+          {
+            "label": "tiers",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_contract(TiersV1)17116",
+            "contract": "SaleManager",
+            "src": "contracts/SaleManager.sol:91"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_struct(InitializableStorage)586_storage": {
+            "label": "struct Initializable.InitializableStorage",
+            "members": [
+              {
+                "label": "_initialized",
+                "type": "t_uint64",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "_initializing",
+                "type": "t_bool",
+                "offset": 8,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(Ownable2StepStorage)177_storage": {
+            "label": "struct Ownable2StepUpgradeable.Ownable2StepStorage",
+            "members": [
+              {
+                "label": "_pendingOwner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(OwnableStorage)243_storage": {
+            "label": "struct OwnableUpgradeable.OwnableStorage",
+            "members": [
+              {
+                "label": "_owner",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_struct(PausableStorage)1292_storage": {
+            "label": "struct PausableUpgradeable.PausableStorage",
+            "members": [
+              {
+                "label": "_paused",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              }
+            ],
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_struct(Unclaimed)15365_storage)dyn_storage": {
+            "label": "struct SaleManager.Unclaimed[]",
+            "numberOfBytes": "32"
+          },
+          "t_contract(IOracle)14491": {
+            "label": "contract IOracle",
+            "numberOfBytes": "20"
+          },
+          "t_contract(TiersV1)17116": {
+            "label": "contract TiersV1",
+            "numberOfBytes": "20"
+          },
+          "t_contract(UpgradeableBeacon)4729": {
+            "label": "contract UpgradeableBeacon",
+            "numberOfBytes": "20"
+          },
+          "t_enum(Tier)16421": {
+            "label": "enum TiersV1.Tier",
+            "members": [
+              "VISITOR",
+              "ROOKIE",
+              "EXPLORER",
+              "CAMPER",
+              "BUILDER",
+              "TYCOON"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_array(t_struct(Unclaimed)15365_storage)dyn_storage)": {
+            "label": "mapping(address => struct SaleManager.Unclaimed[])",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_mapping(t_enum(Tier)16421,t_uint256))": {
+            "label": "mapping(address => mapping(enum TiersV1.Tier => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(Sale)15317_storage)": {
+            "label": "mapping(address => struct SaleManager.Sale)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_enum(Tier)16421,t_uint256)": {
+            "label": "mapping(enum TiersV1.Tier => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(Sale)15317_storage": {
+            "label": "struct SaleManager.Sale",
+            "members": [
+              {
+                "label": "start",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "end",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "price",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(Unclaimed)15365_storage": {
+            "label": "struct SaleManager.Unclaimed",
+            "members": [
+              {
+                "label": "propertyAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "paymentTokenAddress",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "propertyAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "paymentTokenAmount",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable2Step": [
+            {
+              "contract": "Ownable2StepUpgradeable",
+              "label": "_pendingOwner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol:23",
+              "offset": 0,
+              "slot": "0"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Ownable": [
+            {
+              "contract": "OwnableUpgradeable",
+              "label": "_owner",
+              "type": "t_address",
+              "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:24",
+              "offset": 0,
+              "slot": "0"
             }
           ],
           "erc7201:openzeppelin.storage.Initializable": [
